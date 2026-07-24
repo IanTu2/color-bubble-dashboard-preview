@@ -46,94 +46,22 @@ function formatTime(value: number) {
 export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   const copy = language === 'zh'
     ? {
-        title: '音樂工作室',
-        subtitle: '播放清單、佇列、收藏、速度與循環控制',
-        addUrl: '加入網址音樂',
-        trackTitle: '歌曲名稱',
-        artist: '演出者（選填）',
-        audioUrl: '直接音訊網址（MP3、M4A、OGG 等）',
-        add: '加入曲庫',
-        local: '暫時載入本機音樂',
-        library: '我的曲庫',
-        queue: '播放佇列',
-        favorites: '只看收藏',
-        all: '全部歌曲',
-        empty: '曲庫目前是空的',
-        emptyQueue: '播放佇列目前是空的',
-        play: '播放',
-        pause: '暫停',
-        previous: '上一首',
-        next: '下一首',
-        shuffle: '隨機播放',
-        repeatOff: '不循環',
-        repeatAll: '全部循環',
-        repeatOne: '單曲循環',
-        volume: '音量',
-        speed: '速度',
-        addQueue: '加入佇列',
-        playNow: '立即播放',
-        favorite: '收藏',
-        unfavorite: '取消收藏',
-        remove: '移除',
-        moveUp: '往上移',
-        moveDown: '往下移',
-        invalidUrl: '請輸入可用的 http 或 https 音訊網址。',
-        added: '歌曲已加入曲庫。',
-        localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。',
-        playbackFailed: '瀏覽器無法播放這個來源，請確認它是直接音訊網址。',
-        nowPlaying: '正在播放',
-        noTrack: '尚未選擇歌曲',
-        clearQueue: '清空佇列',
+        title: '音樂工作室', subtitle: '播放清單、佇列、收藏、速度與循環控制', addUrl: '加入網址音樂', trackTitle: '歌曲名稱', artist: '演出者（選填）', audioUrl: '直接音訊網址（MP3、M4A、OGG 等）', add: '加入曲庫', local: '暫時載入本機音樂', library: '我的曲庫', queue: '播放佇列', favorites: '只看收藏', all: '全部歌曲', empty: '曲庫目前是空的', emptyQueue: '播放佇列目前是空的', play: '播放', pause: '暫停', previous: '上一首', next: '下一首', shuffle: '隨機播放', repeatOff: '不循環', repeatAll: '全部循環', repeatOne: '單曲循環', volume: '音量', speed: '速度', addQueue: '加入佇列', playNow: '立即播放', favorite: '收藏', unfavorite: '取消收藏', remove: '移除', moveUp: '往上移', moveDown: '往下移', invalidUrl: '請輸入可用的 http 或 https 音訊網址。', added: '歌曲已加入曲庫。', localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。', playbackFailed: '瀏覽器無法播放這個來源，請確認它是直接音訊網址。', nowPlaying: '正在播放', noTrack: '尚未選擇歌曲', clearQueue: '清空佇列',
       }
     : {
-        title: 'Music Studio',
-        subtitle: 'Library, queue, favorites, speed, and repeat controls',
-        addUrl: 'Add audio URL',
-        trackTitle: 'Track title',
-        artist: 'Artist (optional)',
-        audioUrl: 'Direct audio URL (MP3, M4A, OGG, etc.)',
-        add: 'Add to library',
-        local: 'Load local audio temporarily',
-        library: 'Library',
-        queue: 'Play queue',
-        favorites: 'Favorites only',
-        all: 'All tracks',
-        empty: 'Your library is empty',
-        emptyQueue: 'The queue is empty',
-        play: 'Play',
-        pause: 'Pause',
-        previous: 'Previous',
-        next: 'Next',
-        shuffle: 'Shuffle',
-        repeatOff: 'Repeat off',
-        repeatAll: 'Repeat all',
-        repeatOne: 'Repeat one',
-        volume: 'Volume',
-        speed: 'Speed',
-        addQueue: 'Add to queue',
-        playNow: 'Play now',
-        favorite: 'Favorite',
-        unfavorite: 'Remove favorite',
-        remove: 'Remove',
-        moveUp: 'Move up',
-        moveDown: 'Move down',
-        invalidUrl: 'Enter a valid http or https direct audio URL.',
-        added: 'Track added to the library.',
-        localAdded: 'Local audio added temporarily. Select it again after refreshing.',
-        playbackFailed: 'The browser could not play this source. Use a direct audio URL.',
-        nowPlaying: 'Now playing',
-        noTrack: 'No track selected',
-        clearQueue: 'Clear queue',
+        title: 'Music Studio', subtitle: 'Library, queue, favorites, speed, and repeat controls', addUrl: 'Add audio URL', trackTitle: 'Track title', artist: 'Artist (optional)', audioUrl: 'Direct audio URL (MP3, M4A, OGG, etc.)', add: 'Add to library', local: 'Load local audio temporarily', library: 'Library', queue: 'Play queue', favorites: 'Favorites only', all: 'All tracks', empty: 'Your library is empty', emptyQueue: 'The queue is empty', play: 'Play', pause: 'Pause', previous: 'Previous', next: 'Next', shuffle: 'Shuffle', repeatOff: 'Repeat off', repeatAll: 'Repeat all', repeatOne: 'Repeat one', volume: 'Volume', speed: 'Speed', addQueue: 'Add to queue', playNow: 'Play now', favorite: 'Favorite', unfavorite: 'Remove favorite', remove: 'Remove', moveUp: 'Move up', moveDown: 'Move down', invalidUrl: 'Enter a valid http or https direct audio URL.', added: 'Track added to the library.', localAdded: 'Local audio added temporarily. Select it again after refreshing.', playbackFailed: 'The browser could not play this source. Use a direct audio URL.', nowPlaying: 'Now playing', noTrack: 'No track selected', clearQueue: 'Clear queue',
       }
 
   const libraryKey = storageKey(userId, 'library')
   const queueKey = storageKey(userId, 'queue')
   const settingsKey = storageKey(userId, 'settings')
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const temporaryUrlsRef = useRef<Set<string>>(new Set())
+  const autoPlayRef = useRef(false)
 
-  const [tracks, setTracks] = useState<MusicTrack[]>(() => readJson<MusicTrack[]>(libraryKey, []))
-  const [queue, setQueue] = useState<string[]>(() => readJson<string[]>(queueKey, []))
-  const [currentId, setCurrentId] = useState<string | null>(() => readJson<string | null>(storageKey(userId, 'current'), null))
+  const [tracks, setTracks] = useState<MusicTrack[]>(() => readJson(libraryKey, []))
+  const [queue, setQueue] = useState<string[]>(() => readJson(queueKey, []))
+  const [currentId, setCurrentId] = useState<string | null>(() => readJson(storageKey(userId, 'current'), null))
   const initialSettings = readJson<{ volume: number; speed: number; repeat: RepeatMode; shuffle: boolean }>(settingsKey, {
     volume: 0.72,
     speed: 1,
@@ -150,17 +78,11 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   const currentTrack = tracks.find((track) => track.id === currentId) ?? null
-  const visibleTracks = useMemo(
-    () => tracks.filter((track) => !favoritesOnly || track.favorite),
-    [favoritesOnly, tracks],
-  )
-  const queuedTracks = queue
-    .map((id) => tracks.find((track) => track.id === id))
-    .filter((track): track is MusicTrack => Boolean(track))
+  const visibleTracks = useMemo(() => tracks.filter((track) => !favoritesOnly || track.favorite), [favoritesOnly, tracks])
+  const queuedTracks = queue.map((id) => tracks.find((track) => track.id === id)).filter((track): track is MusicTrack => Boolean(track))
 
   useEffect(() => {
-    const persistentTracks = tracks.filter((track) => !track.temporary)
-    window.localStorage.setItem(libraryKey, JSON.stringify(persistentTracks))
+    window.localStorage.setItem(libraryKey, JSON.stringify(tracks.filter((track) => !track.temporary)))
   }, [libraryKey, tracks])
 
   useEffect(() => {
@@ -184,6 +106,14 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   }, [speed, volume])
 
   useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !currentTrack || !autoPlayRef.current) return
+    autoPlayRef.current = false
+    audio.load()
+    void audio.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
+  }, [currentTrack, copy.playbackFailed, onNotice])
+
+  useEffect(() => {
     if (!currentTrack || !('mediaSession' in navigator)) return
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.title,
@@ -193,15 +123,18 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   }, [currentTrack])
 
   useEffect(() => () => {
-    tracks.filter((track) => track.temporary).forEach((track) => URL.revokeObjectURL(track.url))
-  }, [tracks])
+    temporaryUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    temporaryUrlsRef.current.clear()
+  }, [])
 
   const playTrack = async (track: MusicTrack) => {
-    setCurrentId(track.id)
     setQueue((current) => current.includes(track.id) ? current : [...current, track.id])
-    window.setTimeout(() => {
-      void audioRef.current?.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
-    }, 0)
+    if (currentId === track.id && audioRef.current) {
+      await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
+      return
+    }
+    autoPlayRef.current = true
+    setCurrentId(track.id)
   }
 
   const togglePlay = async () => {
@@ -223,10 +156,11 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   const selectNext = (direction: 1 | -1) => {
     if (queue.length === 0) return
     const currentIndex = Math.max(0, queue.indexOf(currentId ?? ''))
-    let nextIndex: number
+    let nextIndex = currentIndex
     if (shuffle && queue.length > 1) {
-      do nextIndex = Math.floor(Math.random() * queue.length)
-      while (nextIndex === currentIndex)
+      do {
+        nextIndex = Math.floor(Math.random() * queue.length)
+      } while (nextIndex === currentIndex)
     } else {
       nextIndex = currentIndex + direction
       if (nextIndex >= queue.length) nextIndex = repeat === 'all' ? 0 : queue.length - 1
@@ -238,7 +172,8 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
 
   const onEnded = () => {
     if (repeat === 'one') {
-      audioRef.current?.play().catch(() => onNotice(copy.playbackFailed))
+      if (audioRef.current) audioRef.current.currentTime = 0
+      void audioRef.current?.play().catch(() => onNotice(copy.playbackFailed))
       return
     }
     const currentIndex = queue.indexOf(currentId ?? '')
@@ -251,7 +186,8 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
 
   const addUrlTrack = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
     const title = String(form.get('title') ?? '').trim()
     const artist = String(form.get('artist') ?? '').trim()
     const urlValue = String(form.get('url') ?? '').trim()
@@ -261,7 +197,7 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
       const track: MusicTrack = { id: createId(), title, artist, url: url.toString(), favorite: false }
       setTracks((current) => [...current, track])
       setQueue((current) => [...current, track.id])
-      event.currentTarget.reset()
+      formElement.reset()
       onNotice(copy.added)
     } catch {
       onNotice(copy.invalidUrl)
@@ -271,14 +207,11 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   const addLocalTracks = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     if (files.length === 0) return
-    const additions = files.map<MusicTrack>((file) => ({
-      id: createId(),
-      title: file.name.replace(/\.[^.]+$/, ''),
-      artist: '',
-      url: URL.createObjectURL(file),
-      favorite: false,
-      temporary: true,
-    }))
+    const additions = files.map<MusicTrack>((file) => {
+      const url = URL.createObjectURL(file)
+      temporaryUrlsRef.current.add(url)
+      return { id: createId(), title: file.name.replace(/\.[^.]+$/, ''), artist: '', url, favorite: false, temporary: true }
+    })
     setTracks((current) => [...current, ...additions])
     setQueue((current) => [...current, ...additions.map((track) => track.id)])
     event.target.value = ''
@@ -286,7 +219,10 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
   }
 
   const removeTrack = (track: MusicTrack) => {
-    if (track.temporary) URL.revokeObjectURL(track.url)
+    if (track.temporary) {
+      URL.revokeObjectURL(track.url)
+      temporaryUrlsRef.current.delete(track.url)
+    }
     setTracks((current) => current.filter((item) => item.id !== track.id))
     setQueue((current) => current.filter((id) => id !== track.id))
     if (currentId === track.id) {
@@ -322,24 +258,13 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
       />
 
       <header className="music-studio-head">
-        <div>
-          <p className="eyebrow">BUBBLE AUDIO</p>
-          <h2>{copy.title}</h2>
-          <p>{copy.subtitle}</p>
-        </div>
-        <label className="local-audio-button">
-          <input type="file" accept="audio/*" multiple onChange={addLocalTracks} />
-          ＋ {copy.local}
-        </label>
+        <div><p className="eyebrow">BUBBLE AUDIO</p><h2>{copy.title}</h2><p>{copy.subtitle}</p></div>
+        <label className="local-audio-button"><input type="file" accept="audio/*" multiple onChange={addLocalTracks} />＋ {copy.local}</label>
       </header>
 
       <div className="music-now-playing">
         <div className="album-orb" aria-hidden="true"><span>♫</span></div>
-        <div className="now-playing-copy">
-          <p>{copy.nowPlaying}</p>
-          <strong>{currentTrack?.title ?? copy.noTrack}</strong>
-          <span>{currentTrack?.artist || 'Bubble Space'}</span>
-        </div>
+        <div className="now-playing-copy"><p>{copy.nowPlaying}</p><strong>{currentTrack?.title ?? copy.noTrack}</strong><span>{currentTrack?.artist || 'Bubble Space'}</span></div>
         <div className="transport-controls">
           <button type="button" aria-label={copy.previous} title={copy.previous} onClick={() => selectNext(-1)}>⏮</button>
           <button className="play-toggle" type="button" aria-label={isPlaying ? copy.pause : copy.play} onClick={() => void togglePlay()}>{isPlaying ? 'Ⅱ' : '▶'}</button>
@@ -347,18 +272,11 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
         </div>
         <div className="music-timeline">
           <span>{formatTime(progress)}</span>
-          <input
-            type="range"
-            min="0"
-            max={Math.max(duration, 1)}
-            step="0.1"
-            value={Math.min(progress, Math.max(duration, 1))}
-            onChange={(event) => {
-              const value = Number(event.target.value)
-              setProgress(value)
-              if (audioRef.current) audioRef.current.currentTime = value
-            }}
-          />
+          <input type="range" min="0" max={Math.max(duration, 1)} step="0.1" value={Math.min(progress, Math.max(duration, 1))} onChange={(event) => {
+            const value = Number(event.target.value)
+            setProgress(value)
+            if (audioRef.current) audioRef.current.currentTime = value
+          }} />
           <span>{formatTime(duration)}</span>
         </div>
         <div className="music-control-grid">
@@ -371,21 +289,13 @@ export function MusicStudio({ language, userId, onNotice }: MusicStudioProps) {
 
       <div className="music-columns">
         <section className="music-panel library-panel">
-          <div className="music-panel-head">
-            <h3>{copy.library}</h3>
-            <div className="music-filter-tabs">
-              <button className={!favoritesOnly ? 'active' : ''} type="button" onClick={() => setFavoritesOnly(false)}>{copy.all}</button>
-              <button className={favoritesOnly ? 'active' : ''} type="button" onClick={() => setFavoritesOnly(true)}>♥ {copy.favorites}</button>
-            </div>
-          </div>
-
+          <div className="music-panel-head"><h3>{copy.library}</h3><div className="music-filter-tabs"><button className={!favoritesOnly ? 'active' : ''} type="button" onClick={() => setFavoritesOnly(false)}>{copy.all}</button><button className={favoritesOnly ? 'active' : ''} type="button" onClick={() => setFavoritesOnly(true)}>♥ {copy.favorites}</button></div></div>
           <form className="audio-url-form" onSubmit={addUrlTrack}>
             <input name="title" required maxLength={80} placeholder={copy.trackTitle} />
             <input name="artist" maxLength={80} placeholder={copy.artist} />
             <input name="url" required inputMode="url" placeholder={copy.audioUrl} />
             <button className="primary-button" type="submit">＋ {copy.add}</button>
           </form>
-
           <div className="music-track-list">
             {visibleTracks.length === 0 ? <div className="music-empty">{copy.empty}</div> : null}
             {visibleTracks.map((track) => (
