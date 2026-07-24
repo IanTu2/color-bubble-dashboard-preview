@@ -28,7 +28,7 @@ type TodoMode = 'active' | 'completed'
 type PanelMode = 'add' | 'search'
 type RangeFilter = 0 | 2 | 7 | 30 | 'all'
 
-function shortTime(value: string | null) {
+function shortTime(value: string | null | undefined) {
   return value ? value.slice(0, 5) : '23:59'
 }
 
