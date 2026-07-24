@@ -55,7 +55,7 @@ export async function loadTodos(client: SupabaseClient, userId: string) {
   }
 
   return {
-    todos: (legacy.data ?? []).map((todo) => normalizeLegacyTodo(todo as Record<string, unknown>)),
+    todos: (legacy.data ?? []).map((todo: Record<string, unknown>) => normalizeLegacyTodo(todo)),
     extendedSchema: false,
     error: null,
   }
