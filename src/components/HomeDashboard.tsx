@@ -1,9 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../lib/supabase'
 import type { Language } from '../types'
 
 type HomeDashboardProps = {
   language: Language
   loggedIn: boolean
+  userId?: string
+}
+
+type Todo = {
+  id: string | number
+  title: string
+  due_date: string
+  completed: boolean
 }
 
 function getCalendarDays(now: Date) {
@@ -24,13 +33,50 @@ function getCalendarDays(now: Date) {
   return cells
 }
 
-export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
+function dateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps) {
   const [now, setNow] = useState(() => new Date())
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [todoLoading, setTodoLoading] = useState(false)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    if (!loggedIn || !userId) {
+      setTodos([])
+      setTodoLoading(false)
+      return () => {
+        mounted = false
+      }
+    }
+
+    setTodoLoading(true)
+    void supabase
+      .from('todos')
+      .select('id,title,due_date,completed')
+      .eq('user_id', userId)
+      .order('due_date', { ascending: true })
+      .then(({ data, error }) => {
+        if (!mounted) return
+        setTodos(error ? [] : ((data ?? []) as Todo[]))
+        setTodoLoading(false)
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [loggedIn, userId])
 
   const locale = language === 'zh' ? 'zh-TW' : 'en-US'
   const calendarDays = useMemo(() => getCalendarDays(now), [now])
@@ -38,6 +84,17 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
   const monthLabel = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(now)
   const dateLabel = new Intl.DateTimeFormat(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now)
   const timeLabel = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hour12: false }).format(now)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const activeTodos = todos.filter((todo) => !todo.completed)
+  const counts = [0, 2, 7, 30].map((days) =>
+    activeTodos.filter((todo) => {
+      const due = new Date(`${todo.due_date}T00:00:00`)
+      const difference = Math.round((due.getTime() - today.getTime()) / 86400000)
+      return difference >= 0 && difference <= days
+    }).length,
+  )
+  const upcomingTodos = activeTodos.slice(0, 3)
+  const taskDates = new Set(todos.map((todo) => todo.due_date))
   const copy =
     language === 'zh'
       ? {
@@ -46,9 +103,10 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
           calendar: '月曆',
           todo: '待辦事項',
           upcoming: '即將到來',
-          preview: '登入後功能預覽資料',
-          tasks: ['整理 React 架構', '確認測試站部署', '規劃登入模組'],
-          periods: ['今天', '本週', '本月', '稍後'],
+          dashboard: '登入後功能',
+          periods: ['今天', '兩天', '七天', '30天'],
+          loading: '載入待辦中…',
+          empty: '目前沒有待辦事項',
         }
       : {
           welcome: loggedIn ? 'Welcome back to your personal space' : 'Welcome to your personal space',
@@ -56,9 +114,10 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
           calendar: 'Calendar',
           todo: 'To-do',
           upcoming: 'Upcoming',
-          preview: 'Signed-in feature preview data',
-          tasks: ['Organize React structure', 'Verify preview deployment', 'Plan account module'],
-          periods: ['Today', 'Week', 'Month', 'Later'],
+          dashboard: 'Signed-in features',
+          periods: ['Today', '2 days', '7 days', '30 days'],
+          loading: 'Loading to-dos…',
+          empty: 'No to-dos yet',
         }
 
   return (
@@ -75,7 +134,7 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
       </section>
 
       {loggedIn ? (
-        <aside className="member-dashboard" aria-label={copy.preview}>
+        <aside className="member-dashboard" aria-label={copy.dashboard}>
           <article className="dashboard-card calendar-card">
             <div className="card-head">
               <div>
@@ -88,11 +147,13 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
               {weekdays.map((weekday, index) => (
                 <span className="weekday" key={`${weekday}-${index}`}>{weekday}</span>
               ))}
-              {calendarDays.map((day, index) => (
-                <span className={day === now.getDate() ? 'today' : ''} key={`${day ?? 'blank'}-${index}`}>
-                  {day ?? ''}
-                </span>
-              ))}
+              {calendarDays.map((day, index) => {
+                const currentDate = day ? dateKey(new Date(now.getFullYear(), now.getMonth(), day)) : ''
+                const classNames = [day === now.getDate() ? 'today' : '', currentDate && taskDates.has(currentDate) ? 'has-task' : '']
+                  .filter(Boolean)
+                  .join(' ')
+                return <span className={classNames} key={`${day ?? 'blank'}-${index}`}>{day ?? ''}</span>
+              })}
             </div>
           </article>
 
@@ -105,7 +166,7 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
               <span className="preview-chip">V2</span>
             </div>
             <div className="todo-buckets">
-              {[2, 4, 7, 1].map((count, index) => (
+              {counts.map((count, index) => (
                 <div className="todo-bucket" key={copy.periods[index]}>
                   <strong>{count}</strong>
                   <span>{copy.periods[index]}</span>
@@ -113,13 +174,17 @@ export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
               ))}
             </div>
             <div className="todo-preview">
-              {copy.tasks.map((task, index) => (
-                <div className="todo-row" key={task}>
-                  <span className="todo-check" aria-hidden="true" />
-                  <span>{task}</span>
-                  <time>{index === 0 ? '10:00' : index === 1 ? '14:30' : '18:00'}</time>
-                </div>
-              ))}
+              {todoLoading ? <div className="empty-state">{copy.loading}</div> : null}
+              {!todoLoading && upcomingTodos.length === 0 ? <div className="empty-state">{copy.empty}</div> : null}
+              {!todoLoading
+                ? upcomingTodos.map((todo) => (
+                    <div className="todo-row" key={todo.id}>
+                      <span className="todo-check" aria-hidden="true" />
+                      <span>{todo.title}</span>
+                      <time>{todo.due_date.slice(5).replace('-', '/')}</time>
+                    </div>
+                  ))
+                : null}
             </div>
           </article>
         </aside>
