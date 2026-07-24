@@ -1,5 +1,5 @@
 import type { Language } from '../types'
-import type { WorkspacePanel } from './Workspace'
+import type { DesktopAppKind } from './DesktopWorkspace'
 
 type SideDrawerProps = {
   language: Language
@@ -9,7 +9,7 @@ type SideDrawerProps = {
   onClose: () => void
   onOpenSettings: () => void
   onOpenAuth: () => void
-  onOpenWorkspace: (panel: WorkspacePanel) => void
+  onOpenDesktopApp: (app: DesktopAppKind) => void
 }
 
 export function SideDrawer({
@@ -20,34 +20,36 @@ export function SideDrawer({
   onClose,
   onOpenSettings,
   onOpenAuth,
-  onOpenWorkspace,
+  onOpenDesktopApp,
 }: SideDrawerProps) {
   const copy = language === 'zh'
     ? {
         menu: '主要選單',
         close: '關閉選單',
-        workspace: '工作區',
+        workspace: '工作視窗',
         notes: '記事本',
-        search: '搜尋',
-        music: '音樂工作室',
+        search: '新增搜尋視窗',
+        musicSection: '背景工具',
+        music: '音樂播放器',
         learning: '學習',
         english: '英文',
         math: '數學',
-        guestNote: '登入後即可使用工作區、學習選單、月曆與待辦事項。',
+        guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊',
         settings: '設定',
       }
     : {
         menu: 'Main menu',
         close: 'Close menu',
-        workspace: 'Workspace',
+        workspace: 'Work windows',
         notes: 'Notes',
-        search: 'Search',
-        music: 'Music Studio',
+        search: 'New search window',
+        musicSection: 'Background tools',
+        music: 'Music player',
         learning: 'Learning',
         english: 'English',
         math: 'Math',
-        guestNote: 'Sign in to unlock the workspace, learning, calendar, and to-dos.',
+        guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register',
         settings: 'Settings',
       }
@@ -57,9 +59,9 @@ export function SideDrawer({
     onOpenAuth()
   }
 
-  const openWorkspace = (panel: WorkspacePanel) => {
+  const openDesktopApp = (app: DesktopAppKind) => {
     onClose()
-    onOpenWorkspace(panel)
+    onOpenDesktopApp(app)
   }
 
   return (
@@ -90,14 +92,18 @@ export function SideDrawer({
           <>
             <nav className="member-nav" aria-label={copy.workspace}>
               <p className="drawer-section-label">{copy.workspace}</p>
-              <button className="nav-single" type="button" onClick={() => openWorkspace('notes')}>
+              <button className="nav-single" type="button" onClick={() => openDesktopApp('notes')}>
                 <span>✎</span>{copy.notes}<small>Auto save</small>
               </button>
-              <button className="nav-single" type="button" onClick={() => openWorkspace('search')}>
-                <span>⌕</span>{copy.search}<small>Web</small>
+              <button className="nav-single" type="button" onClick={() => openDesktopApp('search')}>
+                <span>⌕＋</span>{copy.search}<small>Multi-window</small>
               </button>
-              <button className="nav-single" type="button" onClick={() => openWorkspace('music')}>
-                <span>♫</span>{copy.music}<small>Studio</small>
+            </nav>
+
+            <nav className="member-nav learning-nav" aria-label={copy.musicSection}>
+              <p className="drawer-section-label">{copy.musicSection}</p>
+              <button className="nav-single" type="button" onClick={() => openDesktopApp('music')}>
+                <span>♫</span>{copy.music}<small>Singleton</small>
               </button>
             </nav>
 
