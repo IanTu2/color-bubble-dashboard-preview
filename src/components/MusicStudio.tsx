@@ -11,6 +11,7 @@ type MusicTrack = {
   url: string
   favorite: boolean
   temporary?: boolean
+  source?: 'audio' | 'youtube'
 }
 
 type MusicStudioProps = {
@@ -46,6 +47,36 @@ function formatTime(value: number) {
   return `${minutes}:${seconds}`
 }
 
+function extractYouTubeId(value: string) {
+  try {
+    const url = new URL(value)
+    const host = url.hostname.replace(/^www\./, '').toLowerCase()
+    let candidate = ''
+
+    if (host === 'youtu.be') {
+      candidate = url.pathname.split('/').filter(Boolean)[0] ?? ''
+    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com') {
+      if (url.pathname === '/watch') {
+        candidate = url.searchParams.get('v') ?? ''
+      } else {
+        const parts = url.pathname.split('/').filter(Boolean)
+        if (['embed', 'shorts', 'live'].includes(parts[0] ?? '')) candidate = parts[1] ?? ''
+      }
+    }
+
+    return /^[A-Za-z0-9_-]{6,20}$/.test(candidate) ? candidate : null
+  } catch {
+    return null
+  }
+}
+
+function trackSource(track: MusicTrack | null) {
+  if (!track) return { type: 'none' as const, youtubeId: null }
+  const youtubeId = extractYouTubeId(track.url)
+  if (track.source === 'youtube' || youtubeId) return { type: 'youtube' as const, youtubeId }
+  return { type: 'audio' as const, youtubeId: null }
+}
+
 export function MusicStudio({
   language,
   userId,
@@ -56,16 +87,18 @@ export function MusicStudio({
 }: MusicStudioProps) {
   const copy = language === 'zh'
     ? {
-        title: '音樂工作室', subtitle: '播放清單、佇列、收藏、速度與循環控制', addUrl: '加入網址音樂', trackTitle: '歌曲名稱', artist: '演出者（選填）', audioUrl: '直接音訊網址（MP3、M4A、OGG 等）', add: '加入曲庫', local: '暫時載入本機音樂', library: '我的曲庫', queue: '播放佇列', favorites: '只看收藏', all: '全部歌曲', empty: '曲庫目前是空的', emptyQueue: '播放佇列目前是空的', play: '播放', pause: '暫停', previous: '上一首', next: '下一首', shuffle: '隨機播放', repeatOff: '不循環', repeatAll: '全部循環', repeatOne: '單曲循環', volume: '音量', speed: '速度', addQueue: '加入佇列', playNow: '立即播放', favorite: '收藏', unfavorite: '取消收藏', remove: '移除', moveUp: '往上移', moveDown: '往下移', invalidUrl: '請輸入可用的 http 或 https 音訊網址。', added: '歌曲已加入曲庫。', localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。', playbackFailed: '瀏覽器無法播放這個來源，請確認它是直接音訊網址。', nowPlaying: '正在播放', noTrack: '尚未選擇歌曲', clearQueue: '清空佇列', expand: '展開音樂工作室', collapse: '收合為小型播放器',
+        title: '音樂工作室', subtitle: '播放清單、佇列、收藏、速度與循環控制', addUrl: '加入網址音樂', trackTitle: '歌曲名稱', artist: '演出者（選填）', audioUrl: '直接音訊或 YouTube 網址', add: '加入曲庫', local: '暫時載入本機音樂', library: '我的曲庫', queue: '播放佇列', favorites: '只看收藏', all: '全部歌曲', empty: '曲庫目前是空的', emptyQueue: '播放佇列目前是空的', play: '播放', pause: '暫停', previous: '上一首', next: '下一首', shuffle: '隨機播放', repeatOff: '不循環', repeatAll: '全部循環', repeatOne: '單曲循環', volume: '音量', speed: '速度', addQueue: '加入佇列', playNow: '立即播放', favorite: '收藏', unfavorite: '取消收藏', remove: '移除', moveUp: '往上移', moveDown: '往下移', invalidUrl: '請貼上有效的 YouTube 網址，或可直接播放的 MP3、M4A、OGG 音訊網址。', added: '歌曲已加入曲庫。', localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。', playbackFailed: '這個來源無法播放。YouTube 請貼影片網址；其他來源必須是可直接播放的音訊檔案網址。', nowPlaying: '正在播放', noTrack: '尚未選擇歌曲', clearQueue: '清空佇列', expand: '開啟音樂工作室', collapse: '收合音樂工作室', sourceHint: '支援 YouTube 影片網址，以及可直接播放的 MP3、M4A、OGG 等音訊網址。一般網頁網址無法播放。', youtube: 'YouTube', directAudio: '音訊', openPlayer: '開啟音樂播放器',
       }
     : {
-        title: 'Music Studio', subtitle: 'Library, queue, favorites, speed, and repeat controls', addUrl: 'Add audio URL', trackTitle: 'Track title', artist: 'Artist (optional)', audioUrl: 'Direct audio URL (MP3, M4A, OGG, etc.)', add: 'Add to library', local: 'Load local audio temporarily', library: 'Library', queue: 'Play queue', favorites: 'Favorites only', all: 'All tracks', empty: 'Your library is empty', emptyQueue: 'The queue is empty', play: 'Play', pause: 'Pause', previous: 'Previous', next: 'Next', shuffle: 'Shuffle', repeatOff: 'Repeat off', repeatAll: 'Repeat all', repeatOne: 'Repeat one', volume: 'Volume', speed: 'Speed', addQueue: 'Add to queue', playNow: 'Play now', favorite: 'Favorite', unfavorite: 'Remove favorite', remove: 'Remove', moveUp: 'Move up', moveDown: 'Move down', invalidUrl: 'Enter a valid http or https direct audio URL.', added: 'Track added to the library.', localAdded: 'Local audio added temporarily. Select it again after refreshing.', playbackFailed: 'The browser could not play this source. Use a direct audio URL.', nowPlaying: 'Now playing', noTrack: 'No track selected', clearQueue: 'Clear queue', expand: 'Expand music studio', collapse: 'Collapse to compact player',
+        title: 'Music Studio', subtitle: 'Library, queue, favorites, speed, and repeat controls', addUrl: 'Add audio URL', trackTitle: 'Track title', artist: 'Artist (optional)', audioUrl: 'Direct audio or YouTube URL', add: 'Add to library', local: 'Load local audio temporarily', library: 'Library', queue: 'Play queue', favorites: 'Favorites only', all: 'All tracks', empty: 'Your library is empty', emptyQueue: 'The queue is empty', play: 'Play', pause: 'Pause', previous: 'Previous', next: 'Next', shuffle: 'Shuffle', repeatOff: 'Repeat off', repeatAll: 'Repeat all', repeatOne: 'Repeat one', volume: 'Volume', speed: 'Speed', addQueue: 'Add to queue', playNow: 'Play now', favorite: 'Favorite', unfavorite: 'Remove favorite', remove: 'Remove', moveUp: 'Move up', moveDown: 'Move down', invalidUrl: 'Paste a valid YouTube URL or a directly playable MP3, M4A, or OGG URL.', added: 'Track added to the library.', localAdded: 'Local audio added temporarily. Select it again after refreshing.', playbackFailed: 'This source could not be played. Use a YouTube video URL or a directly playable audio file URL.', nowPlaying: 'Now playing', noTrack: 'No track selected', clearQueue: 'Clear queue', expand: 'Open music studio', collapse: 'Collapse music studio', sourceHint: 'Supports YouTube video URLs and directly playable MP3, M4A, or OGG URLs. Ordinary webpage URLs cannot play.', youtube: 'YouTube', directAudio: 'Audio', openPlayer: 'Open music player',
       }
 
   const libraryKey = storageKey(userId, 'library')
   const queueKey = storageKey(userId, 'queue')
   const settingsKey = storageKey(userId, 'settings')
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const youtubeRef = useRef<HTMLIFrameElement | null>(null)
+  const youtubeReadyRef = useRef(false)
   const temporaryUrlsRef = useRef<Set<string>>(new Set())
   const autoPlayRef = useRef(false)
 
@@ -88,8 +121,27 @@ export function MusicStudio({
   const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   const currentTrack = tracks.find((track) => track.id === currentId) ?? null
+  const currentSource = trackSource(currentTrack)
+  const currentYouTubeId = currentSource.youtubeId
   const visibleTracks = useMemo(() => tracks.filter((track) => !favoritesOnly || track.favorite), [favoritesOnly, tracks])
   const queuedTracks = queue.map((id) => tracks.find((track) => track.id === id)).filter((track): track is MusicTrack => Boolean(track))
+
+  const sendYouTubeCommand = (func: 'playVideo' | 'pauseVideo' | 'stopVideo') => {
+    youtubeRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: 'command', func, args: [] }),
+      'https://www.youtube.com',
+    )
+  }
+
+  const playCurrentYouTube = () => {
+    if (youtubeReadyRef.current) {
+      sendYouTubeCommand('playVideo')
+      autoPlayRef.current = false
+    } else {
+      autoPlayRef.current = true
+    }
+    setIsPlaying(true)
+  }
 
   useEffect(() => {
     window.localStorage.setItem(libraryKey, JSON.stringify(tracks.filter((track) => !track.temporary)))
@@ -116,12 +168,23 @@ export function MusicStudio({
   }, [speed, volume])
 
   useEffect(() => {
+    if (currentSource.type === 'youtube') {
+      audioRef.current?.pause()
+      youtubeReadyRef.current = false
+      setProgress(0)
+      setDuration(0)
+      return
+    }
+
     const audio = audioRef.current
     if (!audio || !currentTrack || !autoPlayRef.current) return
     autoPlayRef.current = false
     audio.load()
-    void audio.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
-  }, [currentTrack, copy.playbackFailed, onNotice])
+    void audio.play().then(() => setIsPlaying(true)).catch(() => {
+      setIsPlaying(false)
+      onNotice(copy.playbackFailed)
+    })
+  }, [currentTrack, currentSource.type, copy.playbackFailed, onNotice])
 
   useEffect(() => {
     if (!currentTrack || !('mediaSession' in navigator)) return
@@ -139,24 +202,49 @@ export function MusicStudio({
 
   const playTrack = async (track: MusicTrack) => {
     setQueue((current) => current.includes(track.id) ? current : [...current, track.id])
-    if (currentId === track.id && audioRef.current) {
-      await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
+    const source = trackSource(track)
+
+    if (currentId === track.id) {
+      if (source.type === 'youtube') {
+        playCurrentYouTube()
+      } else if (audioRef.current) {
+        await audioRef.current.play().then(() => setIsPlaying(true)).catch(() => {
+          setIsPlaying(false)
+          onNotice(copy.playbackFailed)
+        })
+      }
       return
     }
+
     autoPlayRef.current = true
+    setIsPlaying(false)
     setCurrentId(track.id)
   }
 
   const togglePlay = async () => {
-    const audio = audioRef.current
-    if (!audio) return
     if (!currentTrack) {
       const firstTrack = queuedTracks[0] ?? tracks[0]
       if (firstTrack) await playTrack(firstTrack)
       return
     }
+
+    if (currentSource.type === 'youtube') {
+      if (isPlaying) {
+        sendYouTubeCommand('pauseVideo')
+        setIsPlaying(false)
+      } else {
+        playCurrentYouTube()
+      }
+      return
+    }
+
+    const audio = audioRef.current
+    if (!audio) return
     if (audio.paused) {
-      await audio.play().then(() => setIsPlaying(true)).catch(() => onNotice(copy.playbackFailed))
+      await audio.play().then(() => setIsPlaying(true)).catch(() => {
+        setIsPlaying(false)
+        onNotice(copy.playbackFailed)
+      })
     } else {
       audio.pause()
       setIsPlaying(false)
@@ -204,7 +292,8 @@ export function MusicStudio({
     try {
       const url = new URL(urlValue)
       if (!['http:', 'https:'].includes(url.protocol)) throw new Error('protocol')
-      const track: MusicTrack = { id: createId(), title, artist, url: url.toString(), favorite: false }
+      const source = extractYouTubeId(url.toString()) ? 'youtube' : 'audio'
+      const track: MusicTrack = { id: createId(), title, artist, url: url.toString(), favorite: false, source }
       setTracks((current) => [...current, track])
       setQueue((current) => [...current, track.id])
       formElement.reset()
@@ -220,7 +309,7 @@ export function MusicStudio({
     const additions = files.map<MusicTrack>((file) => {
       const url = URL.createObjectURL(file)
       temporaryUrlsRef.current.add(url)
-      return { id: createId(), title: file.name.replace(/\.[^.]+$/, ''), artist: '', url, favorite: false, temporary: true }
+      return { id: createId(), title: file.name.replace(/\.[^.]+$/, ''), artist: '', url, favorite: false, temporary: true, source: 'audio' }
     })
     setTracks((current) => [...current, ...additions])
     setQueue((current) => [...current, ...additions.map((track) => track.id)])
@@ -237,6 +326,7 @@ export function MusicStudio({
     setQueue((current) => current.filter((id) => id !== track.id))
     if (currentId === track.id) {
       audioRef.current?.pause()
+      sendYouTubeCommand('stopVideo')
       setCurrentId(null)
       setIsPlaying(false)
     }
@@ -253,35 +343,50 @@ export function MusicStudio({
   }
 
   const repeatLabel = repeat === 'one' ? copy.repeatOne : repeat === 'all' ? copy.repeatAll : copy.repeatOff
+  const currentSourceLabel = currentSource.type === 'youtube' ? copy.youtube : copy.directAudio
 
   return (
     <section className={`music-studio music-studio-${mode}`}>
       <audio
         ref={audioRef}
-        src={currentTrack?.url}
+        src={currentSource.type === 'audio' ? currentTrack?.url : undefined}
         onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPause={() => currentSource.type === 'audio' && setIsPlaying(false)}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
         onTimeUpdate={(event) => setProgress(event.currentTarget.currentTime)}
         onEnded={onEnded}
-        onError={() => currentTrack && onNotice(copy.playbackFailed)}
+        onError={() => currentSource.type === 'audio' && currentTrack && onNotice(copy.playbackFailed)}
       />
 
+      {currentYouTubeId ? (
+        <iframe
+          className="music-youtube-frame"
+          ref={youtubeRef}
+          title={`${currentTrack?.title ?? copy.youtube} YouTube player`}
+          src={`https://www.youtube.com/embed/${currentYouTubeId}?enablejsapi=1&playsinline=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          onLoad={() => {
+            youtubeReadyRef.current = true
+            if (autoPlayRef.current) {
+              sendYouTubeCommand('playVideo')
+              autoPlayRef.current = false
+              setIsPlaying(true)
+            }
+          }}
+        />
+      ) : null}
+
       {mode === 'compact' ? (
-        <div className="music-compact-player">
-          <div className={`compact-album-orb${isPlaying ? ' playing' : ''}`} aria-hidden="true">♫</div>
-          <div className="compact-track-copy">
-            <strong>{currentTrack?.title ?? copy.noTrack}</strong>
-            <span>{currentTrack?.artist || 'Bubble Space'}</span>
-          </div>
-          <div className="compact-transport-controls">
-            <button type="button" aria-label={copy.previous} title={copy.previous} onClick={() => selectNext(-1)}>‹</button>
-            <button className="compact-play-toggle" type="button" aria-label={isPlaying ? copy.pause : copy.play} onClick={() => void togglePlay()}>{isPlaying ? 'Ⅱ' : '▶'}</button>
-            <button type="button" aria-label={copy.next} title={copy.next} onClick={() => selectNext(1)}>›</button>
-          </div>
-          <button className="music-expand-button" type="button" aria-label={copy.expand} title={copy.expand} onClick={onExpand}>↗</button>
-          <div className="compact-progress" aria-hidden="true"><span style={{ width: `${duration > 0 ? Math.min(100, (progress / duration) * 100) : 0}%` }} /></div>
-        </div>
+        <button
+          className={`music-orb-launcher${isPlaying ? ' playing' : ''}`}
+          type="button"
+          aria-label={copy.openPlayer}
+          title={currentTrack ? `${copy.openPlayer}：${currentTrack.title}` : copy.openPlayer}
+          onClick={onExpand}
+        >
+          <span aria-hidden="true">♫</span>
+          {isPlaying ? <i aria-hidden="true" /> : null}
+        </button>
       ) : (
         <>
           <header className="music-studio-head">
@@ -294,7 +399,7 @@ export function MusicStudio({
 
           <div className="music-now-playing">
             <div className={`album-orb${isPlaying ? ' playing' : ''}`} aria-hidden="true"><span>♫</span></div>
-            <div className="now-playing-copy"><p>{copy.nowPlaying}</p><strong>{currentTrack?.title ?? copy.noTrack}</strong><span>{currentTrack?.artist || 'Bubble Space'}</span></div>
+            <div className="now-playing-copy"><p>{copy.nowPlaying} · {currentSourceLabel}</p><strong>{currentTrack?.title ?? copy.noTrack}</strong><span>{currentTrack?.artist || 'Bubble Space'}</span></div>
             <div className="transport-controls">
               <button type="button" aria-label={copy.previous} title={copy.previous} onClick={() => selectNext(-1)}>⏮</button>
               <button className="play-toggle" type="button" aria-label={isPlaying ? copy.pause : copy.play} onClick={() => void togglePlay()}>{isPlaying ? 'Ⅱ' : '▶'}</button>
@@ -302,7 +407,7 @@ export function MusicStudio({
             </div>
             <div className="music-timeline">
               <span>{formatTime(progress)}</span>
-              <input type="range" min="0" max={Math.max(duration, 1)} step="0.1" value={Math.min(progress, Math.max(duration, 1))} onChange={(event) => {
+              <input type="range" min="0" max={Math.max(duration, 1)} step="0.1" value={Math.min(progress, Math.max(duration, 1))} disabled={currentSource.type === 'youtube'} onChange={(event) => {
                 const value = Number(event.target.value)
                 setProgress(value)
                 if (audioRef.current) audioRef.current.currentTime = value
@@ -312,8 +417,8 @@ export function MusicStudio({
             <div className="music-control-grid">
               <button className={shuffle ? 'active' : ''} type="button" title={copy.shuffle} onClick={() => setShuffle((value) => !value)}>⤨ {copy.shuffle}</button>
               <button type="button" title={repeatLabel} onClick={() => setRepeat((value) => value === 'off' ? 'all' : value === 'all' ? 'one' : 'off')}>↻ {repeatLabel}</button>
-              <label><span>{copy.volume}</span><input type="range" min="0" max="1" step="0.02" value={volume} onChange={(event) => setVolume(Number(event.target.value))} /></label>
-              <label><span>{copy.speed}</span><select value={speed} onChange={(event) => setSpeed(Number(event.target.value))}><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+              <label><span>{copy.volume}</span><input type="range" min="0" max="1" step="0.02" value={volume} disabled={currentSource.type === 'youtube'} onChange={(event) => setVolume(Number(event.target.value))} /></label>
+              <label><span>{copy.speed}</span><select value={speed} disabled={currentSource.type === 'youtube'} onChange={(event) => setSpeed(Number(event.target.value))}><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
             </div>
           </div>
 
@@ -326,17 +431,21 @@ export function MusicStudio({
                 <input name="url" required inputMode="url" placeholder={copy.audioUrl} />
                 <button className="primary-button" type="submit">＋ {copy.add}</button>
               </form>
+              <p className="audio-source-hint">{copy.sourceHint}</p>
               <div className="music-track-list">
                 {visibleTracks.length === 0 ? <div className="music-empty">{copy.empty}</div> : null}
-                {visibleTracks.map((track) => (
-                  <article className={`music-track-row${track.id === currentId ? ' current' : ''}`} key={track.id}>
-                    <button className="track-play-button" type="button" title={copy.playNow} onClick={() => void playTrack(track)}>▶</button>
-                    <div><strong>{track.title}</strong><span>{track.artist || 'Bubble Space'}{track.temporary ? ' · Local' : ''}</span></div>
-                    <button className={track.favorite ? 'favorite active' : 'favorite'} type="button" title={track.favorite ? copy.unfavorite : copy.favorite} onClick={() => setTracks((current) => current.map((item) => item.id === track.id ? { ...item, favorite: !item.favorite } : item))}>♥</button>
-                    <button type="button" title={copy.addQueue} onClick={() => setQueue((current) => [...current, track.id])}>＋</button>
-                    <button type="button" title={copy.remove} onClick={() => removeTrack(track)}>×</button>
-                  </article>
-                ))}
+                {visibleTracks.map((track) => {
+                  const source = trackSource(track)
+                  return (
+                    <article className={`music-track-row${track.id === currentId ? ' current' : ''}`} key={track.id}>
+                      <button className="track-play-button" type="button" title={copy.playNow} onClick={() => void playTrack(track)}>▶</button>
+                      <div><strong>{track.title}</strong><span>{track.artist || 'Bubble Space'} · {source.type === 'youtube' ? copy.youtube : copy.directAudio}{track.temporary ? ' · Local' : ''}</span></div>
+                      <button className={track.favorite ? 'favorite active' : 'favorite'} type="button" title={track.favorite ? copy.unfavorite : copy.favorite} onClick={() => setTracks((current) => current.map((item) => item.id === track.id ? { ...item, favorite: !item.favorite } : item))}>♥</button>
+                      <button type="button" title={copy.addQueue} onClick={() => setQueue((current) => [...current, track.id])}>＋</button>
+                      <button type="button" title={copy.remove} onClick={() => removeTrack(track)}>×</button>
+                    </article>
+                  )
+                })}
               </div>
             </section>
 
@@ -347,7 +456,7 @@ export function MusicStudio({
                 {queuedTracks.map((track, index) => (
                   <article className={`queue-row${track.id === currentId ? ' current' : ''}`} key={`${track.id}-${index}`}>
                     <button type="button" onClick={() => void playTrack(track)}>{track.id === currentId && isPlaying ? '♫' : index + 1}</button>
-                    <div><strong>{track.title}</strong><span>{track.artist || 'Bubble Space'}</span></div>
+                    <div><strong>{track.title}</strong><span>{track.artist || 'Bubble Space'} · {trackSource(track).type === 'youtube' ? copy.youtube : copy.directAudio}</span></div>
                     <button type="button" title={copy.moveUp} onClick={() => moveQueue(index, -1)}>↑</button>
                     <button type="button" title={copy.moveDown} onClick={() => moveQueue(index, 1)}>↓</button>
                     <button type="button" title={copy.remove} onClick={() => setQueue((current) => current.filter((_, itemIndex) => itemIndex !== index))}>×</button>
