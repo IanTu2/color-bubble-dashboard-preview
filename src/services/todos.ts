@@ -41,7 +41,11 @@ export async function loadTodos(client: SupabaseClient, userId: string) {
     .order('due_date', { ascending: true })
 
   if (!extended.error) {
-    return { todos: (extended.data ?? []) as Todo[], extendedSchema: true, error: null }
+    return {
+      todos: (extended.data as unknown as Todo[]) ?? [],
+      extendedSchema: true,
+      error: null,
+    }
   }
 
   const legacy = await client
@@ -54,8 +58,10 @@ export async function loadTodos(client: SupabaseClient, userId: string) {
     return { todos: [] as Todo[], extendedSchema: false, error: legacy.error }
   }
 
+  const legacyRows = (legacy.data as unknown as Record<string, unknown>[]) ?? []
+
   return {
-    todos: (legacy.data ?? []).map((todo: Record<string, unknown>) => normalizeLegacyTodo(todo)),
+    todos: legacyRows.map((todo) => normalizeLegacyTodo(todo)),
     extendedSchema: false,
     error: null,
   }
@@ -80,10 +86,12 @@ export async function createTodo(
 
   if (result.error) return { todo: null, error: result.error }
 
+  const rawTodo = result.data as unknown
+
   return {
     todo: extendedSchema
-      ? (result.data as Todo)
-      : normalizeLegacyTodo(result.data as Record<string, unknown>),
+      ? (rawTodo as Todo)
+      : normalizeLegacyTodo(rawTodo as Record<string, unknown>),
     error: null,
   }
 }
