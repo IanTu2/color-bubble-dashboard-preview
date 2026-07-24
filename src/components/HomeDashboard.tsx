@@ -3,6 +3,7 @@ import type { Language } from '../types'
 
 type HomeDashboardProps = {
   language: Language
+  loggedIn: boolean
 }
 
 function getCalendarDays(now: Date) {
@@ -23,7 +24,7 @@ function getCalendarDays(now: Date) {
   return cells
 }
 
-export function HomeDashboard({ language }: HomeDashboardProps) {
+export function HomeDashboard({ language, loggedIn }: HomeDashboardProps) {
   const [now, setNow] = useState(() => new Date())
 
   useEffect(() => {
@@ -40,28 +41,28 @@ export function HomeDashboard({ language }: HomeDashboardProps) {
   const copy =
     language === 'zh'
       ? {
-          welcome: '歡迎來到你的個人空間',
+          welcome: loggedIn ? '歡迎回到你的個人空間' : '歡迎來到你的個人空間',
           footer: '讓今天成為有進展的一天',
           calendar: '月曆',
           todo: '待辦事項',
           upcoming: '即將到來',
-          preview: '外框預覽資料',
+          preview: '登入後功能預覽資料',
           tasks: ['整理 React 架構', '確認測試站部署', '規劃登入模組'],
           periods: ['今天', '本週', '本月', '稍後'],
         }
       : {
-          welcome: 'Welcome to your personal space',
+          welcome: loggedIn ? 'Welcome back to your personal space' : 'Welcome to your personal space',
           footer: 'Make today a day of progress',
           calendar: 'Calendar',
           todo: 'To-do',
           upcoming: 'Upcoming',
-          preview: 'Shell preview data',
+          preview: 'Signed-in feature preview data',
           tasks: ['Organize React structure', 'Verify preview deployment', 'Plan account module'],
           periods: ['Today', 'Week', 'Month', 'Later'],
         }
 
   return (
-    <main className="page-shell">
+    <main className={`page-shell${loggedIn ? ' member-layout' : ' guest-layout'}`}>
       <section className="hero-card" aria-label={copy.welcome}>
         <div className="hero-glow" aria-hidden="true" />
         <p className="hero-kicker">{copy.welcome}</p>
@@ -73,54 +74,56 @@ export function HomeDashboard({ language }: HomeDashboardProps) {
         </div>
       </section>
 
-      <aside className="member-dashboard" aria-label={copy.preview}>
-        <article className="dashboard-card calendar-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">{copy.calendar}</p>
-              <h2>{monthLabel}</h2>
+      {loggedIn ? (
+        <aside className="member-dashboard" aria-label={copy.preview}>
+          <article className="dashboard-card calendar-card">
+            <div className="card-head">
+              <div>
+                <p className="eyebrow">{copy.calendar}</p>
+                <h2>{monthLabel}</h2>
+              </div>
+              <span className="preview-chip">V2</span>
             </div>
-            <span className="preview-chip">V2</span>
-          </div>
-          <div className="mini-calendar">
-            {weekdays.map((weekday, index) => (
-              <span className="weekday" key={`${weekday}-${index}`}>{weekday}</span>
-            ))}
-            {calendarDays.map((day, index) => (
-              <span className={day === now.getDate() ? 'today' : ''} key={`${day ?? 'blank'}-${index}`}>
-                {day ?? ''}
-              </span>
-            ))}
-          </div>
-        </article>
+            <div className="mini-calendar">
+              {weekdays.map((weekday, index) => (
+                <span className="weekday" key={`${weekday}-${index}`}>{weekday}</span>
+              ))}
+              {calendarDays.map((day, index) => (
+                <span className={day === now.getDate() ? 'today' : ''} key={`${day ?? 'blank'}-${index}`}>
+                  {day ?? ''}
+                </span>
+              ))}
+            </div>
+          </article>
 
-        <article className="dashboard-card todo-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">{copy.todo}</p>
-              <h2>{copy.upcoming}</h2>
+          <article className="dashboard-card todo-card">
+            <div className="card-head">
+              <div>
+                <p className="eyebrow">{copy.todo}</p>
+                <h2>{copy.upcoming}</h2>
+              </div>
+              <span className="preview-chip">V2</span>
             </div>
-            <span className="preview-chip">V2</span>
-          </div>
-          <div className="todo-buckets">
-            {[2, 4, 7, 1].map((count, index) => (
-              <div className="todo-bucket" key={copy.periods[index]}>
-                <strong>{count}</strong>
-                <span>{copy.periods[index]}</span>
-              </div>
-            ))}
-          </div>
-          <div className="todo-preview">
-            {copy.tasks.map((task, index) => (
-              <div className="todo-row" key={task}>
-                <span className="todo-check" aria-hidden="true" />
-                <span>{task}</span>
-                <time>{index === 0 ? '10:00' : index === 1 ? '14:30' : '18:00'}</time>
-              </div>
-            ))}
-          </div>
-        </article>
-      </aside>
+            <div className="todo-buckets">
+              {[2, 4, 7, 1].map((count, index) => (
+                <div className="todo-bucket" key={copy.periods[index]}>
+                  <strong>{count}</strong>
+                  <span>{copy.periods[index]}</span>
+                </div>
+              ))}
+            </div>
+            <div className="todo-preview">
+              {copy.tasks.map((task, index) => (
+                <div className="todo-row" key={task}>
+                  <span className="todo-check" aria-hidden="true" />
+                  <span>{task}</span>
+                  <time>{index === 0 ? '10:00' : index === 1 ? '14:30' : '18:00'}</time>
+                </div>
+              ))}
+            </div>
+          </article>
+        </aside>
+      ) : null}
     </main>
   )
 }
