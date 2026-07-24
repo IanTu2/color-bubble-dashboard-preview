@@ -115,7 +115,7 @@ function App() {
         onOpenAuth={openAuth}
         onLogout={logout}
       />
-      <HomeDashboard language={language} loggedIn={Boolean(user)} />
+      <HomeDashboard language={language} loggedIn={Boolean(user)} userId={user?.id} />
       <SettingsDialog
         language={language}
         fontScale={fontScale}
