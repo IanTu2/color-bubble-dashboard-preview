@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { MusicStudio } from './MusicStudio'
 import type { Language } from '../types'
@@ -35,7 +35,7 @@ type Geometry = {
 }
 
 type DragState = {
-  type: 'move' | 'resize'
+  mode: 'move' | 'resize'
   startX: number
   startY: number
   geometry: Geometry
@@ -48,6 +48,8 @@ type SearchHistoryItem = {
   engine: SearchEngine
   createdAt: string
 }
+
+const PANELS: WorkspacePanel[] = ['notes', 'search', 'music']
 
 function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
@@ -65,21 +67,12 @@ function readJson<T>(key: string, fallback: T): T {
 function defaultGeometry(): Geometry {
   const width = Math.min(980, Math.max(640, window.innerWidth - 410))
   const height = Math.min(720, Math.max(500, window.innerHeight - 160))
-  return {
-    width,
-    height,
-    x: Math.max(42, (window.innerWidth - width - 280) / 2),
-    y: 90,
-  }
+  return { width, height, x: Math.max(42, (window.innerWidth - width - 280) / 2), y: 90 }
 }
 
 function clampGeometry(value: Geometry): Geometry {
-  const minWidth = 560
-  const minHeight = 420
-  const maxWidth = Math.max(minWidth, window.innerWidth - 32)
-  const maxHeight = Math.max(minHeight, window.innerHeight - 32)
-  const width = Math.min(Math.max(value.width, minWidth), maxWidth)
-  const height = Math.min(Math.max(value.height, minHeight), maxHeight)
+  const width = Math.min(Math.max(value.width, 560), Math.max(560, window.innerWidth - 32))
+  const height = Math.min(Math.max(value.height, 420), Math.max(420, window.innerHeight - 32))
   return {
     width,
     height,
@@ -89,9 +82,7 @@ function clampGeometry(value: Geometry): Geometry {
 }
 
 function panelIcon(panel: WorkspacePanel) {
-  if (panel === 'notes') return '✎'
-  if (panel === 'search') return '⌕'
-  return '♫'
+  return panel === 'notes' ? '✎' : panel === 'search' ? '⌕' : '♫'
 }
 
 export function WorkspaceLauncher({ language, onOpen }: WorkspaceLauncherProps) {
@@ -101,10 +92,10 @@ export function WorkspaceLauncher({ language, onOpen }: WorkspaceLauncherProps) 
 
   return (
     <nav className="workspace-launcher" aria-label={copy.label}>
-      {(['notes', 'search', 'music'] as WorkspacePanel[]).map((panel) => (
-        <button key={panel} type="button" title={copy[panel]} onClick={() => onOpen(panel)}>
-          <span>{panelIcon(panel)}</span>
-          <small>{copy[panel]}</small>
+      {PANELS.map((item) => (
+        <button key={item} type="button" title={copy[item]} onClick={() => onOpen(item)}>
+          <span>{panelIcon(item)}</span>
+          <small>{copy[item]}</small>
         </button>
       ))}
     </nav>
@@ -115,62 +106,26 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
   const geometryKey = `bubble-space-v2-workspace-${userId}-geometry`
   const notesKey = `bubble-space-v2-workspace-${userId}-notes`
   const historyKey = `bubble-space-v2-workspace-${userId}-search-history`
-  const [geometry, setGeometry] = useState<Geometry>(() => clampGeometry(readJson<Geometry>(geometryKey, defaultGeometry())))
+  const [geometry, setGeometry] = useState<Geometry>(() => clampGeometry(readJson(geometryKey, defaultGeometry())))
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [minimized, setMinimized] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const previousGeometry = useRef<Geometry | null>(null)
-  const [notes, setNotes] = useState<Note[]>(() => readJson<Note[]>(notesKey, []))
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => readJson<string | null>(`${notesKey}-selected`, null))
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => readJson<SearchHistoryItem[]>(historyKey, []))
+  const [notes, setNotes] = useState<Note[]>(() => readJson(notesKey, []))
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(() => readJson(`${notesKey}-selected`, null))
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => readJson(historyKey, []))
   const [engine, setEngine] = useState<SearchEngine>('google')
 
   const copy = language === 'zh'
     ? {
-        workspace: '工作區',
-        notes: '記事本',
-        search: '搜尋',
-        music: '音樂',
-        minimize: '最小化',
-        maximize: '最大化',
-        restore: '還原',
-        close: '關閉',
-        newNote: '新增筆記',
-        untitled: '未命名筆記',
-        noteTitle: '筆記標題',
-        noteBody: '開始輸入內容…',
-        deleteNote: '刪除筆記',
-        emptyNotes: '建立第一份筆記開始使用',
-        searchTitle: '網頁搜尋',
-        searchHint: '搜尋結果會安全地在新分頁開啟；搜尋紀錄保留在這個瀏覽器中。',
-        query: '輸入搜尋關鍵字',
-        go: '搜尋',
-        history: '搜尋紀錄',
-        clear: '清除紀錄',
-        noHistory: '尚無搜尋紀錄',
+        workspace: '工作區', notes: '記事本', search: '搜尋', music: '音樂', minimize: '最小化', maximize: '最大化', restore: '還原', close: '關閉',
+        newNote: '新增筆記', untitled: '未命名筆記', noteTitle: '筆記標題', noteBody: '開始輸入內容…', deleteNote: '刪除筆記', emptyNotes: '建立第一份筆記開始使用',
+        searchTitle: '網頁搜尋', searchHint: '搜尋結果會安全地在新分頁開啟；搜尋紀錄保留在這個瀏覽器中。', query: '輸入搜尋關鍵字', go: '搜尋', history: '搜尋紀錄', clear: '清除紀錄', noHistory: '尚無搜尋紀錄',
       }
     : {
-        workspace: 'Workspace',
-        notes: 'Notes',
-        search: 'Search',
-        music: 'Music',
-        minimize: 'Minimize',
-        maximize: 'Maximize',
-        restore: 'Restore',
-        close: 'Close',
-        newNote: 'New note',
-        untitled: 'Untitled note',
-        noteTitle: 'Note title',
-        noteBody: 'Start writing…',
-        deleteNote: 'Delete note',
-        emptyNotes: 'Create your first note to get started',
-        searchTitle: 'Web search',
-        searchHint: 'Results open safely in a new tab. Search history stays in this browser.',
-        query: 'Enter search keywords',
-        go: 'Search',
-        history: 'Search history',
-        clear: 'Clear history',
-        noHistory: 'No search history yet',
+        workspace: 'Workspace', notes: 'Notes', search: 'Search', music: 'Music', minimize: 'Minimize', maximize: 'Maximize', restore: 'Restore', close: 'Close',
+        newNote: 'New note', untitled: 'Untitled note', noteTitle: 'Note title', noteBody: 'Start writing…', deleteNote: 'Delete note', emptyNotes: 'Create your first note to get started',
+        searchTitle: 'Web search', searchHint: 'Results open safely in a new tab. Search history stays in this browser.', query: 'Enter search keywords', go: 'Search', history: 'Search history', clear: 'Clear history', noHistory: 'No search history yet',
       }
 
   useEffect(() => {
@@ -187,29 +142,27 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
   }, [historyKey, searchHistory])
 
   useEffect(() => {
-    const onPointerMove = (event: PointerEvent) => {
+    const move = (event: PointerEvent) => {
       if (!dragState) return
       const deltaX = event.clientX - dragState.startX
       const deltaY = event.clientY - dragState.startY
-      if (dragState.type === 'move') {
-        setGeometry(clampGeometry({ ...dragState.geometry, x: dragState.geometry.x + deltaX, y: dragState.geometry.y + deltaY }))
-      } else {
-        setGeometry(clampGeometry({ ...dragState.geometry, width: dragState.geometry.width + deltaX, height: dragState.geometry.height + deltaY }))
-      }
+      setGeometry(clampGeometry(dragState.mode === 'move'
+        ? { ...dragState.geometry, x: dragState.geometry.x + deltaX, y: dragState.geometry.y + deltaY }
+        : { ...dragState.geometry, width: dragState.geometry.width + deltaX, height: dragState.geometry.height + deltaY }))
     }
     const stop = () => setDragState(null)
-    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', stop)
     return () => {
-      window.removeEventListener('pointermove', onPointerMove)
+      window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', stop)
     }
   }, [dragState])
 
   useEffect(() => {
-    const onResize = () => setGeometry((value) => clampGeometry(value))
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
+    const resize = () => setGeometry((current) => clampGeometry(current))
+    window.addEventListener('resize', resize)
+    return () => window.removeEventListener('resize', resize)
   }, [])
 
   const selectedNote = notes.find((note) => note.id === selectedNoteId) ?? notes[0] ?? null
@@ -218,10 +171,10 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
     if (!selectedNoteId && notes[0]) setSelectedNoteId(notes[0].id)
   }, [notes, selectedNoteId])
 
-  const startDrag = (event: ReactPointerEvent<HTMLElement>, type: DragState['type']) => {
+  const startDrag = (event: ReactPointerEvent<HTMLElement>, mode: DragState['mode']) => {
     if (maximized || window.innerWidth <= 760) return
     event.preventDefault()
-    setDragState({ type, startX: event.clientX, startY: event.clientY, geometry })
+    setDragState({ mode, startX: event.clientX, startY: event.clientY, geometry })
   }
 
   const toggleMaximize = () => {
@@ -254,36 +207,29 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
     setSelectedNoteId(remaining[0]?.id ?? null)
   }
 
-  const runSearch = (query: string) => {
+  const runSearch = (query: string, selectedEngine = engine) => {
     const trimmed = query.trim()
     if (!trimmed) return
     const encoded = encodeURIComponent(trimmed)
-    const url = engine === 'google'
+    const url = selectedEngine === 'google'
       ? `https://www.google.com/search?q=${encoded}`
-      : engine === 'duckduckgo'
+      : selectedEngine === 'duckduckgo'
         ? `https://duckduckgo.com/?q=${encoded}`
         : `https://www.bing.com/search?q=${encoded}`
     window.open(url, '_blank', 'noopener,noreferrer')
-    setSearchHistory((current) => [
-      { query: trimmed, engine, createdAt: new Date().toISOString() },
-      ...current.filter((item) => item.query !== trimmed || item.engine !== engine),
-    ].slice(0, 20))
-  }
-
-  const panelLabel = copy[panel]
-  const windowStyle = {
-    left: `${geometry.x}px`,
-    top: `${geometry.y}px`,
-    width: `${geometry.width}px`,
-    height: minimized ? '62px' : `${geometry.height}px`,
+    setSearchHistory((current) => [{ query: trimmed, engine: selectedEngine, createdAt: new Date().toISOString() }, ...current.filter((item) => item.query !== trimmed || item.engine !== selectedEngine)].slice(0, 20))
   }
 
   if (!open) return null
 
+  const style = {
+    left: `${geometry.x}px`, top: `${geometry.y}px`, width: `${geometry.width}px`, height: minimized ? '62px' : `${geometry.height}px`,
+  }
+
   return (
-    <section className={`workspace-window${minimized ? ' minimized' : ''}${maximized ? ' maximized' : ''}`} style={windowStyle} aria-label={copy.workspace}>
+    <section className={`workspace-window${minimized ? ' minimized' : ''}${maximized ? ' maximized' : ''}`} style={style} aria-label={copy.workspace}>
       <header className="workspace-titlebar" onPointerDown={(event) => startDrag(event, 'move')}>
-        <div className="workspace-window-title"><span>{panelIcon(panel)}</span><strong>{panelLabel}</strong></div>
+        <div className="workspace-window-title"><span>{panelIcon(panel)}</span><strong>{copy[panel]}</strong></div>
         <div className="workspace-window-actions">
           <button type="button" title={copy.minimize} aria-label={copy.minimize} onClick={() => setMinimized((value) => !value)}>—</button>
           <button type="button" title={maximized ? copy.restore : copy.maximize} aria-label={maximized ? copy.restore : copy.maximize} onClick={toggleMaximize}>{maximized ? '❐' : '□'}</button>
@@ -294,7 +240,7 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
       {!minimized ? (
         <>
           <nav className="workspace-tabs" aria-label={copy.workspace}>
-            {(['notes', 'search', 'music'] as WorkspacePanel[]).map((item) => (
+            {PANELS.map((item) => (
               <button className={panel === item ? 'active' : ''} type="button" key={item} onClick={() => onPanelChange(item)}>
                 <span>{panelIcon(item)}</span>{copy[item]}
               </button>
@@ -356,7 +302,7 @@ export function Workspace({ language, userId, open, panel, onPanelChange, onClos
                   {searchHistory.map((item) => (
                     <button className="search-history-row" type="button" key={`${item.engine}-${item.query}-${item.createdAt}`} onClick={() => {
                       setEngine(item.engine)
-                      runSearch(item.query)
+                      runSearch(item.query, item.engine)
                     }}>
                       <span>⌕</span><strong>{item.query}</strong><small>{item.engine}</small>
                     </button>
