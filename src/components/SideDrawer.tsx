@@ -1,4 +1,5 @@
 import type { Language } from '../types'
+import type { WorkspacePanel } from './Workspace'
 
 type SideDrawerProps = {
   language: Language
@@ -8,6 +9,7 @@ type SideDrawerProps = {
   onClose: () => void
   onOpenSettings: () => void
   onOpenAuth: () => void
+  onOpenWorkspace: (panel: WorkspacePanel) => void
 }
 
 export function SideDrawer({
@@ -18,33 +20,46 @@ export function SideDrawer({
   onClose,
   onOpenSettings,
   onOpenAuth,
+  onOpenWorkspace,
 }: SideDrawerProps) {
-  const copy =
-    language === 'zh'
-      ? {
-          menu: '主要選單',
-          close: '關閉選單',
-          learning: '學習',
-          english: '英文',
-          math: '數學',
-          guestNote: '登入後即可使用學習選單、月曆與待辦事項。',
-          login: '登入或註冊',
-          settings: '設定',
-        }
-      : {
-          menu: 'Main menu',
-          close: 'Close menu',
-          learning: 'Learning',
-          english: 'English',
-          math: 'Math',
-          guestNote: 'Sign in to unlock learning, calendar, and to-dos.',
-          login: 'Log in or register',
-          settings: 'Settings',
-        }
+  const copy = language === 'zh'
+    ? {
+        menu: '主要選單',
+        close: '關閉選單',
+        workspace: '工作區',
+        notes: '記事本',
+        search: '搜尋',
+        music: '音樂工作室',
+        learning: '學習',
+        english: '英文',
+        math: '數學',
+        guestNote: '登入後即可使用工作區、學習選單、月曆與待辦事項。',
+        login: '登入或註冊',
+        settings: '設定',
+      }
+    : {
+        menu: 'Main menu',
+        close: 'Close menu',
+        workspace: 'Workspace',
+        notes: 'Notes',
+        search: 'Search',
+        music: 'Music Studio',
+        learning: 'Learning',
+        english: 'English',
+        math: 'Math',
+        guestNote: 'Sign in to unlock the workspace, learning, calendar, and to-dos.',
+        login: 'Log in or register',
+        settings: 'Settings',
+      }
 
   const openAuth = () => {
     onClose()
     onOpenAuth()
+  }
+
+  const openWorkspace = (panel: WorkspacePanel) => {
+    onClose()
+    onOpenWorkspace(panel)
   }
 
   return (
@@ -68,25 +83,34 @@ export function SideDrawer({
             <p className="eyebrow">PERSONAL SPACE</p>
             <h2>Bubble Space</h2>
           </div>
-          <button className="icon-button" type="button" aria-label={copy.close} onClick={onClose}>
-            ×
-          </button>
+          <button className="icon-button" type="button" aria-label={copy.close} onClick={onClose}>×</button>
         </div>
 
         {loggedIn ? (
-          <nav className="member-nav" aria-label={copy.learning}>
-            <p className="drawer-section-label">{copy.learning}</p>
-            <button className="nav-single" type="button">
-              <span>EN</span>
-              {copy.english}
-              <small>Preview</small>
-            </button>
-            <button className="nav-single" type="button">
-              <span>∑</span>
-              {copy.math}
-              <small>Preview</small>
-            </button>
-          </nav>
+          <>
+            <nav className="member-nav" aria-label={copy.workspace}>
+              <p className="drawer-section-label">{copy.workspace}</p>
+              <button className="nav-single" type="button" onClick={() => openWorkspace('notes')}>
+                <span>✎</span>{copy.notes}<small>Auto save</small>
+              </button>
+              <button className="nav-single" type="button" onClick={() => openWorkspace('search')}>
+                <span>⌕</span>{copy.search}<small>Web</small>
+              </button>
+              <button className="nav-single" type="button" onClick={() => openWorkspace('music')}>
+                <span>♫</span>{copy.music}<small>Studio</small>
+              </button>
+            </nav>
+
+            <nav className="member-nav learning-nav" aria-label={copy.learning}>
+              <p className="drawer-section-label">{copy.learning}</p>
+              <button className="nav-single" type="button">
+                <span>EN</span>{copy.english}<small>Preview</small>
+              </button>
+              <button className="nav-single" type="button">
+                <span>∑</span>{copy.math}<small>Preview</small>
+              </button>
+            </nav>
+          </>
         ) : (
           <div className="guest-drawer-note">
             <span className="note-orb">✦</span>
