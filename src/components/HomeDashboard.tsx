@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { DashboardDetailDialog } from './DashboardDetailDialog'
 import { supabase } from '../lib/supabase'
 import type { Language } from '../types'
 
@@ -14,6 +15,8 @@ type Todo = {
   due_date: string
   completed: boolean
 }
+
+type DetailMode = 'calendar' | 'todo' | null
 
 function getCalendarDays(now: Date) {
   const year = now.getFullYear()
@@ -44,6 +47,8 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
   const [now, setNow] = useState(() => new Date())
   const [todos, setTodos] = useState<Todo[]>([])
   const [todoLoading, setTodoLoading] = useState(false)
+  const [todoError, setTodoError] = useState(false)
+  const [detailMode, setDetailMode] = useState<DetailMode>(null)
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000)
@@ -56,12 +61,15 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
     if (!loggedIn || !userId) {
       setTodos([])
       setTodoLoading(false)
+      setTodoError(false)
+      setDetailMode(null)
       return () => {
         mounted = false
       }
     }
 
     setTodoLoading(true)
+    setTodoError(false)
     void supabase
       .from('todos')
       .select('id,title,due_date,completed')
@@ -70,6 +78,7 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
       .then(({ data, error }) => {
         if (!mounted) return
         setTodos(error ? [] : ((data ?? []) as Todo[]))
+        setTodoError(Boolean(error))
         setTodoLoading(false)
       })
 
@@ -104,9 +113,13 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
           todo: '待辦事項',
           upcoming: '即將到來',
           dashboard: '登入後功能',
-          periods: ['今天', '兩天', '七天', '30天'],
+          periods: ['今天', '兩天內', '七天內', '30 天內'],
           loading: '載入待辦中…',
           empty: '目前沒有待辦事項',
+          loadError: '待辦資料讀取失敗',
+          openCalendar: '開啟完整月曆',
+          openTodo: '開啟所有待辦事項',
+          view: '查看',
         }
       : {
           welcome: loggedIn ? 'Welcome back to your personal space' : 'Welcome to your personal space',
@@ -115,9 +128,13 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
           todo: 'To-do',
           upcoming: 'Upcoming',
           dashboard: 'Signed-in features',
-          periods: ['Today', '2 days', '7 days', '30 days'],
+          periods: ['Today', 'Within 2 days', 'Within 7 days', 'Within 30 days'],
           loading: 'Loading to-dos…',
           empty: 'No to-dos yet',
+          loadError: 'Could not load to-dos',
+          openCalendar: 'Open full calendar',
+          openTodo: 'Open all to-dos',
+          view: 'View',
         }
 
   return (
@@ -135,13 +152,18 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
 
       {loggedIn ? (
         <aside className="member-dashboard" aria-label={copy.dashboard}>
-          <article className="dashboard-card calendar-card">
+          <button
+            className="dashboard-card dashboard-card-button calendar-card"
+            type="button"
+            aria-label={copy.openCalendar}
+            onClick={() => setDetailMode('calendar')}
+          >
             <div className="card-head">
               <div>
                 <p className="eyebrow">{copy.calendar}</p>
                 <h2>{monthLabel}</h2>
               </div>
-              <span className="preview-chip">V2</span>
+              <span className="card-view-label">{copy.view} →</span>
             </div>
             <div className="mini-calendar">
               {weekdays.map((weekday, index) => (
@@ -155,15 +177,20 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
                 return <span className={classNames} key={`${day ?? 'blank'}-${index}`}>{day ?? ''}</span>
               })}
             </div>
-          </article>
+          </button>
 
-          <article className="dashboard-card todo-card">
+          <button
+            className="dashboard-card dashboard-card-button todo-card"
+            type="button"
+            aria-label={copy.openTodo}
+            onClick={() => setDetailMode('todo')}
+          >
             <div className="card-head">
               <div>
                 <p className="eyebrow">{copy.todo}</p>
                 <h2>{copy.upcoming}</h2>
               </div>
-              <span className="preview-chip">V2</span>
+              <span className="card-view-label">{copy.view} →</span>
             </div>
             <div className="todo-buckets">
               {counts.map((count, index) => (
@@ -175,20 +202,36 @@ export function HomeDashboard({ language, loggedIn, userId }: HomeDashboardProps
             </div>
             <div className="todo-preview">
               {todoLoading ? <div className="empty-state">{copy.loading}</div> : null}
-              {!todoLoading && upcomingTodos.length === 0 ? <div className="empty-state">{copy.empty}</div> : null}
-              {!todoLoading
+              {!todoLoading && todoError ? <div className="empty-state error-state">{copy.loadError}</div> : null}
+              {!todoLoading && !todoError && upcomingTodos.length === 0 ? <div className="empty-state">{copy.empty}</div> : null}
+              {!todoLoading && !todoError
                 ? upcomingTodos.map((todo) => (
                     <div className="todo-row" key={todo.id}>
                       <span className="todo-check" aria-hidden="true" />
                       <span>{todo.title}</span>
-                      <time>{todo.due_date.slice(5).replace('-', '/')}</time>
+                      <time dateTime={todo.due_date}>{todo.due_date.slice(5).replace('-', '/')}</time>
                     </div>
                   ))
                 : null}
             </div>
-          </article>
+          </button>
         </aside>
       ) : null}
+
+      <DashboardDetailDialog
+        language={language}
+        mode={detailMode}
+        monthLabel={monthLabel}
+        weekdays={weekdays}
+        calendarDays={calendarDays}
+        currentYear={now.getFullYear()}
+        currentMonth={now.getMonth()}
+        today={now.getDate()}
+        taskDates={taskDates}
+        todos={todos}
+        loading={todoLoading}
+        onClose={() => setDetailMode(null)}
+      />
     </main>
   )
 }
