@@ -1,18 +1,14 @@
 import type { MouseEvent } from 'react'
+import { TodoManager } from './TodoManager'
+import type { Todo } from '../services/todos'
 import type { Language } from '../types'
-
-type Todo = {
-  id: string | number
-  title: string
-  due_date: string
-  completed: boolean
-}
 
 type DetailMode = 'calendar' | 'todo' | null
 
 type DashboardDetailDialogProps = {
   language: Language
   mode: DetailMode
+  userId: string
   monthLabel: string
   weekdays: string[]
   calendarDays: Array<number | null>
@@ -22,6 +18,12 @@ type DashboardDetailDialogProps = {
   taskDates: Set<string>
   todos: Todo[]
   loading: boolean
+  error: boolean
+  extendedSchema: boolean
+  selectedDate?: string | null
+  onSelectDate: (date: string) => void
+  onChanged: () => Promise<void>
+  onNotice: (message: string) => void
   onClose: () => void
 }
 
@@ -35,6 +37,7 @@ function dateKey(date: Date) {
 export function DashboardDetailDialog({
   language,
   mode,
+  userId,
   monthLabel,
   weekdays,
   calendarDays,
@@ -44,6 +47,12 @@ export function DashboardDetailDialog({
   taskDates,
   todos,
   loading,
+  error,
+  extendedSchema,
+  selectedDate,
+  onSelectDate,
+  onChanged,
+  onNotice,
   onClose,
 }: DashboardDetailDialogProps) {
   if (!mode) return null
@@ -52,73 +61,69 @@ export function DashboardDetailDialog({
     ? {
         close: '關閉',
         calendar: '完整月曆',
-        todo: '所有待辦事項',
-        calendarHint: '粉紅色圓點代表當天有待辦事項。',
-        todoHint: '目前先顯示帳號中的待辦資料，新增與編輯功能下一階段接入。',
-        loading: '載入待辦中…',
-        empty: '目前沒有待辦事項',
-        completed: '已完成',
+        calendarHint: '點選日期可直接新增或查看該日的待辦事項；粉紅色圓點代表已有待辦。',
+        openDate: '查看這一天的待辦事項',
       }
     : {
         close: 'Close',
         calendar: 'Full calendar',
-        todo: 'All to-dos',
-        calendarHint: 'A pink dot marks dates that contain to-dos.',
-        todoHint: 'This view currently shows account data. Add and edit controls arrive next.',
-        loading: 'Loading to-dos…',
-        empty: 'No to-dos yet',
-        completed: 'Completed',
+        calendarHint: 'Select a date to add or review to-dos. A pink dot marks dates with existing items.',
+        openDate: 'Open to-dos for this date',
       }
-
-  const activeTodos = todos.filter((todo) => !todo.completed)
 
   return (
     <div className="modal dashboard-detail-modal" role="presentation" onMouseDown={onClose}>
       <section
-        className="dashboard-detail-shell"
+        className={`dashboard-detail-shell${mode === 'todo' ? ' todo-detail-shell' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dashboard-detail-title"
         onMouseDown={(event: MouseEvent<HTMLElement>) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" aria-label={copy.close} onClick={onClose}>×</button>
-        <p className="eyebrow">BUBBLE SPACE</p>
-        <h2 id="dashboard-detail-title">{mode === 'calendar' ? copy.calendar : copy.todo}</h2>
-        <p className="dashboard-detail-subtitle">{mode === 'calendar' ? copy.calendarHint : copy.todoHint}</p>
 
         {mode === 'calendar' ? (
           <>
+            <p className="eyebrow">BUBBLE SPACE</p>
+            <h2 id="dashboard-detail-title">{copy.calendar}</h2>
+            <p className="dashboard-detail-subtitle">{copy.calendarHint}</p>
             <h3 className="detail-month-label">{monthLabel}</h3>
             <div className="large-calendar">
               {weekdays.map((weekday, index) => (
                 <span className="weekday" key={`${weekday}-${index}`}>{weekday}</span>
               ))}
               {calendarDays.map((day, index) => {
-                const currentDate = day ? dateKey(new Date(currentYear, currentMonth, day)) : ''
-                const classNames = [day === today ? 'today' : '', currentDate && taskDates.has(currentDate) ? 'has-task' : '']
+                if (!day) return <span className="calendar-empty" key={`blank-${index}`} />
+                const currentDate = dateKey(new Date(currentYear, currentMonth, day))
+                const classNames = [day === today ? 'today' : '', taskDates.has(currentDate) ? 'has-task' : '']
                   .filter(Boolean)
                   .join(' ')
-                return <span className={classNames} key={`${day ?? 'blank'}-${index}`}>{day ?? ''}</span>
+                return (
+                  <button
+                    className={classNames}
+                    type="button"
+                    aria-label={`${copy.openDate} ${currentDate}`}
+                    onClick={() => onSelectDate(currentDate)}
+                    key={currentDate}
+                  >
+                    {day}
+                  </button>
+                )
               })}
             </div>
           </>
         ) : (
-          <div className="detail-todo-list">
-            {loading ? <div className="empty-state">{copy.loading}</div> : null}
-            {!loading && activeTodos.length === 0 ? <div className="empty-state">{copy.empty}</div> : null}
-            {!loading ? activeTodos.map((todo) => (
-              <article className="detail-todo-row" key={todo.id}>
-                <span className="todo-check" aria-hidden="true" />
-                <div>
-                  <strong>{todo.title}</strong>
-                  <time dateTime={todo.due_date}>{todo.due_date}</time>
-                </div>
-              </article>
-            )) : null}
-            {!loading && todos.some((todo) => todo.completed) ? (
-              <p className="completed-summary">{copy.completed}：{todos.filter((todo) => todo.completed).length}</p>
-            ) : null}
-          </div>
+          <TodoManager
+            language={language}
+            userId={userId}
+            todos={todos}
+            loading={loading}
+            error={error}
+            extendedSchema={extendedSchema}
+            initialDate={selectedDate}
+            onChanged={onChanged}
+            onNotice={onNotice}
+          />
         )}
       </section>
     </div>
