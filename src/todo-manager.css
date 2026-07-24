@@ -1,0 +1,300 @@
+.todo-detail-shell {
+  width: min(980px, 100%);
+}
+
+.todo-manager-heading h2 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.todo-manager-heading > div > p:last-child {
+  margin: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.todo-editor {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(150px, .75fr) minmax(190px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 20px;
+  background: rgba(255,255,255,.035);
+}
+
+.todo-editor label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .76rem;
+}
+
+.todo-editor input,
+.todo-search-field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  background: rgba(255,255,255,.055);
+}
+
+.todo-editor input:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.todo-editor .primary-button,
+.todo-editor .secondary-button {
+  min-height: 48px;
+}
+
+.todo-editor .secondary-button {
+  grid-column: 1 / -1;
+}
+
+.schema-hint {
+  margin: 10px 4px 0;
+  color: #ffd59a;
+  font-size: .72rem;
+  line-height: 1.5;
+}
+
+.todo-manager-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 22px 0 14px;
+}
+
+.todo-view-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+
+.todo-view-tabs button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.todo-view-tabs button.active {
+  color: var(--ink);
+  background: rgba(255,255,255,.12);
+}
+
+.todo-search-field {
+  width: min(300px, 100%);
+}
+
+.full-todo-list {
+  display: grid;
+  gap: 9px;
+}
+
+.full-todo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  background: rgba(255,255,255,.04);
+}
+
+.full-todo.overdue {
+  border-color: rgba(255,117,195,.25);
+}
+
+.full-todo.done {
+  opacity: .66;
+}
+
+.full-todo.done .todo-main-copy strong {
+  text-decoration: line-through;
+}
+
+.todo-toggle {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 10px;
+  color: #14262d;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.full-todo.done .todo-toggle {
+  border-color: transparent;
+  background: var(--aqua);
+}
+
+.todo-main-copy {
+  min-width: 0;
+}
+
+.todo-main-copy strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.todo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: .7rem;
+}
+
+.overdue-label {
+  color: #ff9eb7;
+  font-weight: 800;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.todo-actions button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 11px;
+  color: var(--muted);
+  background: rgba(255,255,255,.035);
+  cursor: pointer;
+}
+
+.todo-actions button:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,.1);
+}
+
+.todo-actions button:disabled,
+.todo-toggle:disabled {
+  cursor: wait;
+  opacity: .45;
+}
+
+.large-calendar > button,
+.large-calendar > .calendar-empty {
+  position: relative;
+  display: grid;
+  min-height: 64px;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 15px;
+  color: var(--muted);
+  background: rgba(255,255,255,.035);
+}
+
+.large-calendar > button {
+  cursor: pointer;
+}
+
+.large-calendar > button:hover {
+  color: var(--ink);
+  border-color: rgba(255,255,255,.24);
+  background: rgba(255,255,255,.09);
+}
+
+.large-calendar > button.today {
+  color: #1c1931;
+  background: var(--yellow);
+  font-weight: 900;
+}
+
+.large-calendar > .calendar-empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .todo-editor {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .todo-title-field {
+    grid-column: 1 / -1;
+  }
+
+  .todo-editor .primary-button {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 620px) {
+  .todo-manager-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .todo-search-field {
+    width: 100%;
+  }
+
+  .todo-editor {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .todo-title-field,
+  .todo-editor .secondary-button {
+    grid-column: auto;
+  }
+
+  .todo-view-tabs button {
+    flex: 1;
+    padding: 0 8px;
+  }
+
+  .full-todo {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .todo-actions {
+    grid-column: 2;
+    justify-content: flex-end;
+  }
+
+  .large-calendar > button,
+  .large-calendar > .calendar-empty {
+    min-height: 44px;
+    border-radius: 11px;
+    font-size: .75rem;
+  }
+}
