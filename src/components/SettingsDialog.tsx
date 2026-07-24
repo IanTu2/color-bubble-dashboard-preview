@@ -1,3 +1,4 @@
+import type { ChangeEvent, MouseEvent } from 'react'
 import type { Language } from '../types'
 
 type SettingsDialogProps = {
@@ -49,7 +50,7 @@ export function SettingsDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-title"
-        onMouseDown={(event) => event.stopPropagation()}
+        onMouseDown={(event: MouseEvent<HTMLElement>) => event.stopPropagation()}
       >
         <button className="modal-close" type="button" aria-label={copy.close} onClick={onClose}>×</button>
         <p className="eyebrow">BUBBLE SPACE V2</p>
@@ -76,7 +77,7 @@ export function SettingsDialog({
             max="125"
             step="5"
             value={fontScale}
-            onChange={(event) => onFontScaleChange(Number(event.target.value))}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => onFontScaleChange(Number(event.target.value))}
           />
           <div className="range-labels" aria-hidden="true"><span>A</span><span>A</span></div>
           <p className="setting-hint">{copy.hint}</p>
