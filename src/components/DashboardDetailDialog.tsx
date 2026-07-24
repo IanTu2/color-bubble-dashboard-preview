@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { TodoManager } from './TodoManager'
-import type { Todo } from '../services/todos'
+import type { Todo, TodoSchema } from '../services/todos'
 import type { Language } from '../types'
 
 type DetailMode = 'calendar' | 'todo' | null
@@ -19,7 +19,7 @@ type DashboardDetailDialogProps = {
   todos: Todo[]
   loading: boolean
   error: boolean
-  extendedSchema: boolean
+  schemaMode: TodoSchema
   selectedDate?: string | null
   onSelectDate: (date: string) => void
   onChanged: () => Promise<void>
@@ -48,7 +48,7 @@ export function DashboardDetailDialog({
   todos,
   loading,
   error,
-  extendedSchema,
+  schemaMode,
   selectedDate,
   onSelectDate,
   onChanged,
@@ -61,14 +61,14 @@ export function DashboardDetailDialog({
     ? {
         close: '關閉',
         calendar: '完整月曆',
-        calendarHint: '點選日期可直接新增或查看該日的待辦事項；粉紅色圓點代表已有待辦。',
-        openDate: '查看這一天的待辦事項',
+        calendarHint: '點選日期後，截止日期會自動帶入該日期；粉紅色圓點代表已有計畫或截止事項。',
+        openDate: '在這一天新增或查看待辦事項',
       }
     : {
         close: 'Close',
         calendar: 'Full calendar',
-        calendarHint: 'Select a date to add or review to-dos. A pink dot marks dates with existing items.',
-        openDate: 'Open to-dos for this date',
+        calendarHint: 'Select a date to prefill the deadline. A pink dot marks planned or due items.',
+        openDate: 'Add or review to-dos for this date',
       }
 
   return (
@@ -119,7 +119,7 @@ export function DashboardDetailDialog({
             todos={todos}
             loading={loading}
             error={error}
-            extendedSchema={extendedSchema}
+            schemaMode={schemaMode}
             initialDate={selectedDate}
             onChanged={onChanged}
             onNotice={onNotice}
