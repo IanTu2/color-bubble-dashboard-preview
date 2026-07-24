@@ -25,6 +25,13 @@ type TodoManagerProps = {
 
 type TodoMode = 'active' | 'completed'
 
+function dateKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function toLocalInput(value: string | null) {
   if (!value) return ''
   const date = new Date(value)
@@ -120,7 +127,8 @@ export function TodoManager({
     event.preventDefault()
     if (busy) return
 
-    const form = new FormData(event.currentTarget)
+    const formElement = event.currentTarget
+    const form = new FormData(formElement)
     const title = String(form.get('title') ?? '').trim()
     const dueDate = String(form.get('dueDate') ?? '')
     const reminderValue = String(form.get('reminderAt') ?? '')
@@ -133,52 +141,68 @@ export function TodoManager({
     }
 
     setBusy(true)
-    const result = editingTodo
-      ? await updateTodo(supabase, userId, editingTodo.id, draft, extendedSchema)
-      : await createTodo(supabase, userId, draft, extendedSchema)
-    setBusy(false)
+    try {
+      const result = editingTodo
+        ? await updateTodo(supabase, userId, editingTodo.id, draft, extendedSchema)
+        : await createTodo(supabase, userId, draft, extendedSchema)
 
-    if (result.error) {
+      if (result.error) {
+        onNotice(copy.failed)
+        return
+      }
+
+      setEditingId(null)
+      formElement.reset()
+      onNotice(editingTodo ? copy.updated : copy.added)
+      await onChanged()
+    } catch {
       onNotice(copy.failed)
-      return
+    } finally {
+      setBusy(false)
     }
-
-    setEditingId(null)
-    event.currentTarget.reset()
-    onNotice(editingTodo ? copy.updated : copy.added)
-    await onChanged()
   }
 
   const toggleCompleted = async (todo: Todo) => {
     if (busy) return
     setBusy(true)
-    const result = await setTodoCompleted(supabase, userId, todo.id, !todo.completed, extendedSchema)
-    setBusy(false)
-    if (result.error) {
+    try {
+      const result = await setTodoCompleted(supabase, userId, todo.id, !todo.completed, extendedSchema)
+      if (result.error) {
+        onNotice(copy.failed)
+        return
+      }
+      onNotice(copy.completedNotice)
+      await onChanged()
+    } catch {
       onNotice(copy.failed)
-      return
+    } finally {
+      setBusy(false)
     }
-    onNotice(copy.completedNotice)
-    await onChanged()
   }
 
   const deleteTodo = async (todo: Todo) => {
     if (busy || !window.confirm(`${copy.remove}「${todo.title}」？`)) return
     setBusy(true)
-    const result = await removeTodo(supabase, userId, todo.id)
-    setBusy(false)
-    if (result.error) {
+    try {
+      const result = await removeTodo(supabase, userId, todo.id)
+      if (result.error) {
+        onNotice(copy.failed)
+        return
+      }
+      if (String(editingId) === String(todo.id)) setEditingId(null)
+      onNotice(copy.deleted)
+      await onChanged()
+    } catch {
       onNotice(copy.failed)
-      return
+    } finally {
+      setBusy(false)
     }
-    if (String(editingId) === String(todo.id)) setEditingId(null)
-    onNotice(copy.deleted)
-    await onChanged()
   }
 
   const formKey = editingTodo ? `edit-${editingTodo.id}` : `add-${initialDate ?? 'today'}`
-  const defaultDate = editingTodo?.due_date ?? initialDate ?? new Date().toISOString().slice(0, 10)
+  const defaultDate = editingTodo?.due_date ?? initialDate ?? dateKey()
   const defaultReminder = toLocalInput(editingTodo?.reminder_at ?? null)
+  const today = dateKey()
 
   return (
     <div className="todo-manager">
@@ -204,9 +228,7 @@ export function TodoManager({
           <input name="reminderAt" type="datetime-local" defaultValue={defaultReminder} disabled={!extendedSchema} />
         </label>
         <button className="primary-button" type="submit" disabled={busy}>{busy ? '…' : editingTodo ? copy.save : copy.add}</button>
-        {editingTodo ? (
-          <button className="secondary-button" type="button" onClick={() => setEditingId(null)}>{copy.cancel}</button>
-        ) : null}
+        {editingTodo ? <button className="secondary-button" type="button" onClick={() => setEditingId(null)}>{copy.cancel}</button> : null}
       </form>
 
       {!extendedSchema ? <p className="schema-hint">{copy.legacyHint}</p> : null}
@@ -227,10 +249,10 @@ export function TodoManager({
         {!loading && error ? <div className="empty-state error-state">{copy.loadError}</div> : null}
         {!loading && !error && visibleTodos.length === 0 ? <div className="empty-state">{query ? copy.noResult : copy.empty}</div> : null}
         {!loading && !error ? visibleTodos.map((todo) => {
-          const overdue = !todo.completed && todo.due_date < new Date().toISOString().slice(0, 10)
+          const overdue = !todo.completed && todo.due_date < today
           return (
             <article className={`full-todo${todo.completed ? ' done' : ''}${overdue ? ' overdue' : ''}`} key={todo.id}>
-              <button className="todo-toggle" type="button" aria-label={todo.completed ? copy.reopen : copy.complete} onClick={() => void toggleCompleted(todo)}>{todo.completed ? '✓' : ''}</button>
+              <button className="todo-toggle" type="button" disabled={busy} aria-label={todo.completed ? copy.reopen : copy.complete} onClick={() => void toggleCompleted(todo)}>{todo.completed ? '✓' : ''}</button>
               <div className="todo-main-copy">
                 <strong>{todo.title}</strong>
                 <div className="todo-meta">
@@ -240,8 +262,8 @@ export function TodoManager({
                 </div>
               </div>
               <div className="todo-actions">
-                <button type="button" aria-label={copy.edit} onClick={() => setEditingId(todo.id)}>✎</button>
-                <button type="button" aria-label={copy.remove} onClick={() => void deleteTodo(todo)}>×</button>
+                <button type="button" disabled={busy} aria-label={copy.edit} onClick={() => setEditingId(todo.id)}>✎</button>
+                <button type="button" disabled={busy} aria-label={copy.remove} onClick={() => void deleteTodo(todo)}>×</button>
               </div>
             </article>
           )
