@@ -28,13 +28,6 @@ type TodoMode = 'active' | 'completed'
 type PanelMode = 'add' | 'search'
 type RangeFilter = 0 | 2 | 7 | 30 | 'all'
 
-function dateKey(date = new Date()) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 function shortTime(value: string | null) {
   return value ? value.slice(0, 5) : '23:59'
 }
@@ -188,8 +181,7 @@ export function TodoManager({
     event.preventDefault()
     if (busy) return
 
-    const formElement = event.currentTarget
-    const form = new FormData(formElement)
+    const form = new FormData(event.currentTarget)
     const title = String(form.get('title') ?? '').trim()
     const plannedDate = String(form.get('plannedDate') ?? '') || null
     const plannedTime = String(form.get('plannedTime') ?? '') || '23:59'
