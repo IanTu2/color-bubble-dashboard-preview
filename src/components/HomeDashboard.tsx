@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DashboardDetailDialog } from './DashboardDetailDialog'
 import { supabase } from '../lib/supabase'
-import { loadTodos, type Todo } from '../services/todos'
+import { loadTodos, type Todo, type TodoSchema } from '../services/todos'
 import type { Language } from '../types'
 
 type HomeDashboardProps = {
@@ -32,12 +32,16 @@ function dateKey(date: Date) {
   return `${year}-${month}-${day}`
 }
 
+function todoTargetDate(todo: Todo) {
+  return todo.due_date || todo.planned_date
+}
+
 export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDashboardProps) {
   const [now, setNow] = useState(() => new Date())
   const [todos, setTodos] = useState<Todo[]>([])
   const [todoLoading, setTodoLoading] = useState(false)
   const [todoError, setTodoError] = useState(false)
-  const [extendedSchema, setExtendedSchema] = useState(true)
+  const [schemaMode, setSchemaMode] = useState<TodoSchema>('legacy')
   const [detailMode, setDetailMode] = useState<DetailMode>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
@@ -51,6 +55,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
       setTodos([])
       setTodoLoading(false)
       setTodoError(false)
+      setSchemaMode('legacy')
       return
     }
 
@@ -58,7 +63,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
     setTodoError(false)
     const result = await loadTodos(supabase, userId)
     setTodos(result.todos)
-    setExtendedSchema(result.extendedSchema)
+    setSchemaMode(result.schemaMode)
     setTodoError(Boolean(result.error))
     setTodoLoading(false)
   }, [loggedIn, userId])
@@ -81,13 +86,19 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
   const activeTodos = todos.filter((todo) => !todo.completed)
   const counts = [0, 2, 7, 30].map((days) =>
     activeTodos.filter((todo) => {
-      const due = new Date(`${todo.due_date}T00:00:00`)
+      const targetDate = todoTargetDate(todo)
+      if (!targetDate) return false
+      const due = new Date(`${targetDate}T00:00:00`)
       const difference = Math.round((due.getTime() - today.getTime()) / 86400000)
       return difference >= 0 && difference <= days
     }).length,
   )
-  const upcomingTodos = [...activeTodos].sort((a, b) => a.due_date.localeCompare(b.due_date)).slice(0, 3)
-  const taskDates = new Set(todos.map((todo) => todo.due_date))
+  const upcomingTodos = [...activeTodos]
+    .sort((a, b) => (todoTargetDate(a) ?? '9999-12-31').localeCompare(todoTargetDate(b) ?? '9999-12-31'))
+    .slice(0, 3)
+  const taskDates = new Set(
+    todos.flatMap((todo) => [todo.planned_date, todo.due_date]).filter((value): value is string => Boolean(value)),
+  )
   const copy = language === 'zh'
     ? {
         welcome: loggedIn ? '歡迎回到你的個人空間' : '歡迎來到你的個人空間',
@@ -103,6 +114,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
         openCalendar: '開啟完整月曆',
         openTodo: '開啟所有待辦事項',
         view: '查看',
+        noDate: '未設定日期',
       }
     : {
         welcome: loggedIn ? 'Welcome back to your personal space' : 'Welcome to your personal space',
@@ -118,6 +130,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
         openCalendar: 'Open full calendar',
         openTodo: 'Open all to-dos',
         view: 'View',
+        noDate: 'No date',
       }
 
   return (
@@ -178,13 +191,16 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
               {todoLoading ? <div className="empty-state">{copy.loading}</div> : null}
               {!todoLoading && todoError ? <div className="empty-state error-state">{copy.loadError}</div> : null}
               {!todoLoading && !todoError && upcomingTodos.length === 0 ? <div className="empty-state">{copy.empty}</div> : null}
-              {!todoLoading && !todoError ? upcomingTodos.map((todo) => (
-                <div className="todo-row" key={todo.id}>
-                  <span className="todo-check" aria-hidden="true" />
-                  <span>{todo.title}</span>
-                  <time dateTime={todo.due_date}>{todo.due_date.slice(5).replace('-', '/')}</time>
-                </div>
-              )) : null}
+              {!todoLoading && !todoError ? upcomingTodos.map((todo) => {
+                const targetDate = todoTargetDate(todo)
+                return (
+                  <div className="todo-row" key={todo.id}>
+                    <span className="todo-check" aria-hidden="true" />
+                    <span>{todo.title}</span>
+                    <time dateTime={targetDate ?? undefined}>{targetDate ? targetDate.slice(5).replace('-', '/') : copy.noDate}</time>
+                  </div>
+                )
+              }) : null}
             </div>
           </button>
         </aside>
@@ -205,7 +221,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
           todos={todos}
           loading={todoLoading}
           error={todoError}
-          extendedSchema={extendedSchema}
+          schemaMode={schemaMode}
           selectedDate={selectedDate}
           onSelectDate={(date) => {
             setSelectedDate(date)
