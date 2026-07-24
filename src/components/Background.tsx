@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
+import type { AnimationLevel } from '../preferences'
 
-const bubbles = Array.from({ length: 24 }, (_, index) => ({
+const bubbles = Array.from({ length: 36 }, (_, index) => ({
   id: index,
   size: 36 + ((index * 31) % 104),
   left: (index * 37) % 100,
@@ -9,16 +10,23 @@ const bubbles = Array.from({ length: 24 }, (_, index) => ({
   drift: -90 + ((index * 47) % 180),
 }))
 
-export function Background() {
+type BackgroundProps = {
+  animationLevel: AnimationLevel
+  bubbleCount: number
+}
+
+export function Background({ animationLevel, bubbleCount }: BackgroundProps) {
+  const visibleBubbles = bubbles.slice(0, Math.min(36, Math.max(0, bubbleCount)))
+
   return (
     <>
-      <div className="moving-screen" aria-hidden="true">
+      <div className={`moving-screen motion-${animationLevel}`} aria-hidden="true">
         <span className="color-field field-one" />
         <span className="color-field field-two" />
         <span className="color-field field-three" />
       </div>
-      <div className="bubble-layer" aria-hidden="true">
-        {bubbles.map((bubble) => (
+      <div className={`bubble-layer motion-${animationLevel}`} aria-hidden="true">
+        {visibleBubbles.map((bubble) => (
           <span
             className="bubble"
             key={bubble.id}
