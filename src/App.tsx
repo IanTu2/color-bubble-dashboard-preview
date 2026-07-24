@@ -1,82 +1,68 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
+import { Background } from './components/Background'
+import { HomeDashboard } from './components/HomeDashboard'
+import { SettingsDialog } from './components/SettingsDialog'
+import { SideDrawer } from './components/SideDrawer'
+import { Topbar } from './components/Topbar'
+import type { Language } from './types'
 
-const bubbles = Array.from({ length: 24 }, (_, index) => ({
-  id: index,
-  size: 42 + ((index * 29) % 96),
-  left: (index * 37) % 100,
-  delay: -((index * 1.7) % 18),
-  duration: 16 + ((index * 11) % 18),
-  drift: -80 + ((index * 47) % 160),
-}))
+const LANGUAGE_KEY = 'bubble-space-v2-language'
+const FONT_SCALE_KEY = 'bubble-space-v2-font-scale'
 
-const modules = [
-  { name: '帳號與設定', status: '等待搬移' },
-  { name: '待辦與月曆', status: '等待搬移' },
-  { name: '音樂與工作區', status: '等待搬移' },
-  { name: '學習與搜尋', status: '等待搬移' },
-]
+function readLanguage(): Language {
+  return window.localStorage.getItem(LANGUAGE_KEY) === 'en' ? 'en' : 'zh'
+}
+
+function readFontScale() {
+  const storedValue = Number(window.localStorage.getItem(FONT_SCALE_KEY))
+  return Number.isFinite(storedValue) && storedValue >= 85 && storedValue <= 125 ? storedValue : 100
+}
 
 function App() {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [language, setLanguage] = useState<Language>(readLanguage)
+  const [fontScale, setFontScale] = useState(readFontScale)
+
+  useEffect(() => {
+    document.documentElement.lang = language === 'zh' ? 'zh-Hant' : 'en'
+    window.localStorage.setItem(LANGUAGE_KEY, language)
+  }, [language])
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontScale}%`
+    window.localStorage.setItem(FONT_SCALE_KEY, String(fontScale))
+  }, [fontScale])
+
+  useEffect(() => {
+    document.body.classList.toggle('dialog-open', settingsOpen)
+    return () => document.body.classList.remove('dialog-open')
+  }, [settingsOpen])
+
   return (
-    <main className="app-shell">
-      <div className="aurora" aria-hidden="true" />
-      <div className="bubble-field" aria-hidden="true">
-        {bubbles.map((bubble) => (
-          <span
-            className="bubble"
-            key={bubble.id}
-            style={
-              {
-                '--bubble-size': `${bubble.size}px`,
-                '--bubble-left': `${bubble.left}%`,
-                '--bubble-delay': `${bubble.delay}s`,
-                '--bubble-duration': `${bubble.duration}s`,
-                '--bubble-drift': `${bubble.drift}px`,
-              } as CSSProperties
-            }
-          />
-        ))}
-      </div>
-
-      <section className="workspace" aria-labelledby="page-title">
-        <header className="topbar">
-          <div className="brand-mark" aria-hidden="true">B</div>
-          <div>
-            <p className="eyebrow">Bubble Space</p>
-            <h1 id="page-title">v2 雲端測試服</h1>
-          </div>
-          <span className="environment-badge">React + TypeScript</span>
-        </header>
-
-        <div className="hero-card">
-          <p className="hero-kicker">第一階段已開始</p>
-          <h2>新版在獨立測試站重建，原本正式站保持不動。</h2>
-          <p>
-            這是 Bubble Space v2 的第一個雲端建置版本。接下來會依序搬入外框、登入、待辦、月曆、音樂、工作區與學習功能。
-          </p>
-          <div className="status-row">
-            <span className="status-dot" aria-hidden="true" />
-            <strong>架構狀態：等待 GitHub Pages 首次部署</strong>
-          </div>
-        </div>
-
-        <section className="module-grid" aria-label="功能搬移進度">
-          {modules.map((module, index) => (
-            <article className="module-card" key={module.name}>
-              <span className="module-number">0{index + 1}</span>
-              <h3>{module.name}</h3>
-              <p>{module.status}</p>
-            </article>
-          ))}
-        </section>
-
-        <footer className="footer-note">
-          <span>環境：preview</span>
-          <span>Repository：color-bubble-dashboard-preview</span>
-          <span>版本：0.1.0</span>
-        </footer>
-      </section>
-    </main>
+    <div className="app-shell">
+      <Background />
+      <SideDrawer
+        language={language}
+        open={drawerOpen}
+        onToggle={() => setDrawerOpen((current) => !current)}
+        onClose={() => setDrawerOpen(false)}
+        onOpenSettings={() => {
+          setDrawerOpen(false)
+          setSettingsOpen(true)
+        }}
+      />
+      <Topbar language={language} />
+      <HomeDashboard language={language} />
+      <SettingsDialog
+        language={language}
+        fontScale={fontScale}
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onLanguageChange={setLanguage}
+        onFontScaleChange={setFontScale}
+      />
+    </div>
   )
 }
 
