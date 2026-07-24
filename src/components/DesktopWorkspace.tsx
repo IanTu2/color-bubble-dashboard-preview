@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { MusicWindow } from './MusicWindow'
 import { NotesApp } from './NotesApp'
 import { SearchApp } from './SearchApp'
 import { WindowFrame, clampWindowGeometry, type WindowGeometry } from './WindowFrame'
 import type { Language } from '../types'
 
-export type DesktopAppKind = 'notes' | 'search' | 'music'
+export type DesktopAppKind = 'notes' | 'search'
 
 export type DesktopRequest = {
   id: number
@@ -16,14 +15,12 @@ type DesktopWorkspaceProps = {
   language: Language
   userId: string
   request: DesktopRequest | null
-  onNotice: (message: string) => void
+  rememberWindows: boolean
 }
-
-type WindowApp = Exclude<DesktopAppKind, 'music'>
 
 type ManagedWindow = {
   id: string
-  app: WindowApp
+  app: DesktopAppKind
   sequence: number
   geometry: WindowGeometry
   minimized: boolean
@@ -31,18 +28,17 @@ type ManagedWindow = {
   zIndex: number
 }
 
-type MusicState = {
-  open: boolean
-  minimized: boolean
-  geometry: WindowGeometry
-  zIndex: number
-}
+type StoredWindow = Pick<ManagedWindow, 'id' | 'app' | 'sequence' | 'geometry' | 'minimized'>
 
 function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function appGeometry(app: WindowApp, offset: number): WindowGeometry {
+function storageKey(userId: string) {
+  return `bubble-space-v2-desktop-windows-${userId}`
+}
+
+function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
   const preferredWidth = app === 'search' ? 780 : 760
   const preferredHeight = app === 'search' ? 610 : 560
   const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - 360))
@@ -55,31 +51,48 @@ function appGeometry(app: WindowApp, offset: number): WindowGeometry {
   })
 }
 
-function musicGeometry(): WindowGeometry {
-  return clampWindowGeometry({
-    x: Math.max(28, window.innerWidth - 940),
-    y: 82,
-    width: Math.min(900, Math.max(620, window.innerWidth - 370)),
-    height: Math.min(650, Math.max(440, window.innerHeight - 170)),
-  })
+function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWindow[] {
+  if (!rememberWindows) return []
+
+  try {
+    const stored = window.localStorage.getItem(storageKey(userId))
+    if (!stored) return []
+    const parsed = JSON.parse(stored) as StoredWindow[]
+    if (!Array.isArray(parsed)) return []
+
+    return parsed
+      .filter((item) => item && (item.app === 'notes' || item.app === 'search'))
+      .slice(0, 10)
+      .map((item, index) => ({
+        id: typeof item.id === 'string' ? item.id : createId(),
+        app: item.app,
+        sequence: Number.isFinite(item.sequence) ? item.sequence : index + 1,
+        geometry: clampWindowGeometry(item.geometry),
+        minimized: Boolean(item.minimized),
+        maximized: false,
+        zIndex: 60 + index,
+      }))
+  } catch {
+    return []
+  }
 }
 
 function appIcon(app: DesktopAppKind) {
-  if (app === 'notes') return '✎'
-  if (app === 'search') return '⌕'
-  return '♫'
+  return app === 'notes' ? '✎' : '⌕'
 }
 
-export function DesktopWorkspace({ language, userId, request, onNotice }: DesktopWorkspaceProps) {
-  const [windows, setWindows] = useState<ManagedWindow[]>([])
-  const [music, setMusic] = useState<MusicState>(() => ({
-    open: false,
-    minimized: false,
-    geometry: musicGeometry(),
-    zIndex: 50,
-  }))
-  const zIndexRef = useRef(60)
-  const sequenceRef = useRef({ notes: 0, search: 0 })
+export function DesktopWorkspace({
+  language,
+  userId,
+  request,
+  rememberWindows,
+}: DesktopWorkspaceProps) {
+  const [windows, setWindows] = useState<ManagedWindow[]>(() => readStoredWindows(userId, rememberWindows))
+  const zIndexRef = useRef(80)
+  const sequenceRef = useRef({
+    notes: Math.max(0, ...windows.filter((item) => item.app === 'notes').map((item) => item.sequence)),
+    search: Math.max(0, ...windows.filter((item) => item.app === 'search').map((item) => item.sequence)),
+  })
   const lastRequestRef = useRef<number | null>(null)
 
   const nextZIndex = () => {
@@ -92,45 +105,34 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
     setWindows((current) => current.map((item) => item.id === id ? { ...item, zIndex } : item))
   }, [])
 
-  const focusMusic = useCallback(() => {
-    const zIndex = nextZIndex()
-    setMusic((current) => ({ ...current, zIndex }))
-  }, [])
-
   const openApp = useCallback((kind: DesktopAppKind) => {
-    if (kind === 'music') {
-      const zIndex = nextZIndex()
-      setMusic((current) => ({ ...current, open: true, minimized: false, zIndex }))
-      return
-    }
-
-    if (kind === 'notes') {
-      const existing = windows.find((item) => item.app === 'notes')
-      if (existing) {
-        const zIndex = nextZIndex()
-        setWindows((current) => current.map((item) => item.id === existing.id
-          ? { ...item, minimized: false, zIndex }
-          : item))
-        return
+    setWindows((current) => {
+      if (kind === 'notes') {
+        const existing = current.find((item) => item.app === 'notes')
+        if (existing) {
+          const zIndex = nextZIndex()
+          return current.map((item) => item.id === existing.id
+            ? { ...item, minimized: false, zIndex }
+            : item)
+        }
       }
-    }
 
-    sequenceRef.current[kind] += 1
-    const sequence = sequenceRef.current[kind]
-    const zIndex = nextZIndex()
-    setWindows((current) => [
-      ...current,
-      {
-        id: createId(),
-        app: kind,
-        sequence,
-        geometry: appGeometry(kind, current.length),
-        minimized: false,
-        maximized: false,
-        zIndex,
-      },
-    ])
-  }, [windows])
+      sequenceRef.current[kind] += 1
+      const sequence = sequenceRef.current[kind]
+      return [
+        ...current,
+        {
+          id: createId(),
+          app: kind,
+          sequence,
+          geometry: appGeometry(kind, current.length),
+          minimized: false,
+          maximized: false,
+          zIndex: nextZIndex(),
+        },
+      ]
+    })
+  }, [])
 
   useEffect(() => {
     if (!request || request.id === lastRequestRef.current) return
@@ -138,13 +140,29 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
     openApp(request.kind)
   }, [openApp, request])
 
+  useEffect(() => {
+    const key = storageKey(userId)
+    if (!rememberWindows) {
+      window.localStorage.removeItem(key)
+      return
+    }
+
+    const storedWindows: StoredWindow[] = windows.map((item) => ({
+      id: item.id,
+      app: item.app,
+      sequence: item.sequence,
+      geometry: item.geometry,
+      minimized: item.minimized,
+    }))
+    window.localStorage.setItem(key, JSON.stringify(storedWindows))
+  }, [rememberWindows, userId, windows])
+
   const copy = language === 'zh'
     ? {
         launch: '開啟應用程式',
         running: '正在執行',
         notes: '記事本',
         search: '搜尋',
-        music: '音樂',
         newSearch: '新增搜尋視窗',
       }
     : {
@@ -152,35 +170,24 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
         running: 'Running applications',
         notes: 'Notes',
         search: 'Search',
-        music: 'Music',
         newSearch: 'New search window',
       }
 
-  const windowTitle = (item: ManagedWindow) => {
-    if (item.app === 'notes') return copy.notes
-    return `${copy.search} ${item.sequence}`
-  }
+  const windowTitle = (item: ManagedWindow) => item.app === 'notes'
+    ? copy.notes
+    : `${copy.search} ${item.sequence}`
 
   const updateWindow = (id: string, changes: Partial<ManagedWindow>) => {
     setWindows((current) => current.map((item) => item.id === id ? { ...item, ...changes } : item))
   }
 
   const toggleTaskWindow = (item: ManagedWindow) => {
-    const highestZ = Math.max(music.open ? music.zIndex : 0, ...windows.map((windowItem) => windowItem.zIndex))
+    const highestZ = Math.max(0, ...windows.map((windowItem) => windowItem.zIndex))
     if (!item.minimized && item.zIndex === highestZ) {
       updateWindow(item.id, { minimized: true })
       return
     }
     updateWindow(item.id, { minimized: false, zIndex: nextZIndex() })
-  }
-
-  const toggleMusicTask = () => {
-    const highestZ = Math.max(music.zIndex, ...windows.map((item) => item.zIndex))
-    if (!music.minimized && music.zIndex === highestZ) {
-      setMusic((current) => ({ ...current, minimized: true }))
-      return
-    }
-    setMusic((current) => ({ ...current, minimized: false, zIndex: nextZIndex() }))
   }
 
   return (
@@ -209,20 +216,6 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
         </WindowFrame>
       ))}
 
-      <MusicWindow
-        language={language}
-        userId={userId}
-        open={music.open}
-        minimized={music.minimized}
-        geometry={music.geometry}
-        zIndex={music.zIndex}
-        onFocus={focusMusic}
-        onMinimize={() => setMusic((current) => ({ ...current, minimized: true }))}
-        onClose={() => setMusic((current) => ({ ...current, open: false, minimized: false }))}
-        onGeometryChange={(geometry) => setMusic((current) => ({ ...current, geometry }))}
-        onNotice={onNotice}
-      />
-
       <nav className="desktop-dock" aria-label={copy.launch}>
         <div className="desktop-dock-launchers">
           <button type="button" title={copy.notes} onClick={() => openApp('notes')}>
@@ -231,17 +224,14 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
           <button type="button" title={copy.newSearch} onClick={() => openApp('search')}>
             <span>⌕＋</span><small>{copy.search}</small>
           </button>
-          <button type="button" title={copy.music} onClick={() => openApp('music')}>
-            <span>♫</span><small>{copy.music}</small>
-          </button>
         </div>
 
-        {(windows.length > 0 || music.open) ? <span className="desktop-dock-divider" aria-hidden="true" /> : null}
+        {windows.length > 0 ? <span className="desktop-dock-divider" aria-hidden="true" /> : null}
 
         <div className="desktop-running-apps" aria-label={copy.running}>
           {windows.map((item) => (
             <button
-              className={`${item.minimized ? 'minimized ' : ''}${item.zIndex === Math.max(...windows.map((windowItem) => windowItem.zIndex), music.open ? music.zIndex : 0) ? 'active' : ''}`.trim()}
+              className={`${item.minimized ? 'minimized ' : ''}${item.zIndex === Math.max(...windows.map((windowItem) => windowItem.zIndex)) ? 'active' : ''}`.trim()}
               type="button"
               key={item.id}
               title={windowTitle(item)}
@@ -251,16 +241,6 @@ export function DesktopWorkspace({ language, userId, request, onNotice }: Deskto
               <small>{windowTitle(item)}</small>
             </button>
           ))}
-          {music.open ? (
-            <button
-              className={`${music.minimized ? 'minimized ' : ''}${music.zIndex === Math.max(...windows.map((item) => item.zIndex), music.zIndex) ? 'active' : ''}`.trim()}
-              type="button"
-              title={copy.music}
-              onClick={toggleMusicTask}
-            >
-              <span>♫</span><small>{copy.music}</small>
-            </button>
-          ) : null}
         </div>
       </nav>
     </>

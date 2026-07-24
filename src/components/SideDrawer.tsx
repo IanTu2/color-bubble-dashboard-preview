@@ -29,8 +29,7 @@ export function SideDrawer({
         workspace: '工作視窗',
         notes: '記事本',
         search: '新增搜尋視窗',
-        musicSection: '背景工具',
-        music: '音樂播放器',
+        searchHint: '可同時開啟多個',
         learning: '學習',
         english: '英文',
         math: '數學',
@@ -44,8 +43,7 @@ export function SideDrawer({
         workspace: 'Work windows',
         notes: 'Notes',
         search: 'New search window',
-        musicSection: 'Background tools',
-        music: 'Music player',
+        searchHint: 'Open multiple windows',
         learning: 'Learning',
         english: 'English',
         math: 'Math',
@@ -96,14 +94,7 @@ export function SideDrawer({
                 <span>✎</span>{copy.notes}<small>Auto save</small>
               </button>
               <button className="nav-single" type="button" onClick={() => openDesktopApp('search')}>
-                <span>⌕＋</span>{copy.search}<small>Multi-window</small>
-              </button>
-            </nav>
-
-            <nav className="member-nav learning-nav" aria-label={copy.musicSection}>
-              <p className="drawer-section-label">{copy.musicSection}</p>
-              <button className="nav-single" type="button" onClick={() => openDesktopApp('music')}>
-                <span>♫</span>{copy.music}<small>Singleton</small>
+                <span>⌕＋</span>{copy.search}<small>{copy.searchHint}</small>
               </button>
             </nav>
 

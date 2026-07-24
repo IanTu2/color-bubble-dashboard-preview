@@ -4,10 +4,17 @@ import { AuthDialog } from './components/AuthDialog'
 import { Background } from './components/Background'
 import { DesktopWorkspace, type DesktopAppKind, type DesktopRequest } from './components/DesktopWorkspace'
 import { HomeDashboard } from './components/HomeDashboard'
+import { PersistentMusicPlayer } from './components/PersistentMusicPlayer'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
 import { supabase } from './lib/supabase'
+import {
+  APP_PREFERENCES_KEY,
+  DEFAULT_APP_PREFERENCES,
+  readAppPreferences,
+  type AppPreferences,
+} from './preferences'
 import type { Language } from './types'
 
 const LANGUAGE_KEY = 'bubble-space-v2-language'
@@ -29,6 +36,7 @@ function App() {
   const [desktopRequest, setDesktopRequest] = useState<DesktopRequest | null>(null)
   const [language, setLanguage] = useState<Language>(readLanguage)
   const [fontScale, setFontScale] = useState(readFontScale)
+  const [preferences, setPreferences] = useState<AppPreferences>(readAppPreferences)
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [toast, setToast] = useState('')
@@ -42,6 +50,10 @@ function App() {
     document.documentElement.style.fontSize = `${fontScale}%`
     window.localStorage.setItem(FONT_SCALE_KEY, String(fontScale))
   }, [fontScale])
+
+  useEffect(() => {
+    window.localStorage.setItem(APP_PREFERENCES_KEY, JSON.stringify(preferences))
+  }, [preferences])
 
   useEffect(() => {
     document.body.classList.toggle('dialog-open', settingsOpen || authOpen)
@@ -84,6 +96,12 @@ function App() {
     setDesktopRequest({ id: Date.now() + Math.random(), kind })
   }
 
+  const resetAllSettings = () => {
+    setLanguage('zh')
+    setFontScale(100)
+    setPreferences({ ...DEFAULT_APP_PREFERENCES })
+  }
+
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
     setToast(
@@ -97,7 +115,10 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Background />
+      <Background
+        animationLevel={preferences.animationLevel}
+        bubbleCount={preferences.bubbleCount}
+      />
       <SideDrawer
         language={language}
         open={drawerOpen}
@@ -130,16 +151,27 @@ function App() {
           language={language}
           userId={user.id}
           request={desktopRequest}
+          rememberWindows={preferences.rememberWindows}
+        />
+      ) : null}
+      {user ? (
+        <PersistentMusicPlayer
+          language={language}
+          userId={user.id}
+          enabled={preferences.musicEnabled}
           onNotice={setToast}
         />
       ) : null}
       <SettingsDialog
         language={language}
         fontScale={fontScale}
+        preferences={preferences}
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         onLanguageChange={setLanguage}
         onFontScaleChange={setFontScale}
+        onPreferencesChange={setPreferences}
+        onResetAll={resetAllSettings}
       />
       <AuthDialog
         language={language}
