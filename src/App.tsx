@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
+import { AuthDialog } from './components/AuthDialog'
 import { Background } from './components/Background'
 import { HomeDashboard } from './components/HomeDashboard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
+import { supabase } from './lib/supabase'
 import type { Language } from './types'
 
 const LANGUAGE_KEY = 'bubble-space-v2-language'
@@ -21,8 +24,12 @@ function readFontScale() {
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
   const [language, setLanguage] = useState<Language>(readLanguage)
   const [fontScale, setFontScale] = useState(readFontScale)
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     document.documentElement.lang = language === 'zh' ? 'zh-Hant' : 'en'
@@ -35,9 +42,55 @@ function App() {
   }, [fontScale])
 
   useEffect(() => {
-    document.body.classList.toggle('dialog-open', settingsOpen)
+    document.body.classList.toggle('dialog-open', settingsOpen || authOpen)
     return () => document.body.classList.remove('dialog-open')
-  }, [settingsOpen])
+  }, [settingsOpen, authOpen])
+
+  useEffect(() => {
+    let mounted = true
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) {
+        return
+      }
+      setUser(data.session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    return () => {
+      mounted = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!toast) {
+      return
+    }
+    const timer = window.setTimeout(() => setToast(''), 3200)
+    return () => window.clearTimeout(timer)
+  }, [toast])
+
+  const openAuth = () => {
+    setSettingsOpen(false)
+    setAuthOpen(true)
+  }
+
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut()
+    setToast(
+      error
+        ? error.message
+        : language === 'zh'
+          ? '已安全登出。'
+          : 'You are safely logged out.',
+    )
+  }
 
   return (
     <div className="app-shell">
@@ -45,15 +98,24 @@ function App() {
       <SideDrawer
         language={language}
         open={drawerOpen}
+        loggedIn={Boolean(user)}
         onToggle={() => setDrawerOpen((current) => !current)}
         onClose={() => setDrawerOpen(false)}
         onOpenSettings={() => {
           setDrawerOpen(false)
+          setAuthOpen(false)
           setSettingsOpen(true)
         }}
+        onOpenAuth={openAuth}
       />
-      <Topbar language={language} />
-      <HomeDashboard language={language} />
+      <Topbar
+        language={language}
+        user={user}
+        authLoading={authLoading}
+        onOpenAuth={openAuth}
+        onLogout={logout}
+      />
+      <HomeDashboard language={language} loggedIn={Boolean(user)} />
       <SettingsDialog
         language={language}
         fontScale={fontScale}
@@ -62,6 +124,13 @@ function App() {
         onLanguageChange={setLanguage}
         onFontScaleChange={setFontScale}
       />
+      <AuthDialog
+        language={language}
+        open={authOpen}
+        onClose={() => setAuthOpen(false)}
+        onSuccess={setToast}
+      />
+      {toast ? <div className="toast" role="status">{toast}</div> : null}
     </div>
   )
 }
