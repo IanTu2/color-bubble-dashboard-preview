@@ -31,7 +31,20 @@ jobs:
         run: npm install
 
       - name: Type check and build
-        shell: bash
+        id: compile
+        continue-on-error: true
+        run: npm run build > build.log 2>&1
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 3
+
+      - name: Report build failure
+        if: steps.compile.outcome == 'failure'
         run: |
-          set -o pipefail
-          npm run build 2>&1 | tail -n 120
+          tail -n 120 build.log
+          exit 1
