@@ -50,9 +50,7 @@ function App() {
     let mounted = true
 
     void supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) {
-        return
-      }
+      if (!mounted) return
       setUser(data.session?.user ?? null)
       setAuthLoading(false)
     })
@@ -69,9 +67,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!toast) {
-      return
-    }
+    if (!toast) return
     const timer = window.setTimeout(() => setToast(''), 3200)
     return () => window.clearTimeout(timer)
   }, [toast])
@@ -115,7 +111,12 @@ function App() {
         onOpenAuth={openAuth}
         onLogout={logout}
       />
-      <HomeDashboard language={language} loggedIn={Boolean(user)} userId={user?.id} />
+      <HomeDashboard
+        language={language}
+        loggedIn={Boolean(user)}
+        userId={user?.id}
+        onNotice={setToast}
+      />
       <SettingsDialog
         language={language}
         fontScale={fontScale}
