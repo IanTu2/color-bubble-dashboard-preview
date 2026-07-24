@@ -6,6 +6,7 @@ import { HomeDashboard } from './components/HomeDashboard'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
+import { Workspace, WorkspaceLauncher, type WorkspacePanel } from './components/Workspace'
 import { supabase } from './lib/supabase'
 import type { Language } from './types'
 
@@ -25,6 +26,8 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [workspaceOpen, setWorkspaceOpen] = useState(false)
+  const [workspacePanel, setWorkspacePanel] = useState<WorkspacePanel>('notes')
   const [language, setLanguage] = useState<Language>(readLanguage)
   const [fontScale, setFontScale] = useState(readFontScale)
   const [user, setUser] = useState<User | null>(null)
@@ -58,6 +61,7 @@ function App() {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setAuthLoading(false)
+      if (!session?.user) setWorkspaceOpen(false)
     })
 
     return () => {
@@ -75,6 +79,11 @@ function App() {
   const openAuth = () => {
     setSettingsOpen(false)
     setAuthOpen(true)
+  }
+
+  const openWorkspace = (panel: WorkspacePanel) => {
+    setWorkspacePanel(panel)
+    setWorkspaceOpen(true)
   }
 
   const logout = async () => {
@@ -103,6 +112,7 @@ function App() {
           setSettingsOpen(true)
         }}
         onOpenAuth={openAuth}
+        onOpenWorkspace={openWorkspace}
       />
       <Topbar
         language={language}
@@ -117,6 +127,18 @@ function App() {
         userId={user?.id}
         onNotice={setToast}
       />
+      {user ? <WorkspaceLauncher language={language} onOpen={openWorkspace} /> : null}
+      {user ? (
+        <Workspace
+          language={language}
+          userId={user.id}
+          open={workspaceOpen}
+          panel={workspacePanel}
+          onPanelChange={setWorkspacePanel}
+          onClose={() => setWorkspaceOpen(false)}
+          onNotice={setToast}
+        />
+      ) : null}
       <SettingsDialog
         language={language}
         fontScale={fontScale}
