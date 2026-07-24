@@ -3,12 +3,22 @@ import type { Language } from '../types'
 type SideDrawerProps = {
   language: Language
   open: boolean
+  loggedIn: boolean
   onToggle: () => void
   onClose: () => void
   onOpenSettings: () => void
+  onOpenAuth: () => void
 }
 
-export function SideDrawer({ language, open, onToggle, onClose, onOpenSettings }: SideDrawerProps) {
+export function SideDrawer({
+  language,
+  open,
+  loggedIn,
+  onToggle,
+  onClose,
+  onOpenSettings,
+  onOpenAuth,
+}: SideDrawerProps) {
   const copy =
     language === 'zh'
       ? {
@@ -17,7 +27,8 @@ export function SideDrawer({ language, open, onToggle, onClose, onOpenSettings }
           learning: '學習',
           english: '英文',
           math: '數學',
-          note: '登入與學習功能會在後續階段接回 Supabase。',
+          guestNote: '登入後即可使用學習選單、月曆與待辦事項。',
+          login: '登入或註冊',
           settings: '設定',
         }
       : {
@@ -26,9 +37,15 @@ export function SideDrawer({ language, open, onToggle, onClose, onOpenSettings }
           learning: 'Learning',
           english: 'English',
           math: 'Math',
-          note: 'Sign-in and learning will reconnect to Supabase in a later phase.',
+          guestNote: 'Sign in to unlock learning, calendar, and to-dos.',
+          login: 'Log in or register',
           settings: 'Settings',
         }
+
+  const openAuth = () => {
+    onClose()
+    onOpenAuth()
+  }
 
   return (
     <>
@@ -56,24 +73,29 @@ export function SideDrawer({ language, open, onToggle, onClose, onOpenSettings }
           </button>
         </div>
 
-        <nav className="member-nav" aria-label={copy.learning}>
-          <p className="drawer-section-label">{copy.learning}</p>
-          <button className="nav-single" type="button">
-            <span>EN</span>
-            {copy.english}
-            <small>Preview</small>
-          </button>
-          <button className="nav-single" type="button">
-            <span>∑</span>
-            {copy.math}
-            <small>Preview</small>
-          </button>
-        </nav>
-
-        <div className="guest-drawer-note">
-          <span className="note-orb">✦</span>
-          <p>{copy.note}</p>
-        </div>
+        {loggedIn ? (
+          <nav className="member-nav" aria-label={copy.learning}>
+            <p className="drawer-section-label">{copy.learning}</p>
+            <button className="nav-single" type="button">
+              <span>EN</span>
+              {copy.english}
+              <small>Preview</small>
+            </button>
+            <button className="nav-single" type="button">
+              <span>∑</span>
+              {copy.math}
+              <small>Preview</small>
+            </button>
+          </nav>
+        ) : (
+          <div className="guest-drawer-note">
+            <span className="note-orb">✦</span>
+            <div>
+              <p>{copy.guestNote}</p>
+              <button className="drawer-login-button" type="button" onClick={openAuth}>{copy.login}</button>
+            </div>
+          </div>
+        )}
 
         <button className="settings-button" type="button" onClick={onOpenSettings}>
           <span className="settings-icon" aria-hidden="true">⚙</span>
