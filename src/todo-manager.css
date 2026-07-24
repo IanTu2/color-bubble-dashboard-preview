@@ -1,5 +1,14 @@
 .todo-detail-shell {
-  width: min(980px, 100%);
+  width: min(1040px, 100%);
+}
+
+.todo-manager-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 22px;
+  padding-right: 46px;
 }
 
 .todo-manager-heading h2 {
@@ -7,21 +16,51 @@
   font-size: 2rem;
 }
 
-.todo-manager-heading > div > p:last-child {
-  margin: 0 0 24px;
+.todo-manager-heading > div:first-child > p:last-child {
+  margin: 0;
   color: var(--muted);
   line-height: 1.6;
 }
 
+.todo-primary-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 7px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+}
+
+.todo-primary-actions button {
+  min-width: 94px;
+  min-height: 42px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.todo-primary-actions button.active {
+  color: var(--ink);
+  background: linear-gradient(135deg, rgba(156,124,255,.26), rgba(88,226,210,.15));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
 .todo-editor {
   display: grid;
-  grid-template-columns: minmax(220px, 1.5fr) minmax(150px, .75fr) minmax(190px, 1fr) auto;
-  gap: 12px;
-  align-items: end;
+  gap: 14px;
   padding: 18px;
   border: 1px solid rgba(255,255,255,.09);
-  border-radius: 20px;
+  border-radius: 22px;
   background: rgba(255,255,255,.035);
+}
+
+.schedule-editor {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .todo-editor label {
@@ -47,13 +86,65 @@
   opacity: .45;
 }
 
-.todo-editor .primary-button,
-.todo-editor .secondary-button {
-  min-height: 48px;
+.schedule-title-field {
+  grid-column: 1 / -1;
 }
 
-.todo-editor .secondary-button {
+.schedule-title-field input {
+  font-size: 1rem;
+}
+
+.schedule-side {
+  min-width: 0;
+  margin: 0;
+  padding: 17px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(11,10,27,.24);
+}
+
+.schedule-side legend {
+  padding: 0 8px;
+  color: var(--ink);
+  font-size: .84rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.schedule-side > p {
+  min-height: 38px;
+  margin: 0 0 13px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.55;
+}
+
+.planned-side {
+  box-shadow: inset 3px 0 0 rgba(88,226,210,.42);
+}
+
+.deadline-side {
+  box-shadow: inset 3px 0 0 rgba(255,117,195,.42);
+}
+
+.schedule-field-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(120px, .75fr);
+  gap: 10px;
+}
+
+.schedule-form-actions {
+  display: flex;
   grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.schedule-form-actions .primary-button,
+.schedule-form-actions .secondary-button {
+  min-width: 132px;
+  min-height: 48px;
 }
 
 .schema-hint {
@@ -63,12 +154,64 @@
   line-height: 1.5;
 }
 
+.migration-hint {
+  padding: 11px 13px;
+  border: 1px solid rgba(255,213,154,.18);
+  border-radius: 13px;
+  background: rgba(255,213,154,.06);
+}
+
+.todo-range-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.todo-range-grid button {
+  display: grid;
+  min-height: 82px;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 17px;
+  color: var(--muted);
+  background: rgba(255,255,255,.04);
+  cursor: pointer;
+  transition: transform .2s, border-color .2s, background .2s;
+}
+
+.todo-range-grid button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,.2);
+}
+
+.todo-range-grid button.active {
+  color: var(--ink);
+  border-color: rgba(88,226,210,.32);
+  background: rgba(88,226,210,.1);
+}
+
+.todo-range-grid strong,
+.todo-range-grid span {
+  display: block;
+}
+
+.todo-range-grid strong {
+  font-size: 1.25rem;
+}
+
+.todo-range-grid span {
+  font-size: .7rem;
+}
+
 .todo-manager-tools {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin: 22px 0 14px;
+  margin: 18px 0 14px;
 }
 
 .todo-view-tabs {
@@ -164,6 +307,12 @@
   font-size: .7rem;
 }
 
+.schedule-meta > span {
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+}
+
 .overdue-label {
   color: #ff9eb7;
   font-weight: 800;
@@ -244,20 +393,40 @@
 }
 
 @media (max-width: 900px) {
-  .todo-editor {
-    grid-template-columns: 1fr 1fr;
+  .todo-manager-heading {
+    padding-right: 42px;
   }
 
-  .todo-title-field {
-    grid-column: 1 / -1;
+  .schedule-editor {
+    grid-template-columns: 1fr;
   }
 
-  .todo-editor .primary-button {
-    min-width: 120px;
+  .schedule-title-field,
+  .schedule-form-actions {
+    grid-column: auto;
+  }
+
+  .todo-range-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 620px) {
+  .todo-manager-heading {
+    align-items: stretch;
+    padding-right: 34px;
+    flex-direction: column;
+  }
+
+  .todo-primary-actions {
+    width: 100%;
+  }
+
+  .todo-primary-actions button {
+    flex: 1;
+    min-width: 0;
+  }
+
   .todo-manager-tools {
     align-items: stretch;
     flex-direction: column;
@@ -268,17 +437,33 @@
   }
 
   .todo-editor {
-    grid-template-columns: 1fr;
     padding: 14px;
   }
 
-  .todo-title-field,
-  .todo-editor .secondary-button {
-    grid-column: auto;
+  .schedule-field-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .schedule-side > p {
+    min-height: 0;
+  }
+
+  .schedule-form-actions {
+    flex-direction: column;
+  }
+
+  .schedule-form-actions .primary-button,
+  .schedule-form-actions .secondary-button {
+    width: 100%;
+  }
+
+  .todo-view-tabs {
+    flex-wrap: wrap;
   }
 
   .todo-view-tabs button {
     flex: 1;
+    min-width: 92px;
     padding: 0 8px;
   }
 
