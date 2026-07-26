@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { EnglishLearningStudio } from './EnglishLearningStudio'
 import { NotesApp } from './NotesApp'
 import { SearchApp } from './SearchApp'
 import { WindowFrame, clampWindowGeometry, type WindowGeometry } from './WindowFrame'
 import type { Language } from '../types'
 
-export type DesktopAppKind = 'notes' | 'search'
+export type DesktopAppKind = 'notes' | 'search' | 'english'
 
 export type DesktopRequest = {
   id: number
@@ -39,8 +40,8 @@ function storageKey(userId: string) {
 }
 
 function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
-  const preferredWidth = app === 'search' ? 780 : 760
-  const preferredHeight = app === 'search' ? 610 : 560
+  const preferredWidth = app === 'english' ? 1040 : app === 'search' ? 780 : 760
+  const preferredHeight = app === 'english' ? 720 : app === 'search' ? 610 : 560
   const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - 360))
   const height = Math.min(preferredHeight, Math.max(380, window.innerHeight - 150))
   return clampWindowGeometry({
@@ -61,7 +62,7 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
     if (!Array.isArray(parsed)) return []
 
     return parsed
-      .filter((item) => item && (item.app === 'notes' || item.app === 'search'))
+      .filter((item) => item && (item.app === 'notes' || item.app === 'search' || item.app === 'english'))
       .slice(0, 10)
       .map((item, index) => ({
         id: typeof item.id === 'string' ? item.id : createId(),
@@ -78,7 +79,9 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
 }
 
 function appIcon(app: DesktopAppKind) {
-  return app === 'notes' ? '✎' : '⌕'
+  if (app === 'notes') return '✎'
+  if (app === 'english') return 'EN'
+  return '⌕'
 }
 
 export function DesktopWorkspace({
@@ -92,6 +95,7 @@ export function DesktopWorkspace({
   const sequenceRef = useRef({
     notes: Math.max(0, ...windows.filter((item) => item.app === 'notes').map((item) => item.sequence)),
     search: Math.max(0, ...windows.filter((item) => item.app === 'search').map((item) => item.sequence)),
+    english: Math.max(0, ...windows.filter((item) => item.app === 'english').map((item) => item.sequence)),
   })
   const lastRequestRef = useRef<number | null>(null)
 
@@ -107,13 +111,11 @@ export function DesktopWorkspace({
 
   const openApp = useCallback((kind: DesktopAppKind) => {
     setWindows((current) => {
-      if (kind === 'notes') {
-        const existing = current.find((item) => item.app === 'notes')
+      if (kind === 'notes' || kind === 'english') {
+        const existing = current.find((item) => item.app === kind)
         if (existing) {
           const zIndex = nextZIndex()
-          return current.map((item) => item.id === existing.id
-            ? { ...item, minimized: false, zIndex }
-            : item)
+          return current.map((item) => item.id === existing.id ? { ...item, minimized: false, zIndex } : item)
         }
       }
 
@@ -158,24 +160,14 @@ export function DesktopWorkspace({
   }, [rememberWindows, userId, windows])
 
   const copy = language === 'zh'
-    ? {
-        launch: '開啟應用程式',
-        running: '正在執行',
-        notes: '記事本',
-        search: '搜尋',
-        newSearch: '新增搜尋視窗',
-      }
-    : {
-        launch: 'Open applications',
-        running: 'Running applications',
-        notes: 'Notes',
-        search: 'Search',
-        newSearch: 'New search window',
-      }
+    ? { launch: '開啟應用程式', running: '正在執行', notes: '記事本', search: '搜尋', english: '英文學習', newSearch: '新增搜尋視窗' }
+    : { launch: 'Open applications', running: 'Running applications', notes: 'Notes', search: 'Search', english: 'English', newSearch: 'New search window' }
 
-  const windowTitle = (item: ManagedWindow) => item.app === 'notes'
-    ? copy.notes
-    : `${copy.search} ${item.sequence}`
+  const windowTitle = (item: ManagedWindow) => {
+    if (item.app === 'notes') return copy.notes
+    if (item.app === 'english') return copy.english
+    return `${copy.search} ${item.sequence}`
+  }
 
   const updateWindow = (id: string, changes: Partial<ManagedWindow>) => {
     setWindows((current) => current.map((item) => item.id === id ? { ...item, ...changes } : item))
@@ -190,6 +182,12 @@ export function DesktopWorkspace({
     updateWindow(item.id, { minimized: false, zIndex: nextZIndex() })
   }
 
+  const appContent = (item: ManagedWindow) => {
+    if (item.app === 'notes') return <NotesApp language={language} userId={userId} />
+    if (item.app === 'english') return <EnglishLearningStudio language={language} userId={userId} />
+    return <SearchApp language={language} userId={userId} instanceId={item.id} />
+  }
+
   return (
     <>
       {windows.map((item) => item.minimized ? null : (
@@ -202,28 +200,19 @@ export function DesktopWorkspace({
           zIndex={item.zIndex}
           onFocus={() => focusWindow(item.id)}
           onMinimize={() => updateWindow(item.id, { minimized: true })}
-          onToggleMaximize={() => updateWindow(item.id, {
-            maximized: !item.maximized,
-            minimized: false,
-            zIndex: nextZIndex(),
-          })}
+          onToggleMaximize={() => updateWindow(item.id, { maximized: !item.maximized, minimized: false, zIndex: nextZIndex() })}
           onClose={() => setWindows((current) => current.filter((windowItem) => windowItem.id !== item.id))}
           onGeometryChange={(geometry) => updateWindow(item.id, { geometry })}
         >
-          {item.app === 'notes'
-            ? <NotesApp language={language} userId={userId} />
-            : <SearchApp language={language} userId={userId} instanceId={item.id} />}
+          {appContent(item)}
         </WindowFrame>
       ))}
 
       <nav className="desktop-dock" aria-label={copy.launch}>
         <div className="desktop-dock-launchers">
-          <button type="button" title={copy.notes} onClick={() => openApp('notes')}>
-            <span>✎</span><small>{copy.notes}</small>
-          </button>
-          <button type="button" title={copy.newSearch} onClick={() => openApp('search')}>
-            <span>⌕＋</span><small>{copy.search}</small>
-          </button>
+          <button type="button" title={copy.notes} onClick={() => openApp('notes')}><span>✎</span><small>{copy.notes}</small></button>
+          <button type="button" title={copy.newSearch} onClick={() => openApp('search')}><span>⌕＋</span><small>{copy.search}</small></button>
+          <button type="button" title={copy.english} onClick={() => openApp('english')}><span>EN</span><small>{copy.english}</small></button>
         </div>
 
         {windows.length > 0 ? <span className="desktop-dock-divider" aria-hidden="true" /> : null}
@@ -237,8 +226,7 @@ export function DesktopWorkspace({
               title={windowTitle(item)}
               onClick={() => toggleTaskWindow(item)}
             >
-              <span>{appIcon(item.app)}</span>
-              <small>{windowTitle(item)}</small>
+              <span>{appIcon(item.app)}</span><small>{windowTitle(item)}</small>
             </button>
           ))}
         </div>
