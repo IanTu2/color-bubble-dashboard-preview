@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { loadYouTubeApi, type YouTubePlayer } from '../lib/youtube'
 import type { Language } from '../types'
 
 type RepeatMode = 'off' | 'all' | 'one'
@@ -18,8 +19,7 @@ type MusicStudioProps = {
   language: Language
   userId: string
   onNotice: (message: string) => void
-  mode?: 'compact' | 'full'
-  onExpand?: () => void
+  mode?: 'headless' | 'full'
   onCollapse?: () => void
 }
 
@@ -82,25 +82,27 @@ export function MusicStudio({
   userId,
   onNotice,
   mode = 'full',
-  onExpand,
   onCollapse,
 }: MusicStudioProps) {
   const copy = language === 'zh'
     ? {
-        title: '音樂工作室', subtitle: '播放清單、佇列、收藏、速度與循環控制', addUrl: '加入網址音樂', trackTitle: '歌曲名稱', artist: '演出者（選填）', audioUrl: '直接音訊或 YouTube 網址', add: '加入曲庫', local: '暫時載入本機音樂', library: '我的曲庫', queue: '播放佇列', favorites: '只看收藏', all: '全部歌曲', empty: '曲庫目前是空的', emptyQueue: '播放佇列目前是空的', play: '播放', pause: '暫停', previous: '上一首', next: '下一首', shuffle: '隨機播放', repeatOff: '不循環', repeatAll: '全部循環', repeatOne: '單曲循環', volume: '音量', speed: '速度', addQueue: '加入佇列', playNow: '立即播放', favorite: '收藏', unfavorite: '取消收藏', remove: '移除', moveUp: '往上移', moveDown: '往下移', invalidUrl: '請貼上有效的 YouTube 網址，或可直接播放的 MP3、M4A、OGG 音訊網址。', added: '歌曲已加入曲庫。', localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。', playbackFailed: '這個來源無法播放。YouTube 請貼影片網址；其他來源必須是可直接播放的音訊檔案網址。', nowPlaying: '正在播放', noTrack: '尚未選擇歌曲', clearQueue: '清空佇列', expand: '開啟音樂工作室', collapse: '收合音樂工作室', sourceHint: '支援 YouTube 影片網址，以及可直接播放的 MP3、M4A、OGG 等音訊網址。一般網頁網址無法播放。', youtube: 'YouTube', directAudio: '音訊', openPlayer: '開啟音樂播放器',
+        title: '音樂工作室', subtitle: '播放清單、佇列、收藏、速度與循環控制', trackTitle: '歌曲名稱', artist: '演出者（選填）', audioUrl: '直接音訊或 YouTube 網址', add: '加入曲庫', local: '暫時載入本機音樂', library: '我的曲庫', queue: '播放佇列', favorites: '只看收藏', all: '全部歌曲', empty: '曲庫目前是空的', emptyQueue: '播放佇列目前是空的', play: '播放', pause: '暫停', previous: '上一首', next: '下一首', shuffle: '隨機播放', repeatOff: '不循環', repeatAll: '全部循環', repeatOne: '單曲循環', volume: '音量', speed: '速度', addQueue: '加入佇列', playNow: '立即播放', favorite: '收藏', unfavorite: '取消收藏', remove: '移除', moveUp: '往上移', moveDown: '往下移', invalidUrl: '請貼上有效的 YouTube 網址，或可直接播放的 MP3、M4A、OGG 音訊網址。', added: '歌曲已加入曲庫。', localAdded: '本機音樂已暫時加入；重新整理後需重新選取檔案。', playbackFailed: '這個來源無法播放。YouTube 請確認影片允許嵌入；其他來源必須是可直接播放的音訊檔案網址。', nowPlaying: '正在播放', noTrack: '尚未選擇歌曲', clearQueue: '清空佇列', collapse: '收合音樂工作室', sourceHint: '支援 YouTube 影片網址，以及可直接播放的 MP3、M4A、OGG 等音訊網址。一般網頁網址無法播放。', youtube: 'YouTube', directAudio: '音訊',
       }
     : {
-        title: 'Music Studio', subtitle: 'Library, queue, favorites, speed, and repeat controls', addUrl: 'Add audio URL', trackTitle: 'Track title', artist: 'Artist (optional)', audioUrl: 'Direct audio or YouTube URL', add: 'Add to library', local: 'Load local audio temporarily', library: 'Library', queue: 'Play queue', favorites: 'Favorites only', all: 'All tracks', empty: 'Your library is empty', emptyQueue: 'The queue is empty', play: 'Play', pause: 'Pause', previous: 'Previous', next: 'Next', shuffle: 'Shuffle', repeatOff: 'Repeat off', repeatAll: 'Repeat all', repeatOne: 'Repeat one', volume: 'Volume', speed: 'Speed', addQueue: 'Add to queue', playNow: 'Play now', favorite: 'Favorite', unfavorite: 'Remove favorite', remove: 'Remove', moveUp: 'Move up', moveDown: 'Move down', invalidUrl: 'Paste a valid YouTube URL or a directly playable MP3, M4A, or OGG URL.', added: 'Track added to the library.', localAdded: 'Local audio added temporarily. Select it again after refreshing.', playbackFailed: 'This source could not be played. Use a YouTube video URL or a directly playable audio file URL.', nowPlaying: 'Now playing', noTrack: 'No track selected', clearQueue: 'Clear queue', expand: 'Open music studio', collapse: 'Collapse music studio', sourceHint: 'Supports YouTube video URLs and directly playable MP3, M4A, or OGG URLs. Ordinary webpage URLs cannot play.', youtube: 'YouTube', directAudio: 'Audio', openPlayer: 'Open music player',
+        title: 'Music Studio', subtitle: 'Library, queue, favorites, speed, and repeat controls', trackTitle: 'Track title', artist: 'Artist (optional)', audioUrl: 'Direct audio or YouTube URL', add: 'Add to library', local: 'Load local audio temporarily', library: 'Library', queue: 'Play queue', favorites: 'Favorites only', all: 'All tracks', empty: 'Your library is empty', emptyQueue: 'The queue is empty', play: 'Play', pause: 'Pause', previous: 'Previous', next: 'Next', shuffle: 'Shuffle', repeatOff: 'Repeat off', repeatAll: 'Repeat all', repeatOne: 'Repeat one', volume: 'Volume', speed: 'Speed', addQueue: 'Add to queue', playNow: 'Play now', favorite: 'Favorite', unfavorite: 'Remove favorite', remove: 'Remove', moveUp: 'Move up', moveDown: 'Move down', invalidUrl: 'Paste a valid YouTube URL or a directly playable MP3, M4A, or OGG URL.', added: 'Track added to the library.', localAdded: 'Local audio added temporarily. Select it again after refreshing.', playbackFailed: 'This source could not be played. Check that the YouTube video allows embedding or use a directly playable audio file URL.', nowPlaying: 'Now playing', noTrack: 'No track selected', clearQueue: 'Clear queue', collapse: 'Collapse music studio', sourceHint: 'Supports YouTube video URLs and directly playable MP3, M4A, or OGG URLs. Ordinary webpage URLs cannot play.', youtube: 'YouTube', directAudio: 'Audio',
       }
 
   const libraryKey = storageKey(userId, 'library')
   const queueKey = storageKey(userId, 'queue')
   const settingsKey = storageKey(userId, 'settings')
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const youtubeRef = useRef<HTMLIFrameElement | null>(null)
-  const youtubeReadyRef = useRef(false)
+  const youtubePlayerRef = useRef<YouTubePlayer | null>(null)
+  const youtubeHostIdRef = useRef(`bubble-youtube-player-${createId()}`)
   const temporaryUrlsRef = useRef<Set<string>>(new Set())
-  const autoPlayRef = useRef(false)
+  const pendingAutoplayRef = useRef(false)
+  const onEndedRef = useRef<() => void>(() => undefined)
+  const noticeRef = useRef(onNotice)
+  const playbackFailedRef = useRef(copy.playbackFailed)
 
   const [tracks, setTracks] = useState<MusicTrack[]>(() => readJson(libraryKey, []))
   const [queue, setQueue] = useState<string[]>(() => readJson(queueKey, []))
@@ -126,22 +128,8 @@ export function MusicStudio({
   const visibleTracks = useMemo(() => tracks.filter((track) => !favoritesOnly || track.favorite), [favoritesOnly, tracks])
   const queuedTracks = queue.map((id) => tracks.find((track) => track.id === id)).filter((track): track is MusicTrack => Boolean(track))
 
-  const sendYouTubeCommand = (func: 'playVideo' | 'pauseVideo' | 'stopVideo') => {
-    youtubeRef.current?.contentWindow?.postMessage(
-      JSON.stringify({ event: 'command', func, args: [] }),
-      'https://www.youtube.com',
-    )
-  }
-
-  const playCurrentYouTube = () => {
-    if (youtubeReadyRef.current) {
-      sendYouTubeCommand('playVideo')
-      autoPlayRef.current = false
-    } else {
-      autoPlayRef.current = true
-    }
-    setIsPlaying(true)
-  }
+  noticeRef.current = onNotice
+  playbackFailedRef.current = copy.playbackFailed
 
   useEffect(() => {
     window.localStorage.setItem(libraryKey, JSON.stringify(tracks.filter((track) => !track.temporary)))
@@ -162,29 +150,131 @@ export function MusicStudio({
 
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
-    audio.volume = volume
-    audio.playbackRate = speed
+    if (audio) {
+      audio.volume = volume
+      audio.playbackRate = speed
+    }
+
+    const youtube = youtubePlayerRef.current
+    if (youtube) {
+      try {
+        youtube.setVolume(Math.round(volume * 100))
+        youtube.setPlaybackRate(speed)
+      } catch {
+        // The player can briefly reject commands while a new video is loading.
+      }
+    }
   }, [speed, volume])
 
   useEffect(() => {
-    if (currentSource.type === 'youtube') {
-      audioRef.current?.pause()
-      youtubeReadyRef.current = false
-      setProgress(0)
-      setDuration(0)
-      return
+    let cancelled = false
+
+    if (currentSource.type !== 'youtube' || !currentYouTubeId) {
+      youtubePlayerRef.current?.pauseVideo()
+      return () => {
+        cancelled = true
+      }
     }
 
+    audioRef.current?.pause()
+    setProgress(0)
+    setDuration(0)
+
+    void loadYouTubeApi().then((api) => {
+      if (cancelled) return
+
+      const existingPlayer = youtubePlayerRef.current
+      if (existingPlayer) {
+        existingPlayer.setVolume(Math.round(volume * 100))
+        existingPlayer.setPlaybackRate(speed)
+        if (pendingAutoplayRef.current) {
+          existingPlayer.loadVideoById(currentYouTubeId)
+          pendingAutoplayRef.current = false
+        } else {
+          existingPlayer.cueVideoById(currentYouTubeId)
+        }
+        return
+      }
+
+      youtubePlayerRef.current = new api.Player(youtubeHostIdRef.current, {
+        width: '2',
+        height: '2',
+        videoId: currentYouTubeId,
+        playerVars: {
+          playsinline: 1,
+          rel: 0,
+          controls: 0,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: ({ target }) => {
+            target.setVolume(Math.round(volume * 100))
+            target.setPlaybackRate(speed)
+            if (pendingAutoplayRef.current) {
+              target.loadVideoById(currentYouTubeId)
+              pendingAutoplayRef.current = false
+            } else {
+              target.cueVideoById(currentYouTubeId)
+            }
+          },
+          onStateChange: ({ data }) => {
+            if (data === api.PlayerState.PLAYING) setIsPlaying(true)
+            if (data === api.PlayerState.PAUSED) setIsPlaying(false)
+            if (data === api.PlayerState.ENDED) {
+              setIsPlaying(false)
+              onEndedRef.current()
+            }
+          },
+          onError: () => {
+            setIsPlaying(false)
+            noticeRef.current(playbackFailedRef.current)
+          },
+        },
+      })
+    }).catch(() => {
+      if (!cancelled) noticeRef.current(playbackFailedRef.current)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [currentSource.type, currentYouTubeId])
+
+  useEffect(() => {
+    if (currentSource.type !== 'audio') return
+
+    youtubePlayerRef.current?.pauseVideo()
     const audio = audioRef.current
-    if (!audio || !currentTrack || !autoPlayRef.current) return
-    autoPlayRef.current = false
+    if (!audio || !currentTrack || !pendingAutoplayRef.current) return
+
+    pendingAutoplayRef.current = false
     audio.load()
     void audio.play().then(() => setIsPlaying(true)).catch(() => {
       setIsPlaying(false)
       onNotice(copy.playbackFailed)
     })
   }, [currentTrack, currentSource.type, copy.playbackFailed, onNotice])
+
+  useEffect(() => {
+    if (currentSource.type !== 'youtube') return
+
+    const updateYouTubeProgress = () => {
+      const player = youtubePlayerRef.current
+      if (!player) return
+      try {
+        const nextDuration = player.getDuration()
+        const nextProgress = player.getCurrentTime()
+        if (Number.isFinite(nextDuration)) setDuration(nextDuration)
+        if (Number.isFinite(nextProgress)) setProgress(nextProgress)
+      } catch {
+        // Player state is not readable until YouTube reports it as ready.
+      }
+    }
+
+    updateYouTubeProgress()
+    const timer = window.setInterval(updateYouTubeProgress, 500)
+    return () => window.clearInterval(timer)
+  }, [currentSource.type, currentYouTubeId])
 
   useEffect(() => {
     if (!currentTrack || !('mediaSession' in navigator)) return
@@ -196,9 +286,24 @@ export function MusicStudio({
   }, [currentTrack])
 
   useEffect(() => () => {
+    youtubePlayerRef.current?.destroy()
+    youtubePlayerRef.current = null
     temporaryUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     temporaryUrlsRef.current.clear()
   }, [])
+
+  const playCurrentYouTube = () => {
+    const player = youtubePlayerRef.current
+    if (player) {
+      player.setVolume(Math.round(volume * 100))
+      player.setPlaybackRate(speed)
+      player.playVideo()
+      pendingAutoplayRef.current = false
+    } else {
+      pendingAutoplayRef.current = true
+    }
+    setIsPlaying(true)
+  }
 
   const playTrack = async (track: MusicTrack) => {
     setQueue((current) => current.includes(track.id) ? current : [...current, track.id])
@@ -216,8 +321,12 @@ export function MusicStudio({
       return
     }
 
-    autoPlayRef.current = true
+    audioRef.current?.pause()
+    youtubePlayerRef.current?.pauseVideo()
+    pendingAutoplayRef.current = true
     setIsPlaying(false)
+    setProgress(0)
+    setDuration(0)
     setCurrentId(track.id)
   }
 
@@ -230,7 +339,7 @@ export function MusicStudio({
 
     if (currentSource.type === 'youtube') {
       if (isPlaying) {
-        sendYouTubeCommand('pauseVideo')
+        youtubePlayerRef.current?.pauseVideo()
         setIsPlaying(false)
       } else {
         playCurrentYouTube()
@@ -255,6 +364,7 @@ export function MusicStudio({
     if (queue.length === 0) return
     const currentIndex = Math.max(0, queue.indexOf(currentId ?? ''))
     let nextIndex = currentIndex
+
     if (shuffle && queue.length > 1) {
       do {
         nextIndex = Math.floor(Math.random() * queue.length)
@@ -264,16 +374,25 @@ export function MusicStudio({
       if (nextIndex >= queue.length) nextIndex = repeat === 'all' ? 0 : queue.length - 1
       if (nextIndex < 0) nextIndex = repeat === 'all' ? queue.length - 1 : 0
     }
+
     const nextTrack = tracks.find((track) => track.id === queue[nextIndex])
     if (nextTrack) void playTrack(nextTrack)
   }
 
   const onEnded = () => {
     if (repeat === 'one') {
-      if (audioRef.current) audioRef.current.currentTime = 0
-      void audioRef.current?.play().catch(() => onNotice(copy.playbackFailed))
+      if (currentSource.type === 'youtube') {
+        const player = youtubePlayerRef.current
+        player?.seekTo(0, true)
+        player?.playVideo()
+        setIsPlaying(true)
+      } else if (audioRef.current) {
+        audioRef.current.currentTime = 0
+        void audioRef.current.play().catch(() => onNotice(copy.playbackFailed))
+      }
       return
     }
+
     const currentIndex = queue.indexOf(currentId ?? '')
     if (currentIndex === queue.length - 1 && repeat === 'off') {
       setIsPlaying(false)
@@ -282,6 +401,8 @@ export function MusicStudio({
     selectNext(1)
   }
 
+  onEndedRef.current = onEnded
+
   const addUrlTrack = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formElement = event.currentTarget
@@ -289,6 +410,7 @@ export function MusicStudio({
     const title = String(form.get('title') ?? '').trim()
     const artist = String(form.get('artist') ?? '').trim()
     const urlValue = String(form.get('url') ?? '').trim()
+
     try {
       const url = new URL(urlValue)
       if (!['http:', 'https:'].includes(url.protocol)) throw new Error('protocol')
@@ -306,11 +428,13 @@ export function MusicStudio({
   const addLocalTracks = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     if (files.length === 0) return
+
     const additions = files.map<MusicTrack>((file) => {
       const url = URL.createObjectURL(file)
       temporaryUrlsRef.current.add(url)
       return { id: createId(), title: file.name.replace(/\.[^.]+$/, ''), artist: '', url, favorite: false, temporary: true, source: 'audio' }
     })
+
     setTracks((current) => [...current, ...additions])
     setQueue((current) => [...current, ...additions.map((track) => track.id)])
     event.target.value = ''
@@ -322,12 +446,16 @@ export function MusicStudio({
       URL.revokeObjectURL(track.url)
       temporaryUrlsRef.current.delete(track.url)
     }
+
     setTracks((current) => current.filter((item) => item.id !== track.id))
     setQueue((current) => current.filter((id) => id !== track.id))
     if (currentId === track.id) {
       audioRef.current?.pause()
-      sendYouTubeCommand('stopVideo')
+      youtubePlayerRef.current?.stopVideo()
+      pendingAutoplayRef.current = false
       setCurrentId(null)
+      setProgress(0)
+      setDuration(0)
       setIsPlaying(false)
     }
   }
@@ -340,6 +468,25 @@ export function MusicStudio({
       ;[next[index], next[target]] = [next[target], next[index]]
       return next
     })
+  }
+
+  const seek = (value: number) => {
+    setProgress(value)
+    if (currentSource.type === 'youtube') {
+      youtubePlayerRef.current?.seekTo(value, true)
+    } else if (audioRef.current) {
+      audioRef.current.currentTime = value
+    }
+  }
+
+  const changeVolume = (value: number) => {
+    setVolume(value)
+    youtubePlayerRef.current?.setVolume(Math.round(value * 100))
+  }
+
+  const changeSpeed = (value: number) => {
+    setSpeed(value)
+    youtubePlayerRef.current?.setPlaybackRate(value)
   }
 
   const repeatLabel = repeat === 'one' ? copy.repeatOne : repeat === 'all' ? copy.repeatAll : copy.repeatOff
@@ -358,36 +505,11 @@ export function MusicStudio({
         onError={() => currentSource.type === 'audio' && currentTrack && onNotice(copy.playbackFailed)}
       />
 
-      {currentYouTubeId ? (
-        <iframe
-          className="music-youtube-frame"
-          ref={youtubeRef}
-          title={`${currentTrack?.title ?? copy.youtube} YouTube player`}
-          src={`https://www.youtube.com/embed/${currentYouTubeId}?enablejsapi=1&playsinline=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`}
-          allow="autoplay; encrypted-media; picture-in-picture"
-          onLoad={() => {
-            youtubeReadyRef.current = true
-            if (autoPlayRef.current) {
-              sendYouTubeCommand('playVideo')
-              autoPlayRef.current = false
-              setIsPlaying(true)
-            }
-          }}
-        />
-      ) : null}
+      <div className="music-youtube-host" aria-hidden="true">
+        <div id={youtubeHostIdRef.current} />
+      </div>
 
-      {mode === 'compact' ? (
-        <button
-          className={`music-orb-launcher${isPlaying ? ' playing' : ''}`}
-          type="button"
-          aria-label={copy.openPlayer}
-          title={currentTrack ? `${copy.openPlayer}：${currentTrack.title}` : copy.openPlayer}
-          onClick={onExpand}
-        >
-          <span aria-hidden="true">♫</span>
-          {isPlaying ? <i aria-hidden="true" /> : null}
-        </button>
-      ) : (
+      {mode === 'headless' ? null : (
         <>
           <header className="music-studio-head">
             <div><p className="eyebrow">BUBBLE AUDIO</p><h2>{copy.title}</h2><p>{copy.subtitle}</p></div>
@@ -407,18 +529,14 @@ export function MusicStudio({
             </div>
             <div className="music-timeline">
               <span>{formatTime(progress)}</span>
-              <input type="range" min="0" max={Math.max(duration, 1)} step="0.1" value={Math.min(progress, Math.max(duration, 1))} disabled={currentSource.type === 'youtube'} onChange={(event) => {
-                const value = Number(event.target.value)
-                setProgress(value)
-                if (audioRef.current) audioRef.current.currentTime = value
-              }} />
+              <input type="range" min="0" max={Math.max(duration, 1)} step="0.1" value={Math.min(progress, Math.max(duration, 1))} onChange={(event) => seek(Number(event.target.value))} />
               <span>{formatTime(duration)}</span>
             </div>
             <div className="music-control-grid">
               <button className={shuffle ? 'active' : ''} type="button" title={copy.shuffle} onClick={() => setShuffle((value) => !value)}>⤨ {copy.shuffle}</button>
               <button type="button" title={repeatLabel} onClick={() => setRepeat((value) => value === 'off' ? 'all' : value === 'all' ? 'one' : 'off')}>↻ {repeatLabel}</button>
-              <label><span>{copy.volume}</span><input type="range" min="0" max="1" step="0.02" value={volume} disabled={currentSource.type === 'youtube'} onChange={(event) => setVolume(Number(event.target.value))} /></label>
-              <label><span>{copy.speed}</span><select value={speed} disabled={currentSource.type === 'youtube'} onChange={(event) => setSpeed(Number(event.target.value))}><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+              <label><span>{copy.volume}</span><input type="range" min="0" max="1" step="0.02" value={volume} onChange={(event) => changeVolume(Number(event.target.value))} /></label>
+              <label><span>{copy.speed}</span><select value={speed} onChange={(event) => changeSpeed(Number(event.target.value))}><option value="0.75">0.75×</option><option value="1">1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
             </div>
           </div>
 
