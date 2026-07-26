@@ -8,6 +8,7 @@ import './todo-manager.css'
 import './desktop-workspace.css'
 import './music-studio.css'
 import './preferences-music.css'
+import './english-learning.css'
 
 const rootElement = document.getElementById('root')
 
