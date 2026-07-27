@@ -7,8 +7,11 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "predev": "node scripts/build-cefr-lexicon.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-cefr-lexicon.mjs",
     "build": "tsc -b && vite build",
+    "pretypecheck": "node scripts/build-cefr-lexicon.mjs",
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview"
   },
