@@ -27,12 +27,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Type check and build
         run: npm run build
+
+      - name: Verify deploy output
+        run: |
+          test -f dist/index.html
+          test -d dist/assets
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+          echo "Deploy output ready:"
+          du -sh dist
+          find dist -maxdepth 2 -type f | sort | head -80
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
