@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { EnglishLearningStudio } from './EnglishLearningStudio'
+import { EnglishLearningStudio } from './EnglishLearningStudioV3'
 import { NotesApp } from './NotesApp'
 import { SearchApp } from './SearchApp'
 import { WindowFrame, clampWindowGeometry, type WindowGeometry } from './WindowFrame'
