@@ -1,4 +1,5 @@
 import type { EnglishAccent, EnglishSkill } from './english-data'
+import { EXPANDED_ENGLISH_WORDS } from './english-expanded-data'
 
 export type LearnerProfile = {
   goals: Array<'daily' | 'work' | 'travel' | 'exam' | 'tech'>
@@ -87,11 +88,22 @@ function editDistance(a: string, b: string) {
   return matrix[a.length][b.length]
 }
 
+function acceptedSemanticAnswers(expected: string) {
+  const target = normalizeEnglishAnswer(expected)
+  const word = EXPANDED_ENGLISH_WORDS.find((item) => normalizeEnglishAnswer(item.word) === target)
+  return word?.acceptedTranslations.map(normalizeEnglishAnswer) ?? []
+}
+
 export function englishAnswerScore(answer: string, expected: string) {
   const normalized = normalizeEnglishAnswer(answer)
   const target = normalizeEnglishAnswer(expected)
   if (normalized === target) return 1
+
+  const semanticAnswers = acceptedSemanticAnswers(expected)
+  if (semanticAnswers.includes(normalized)) return 1
+
   if (target.length >= 6 && editDistance(normalized, target) === 1) return 0.5
+  if (semanticAnswers.some((item) => item.length >= 6 && editDistance(normalized, item) === 1)) return 0.5
   return 0
 }
 
@@ -135,7 +147,8 @@ export function englishTodayKey() {
 }
 
 export function maskEnglishWord(word: string) {
-  return word.split('').map((letter, index) => index > 0 && index < word.length - 1 && /[aeiou]/i.test(letter) ? '_' : letter).join('')
+  if (word.length <= 2) return word
+  return `${word[0]}${'_'.repeat(Math.max(1, word.length - 2))}${word[word.length - 1]}`
 }
 
 export function speakEnglish(text: string, accent: EnglishAccent) {
