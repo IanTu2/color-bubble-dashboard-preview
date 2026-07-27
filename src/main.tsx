@@ -9,6 +9,7 @@ import './desktop-workspace.css'
 import './music-studio.css'
 import './preferences-music.css'
 import './english-learning.css'
+import './english-casual-practice.css'
 
 const rootElement = document.getElementById('root')
 
