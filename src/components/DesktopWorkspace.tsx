@@ -40,13 +40,15 @@ function storageKey(userId: string) {
 }
 
 function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
-  const preferredWidth = app === 'english' ? 1040 : app === 'search' ? 780 : 760
-  const preferredHeight = app === 'english' ? 720 : app === 'search' ? 610 : 560
-  const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - 360))
-  const height = Math.min(preferredHeight, Math.max(380, window.innerHeight - 150))
+  const preferredWidth = app === 'english' ? 1180 : app === 'search' ? 780 : 760
+  const preferredHeight = app === 'english' ? 820 : app === 'search' ? 610 : 560
+  const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - (app === 'english' ? 32 : 360)))
+  const height = app === 'english'
+    ? Math.min(preferredHeight, Math.max(420, window.innerHeight - 94))
+    : Math.min(preferredHeight, Math.max(380, window.innerHeight - 150))
   return clampWindowGeometry({
-    x: 58 + (offset % 7) * 34,
-    y: 86 + (offset % 6) * 28,
+    x: app === 'english' ? Math.max(8, Math.round((window.innerWidth - width) / 2)) : 58 + (offset % 7) * 34,
+    y: app === 'english' ? 8 : 86 + (offset % 6) * 28,
     width,
     height,
   })
