@@ -40,16 +40,16 @@ export function clampWindowGeometry(value: WindowGeometry): WindowGeometry {
 
   const minWidth = 520
   const minHeight = 360
-  const dockClearance = 78
-  const maxWidth = Math.max(minWidth, window.innerWidth - 16)
-  const maxHeight = Math.max(minHeight, window.innerHeight - dockClearance - 8)
+  const edgeGap = 8
+  const maxWidth = Math.max(minWidth, window.innerWidth - edgeGap * 2)
+  const maxHeight = Math.max(minHeight, window.innerHeight - edgeGap * 2)
   const width = Math.min(Math.max(value.width, minWidth), maxWidth)
   const height = Math.min(Math.max(value.height, minHeight), maxHeight)
   return {
     width,
     height,
-    x: Math.min(Math.max(value.x, 8), Math.max(8, window.innerWidth - width - 8)),
-    y: Math.min(Math.max(value.y, 8), Math.max(8, window.innerHeight - height - dockClearance)),
+    x: Math.min(Math.max(value.x, edgeGap), Math.max(edgeGap, window.innerWidth - width - edgeGap)),
+    y: Math.min(Math.max(value.y, edgeGap), Math.max(edgeGap, window.innerHeight - height - edgeGap)),
   }
 }
 
@@ -129,7 +129,7 @@ export function WindowFrame({
   }
 
   const style = maximized
-    ? { inset: '8px 8px 78px', zIndex }
+    ? { inset: '8px', zIndex }
     : {
         left: `${geometry.x}px`,
         top: `${geometry.y}px`,

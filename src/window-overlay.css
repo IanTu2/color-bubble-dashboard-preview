@@ -1,0 +1,9 @@
+.desktop-dock {
+  z-index: 100000;
+}
+
+@media (min-width: 761px) {
+  .desktop-window.maximized {
+    border-radius: 18px;
+  }
+}

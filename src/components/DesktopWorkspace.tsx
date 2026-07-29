@@ -40,15 +40,22 @@ function storageKey(userId: string) {
 }
 
 function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
-  const preferredWidth = app === 'english' ? 1180 : app === 'search' ? 780 : 760
-  const preferredHeight = app === 'english' ? 820 : app === 'search' ? 610 : 560
-  const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - (app === 'english' ? 32 : 360)))
-  const height = app === 'english'
-    ? Math.min(preferredHeight, Math.max(420, window.innerHeight - 94))
-    : Math.min(preferredHeight, Math.max(380, window.innerHeight - 150))
+  if (app === 'english') {
+    return clampWindowGeometry({
+      x: 8,
+      y: 8,
+      width: Math.max(520, window.innerWidth - 16),
+      height: Math.max(420, window.innerHeight - 16),
+    })
+  }
+
+  const preferredWidth = app === 'search' ? 780 : 760
+  const preferredHeight = app === 'search' ? 610 : 560
+  const width = Math.min(preferredWidth, Math.max(520, window.innerWidth - 360))
+  const height = Math.min(preferredHeight, Math.max(380, window.innerHeight - 150))
   return clampWindowGeometry({
-    x: app === 'english' ? Math.max(8, Math.round((window.innerWidth - width) / 2)) : 58 + (offset % 7) * 34,
-    y: app === 'english' ? 8 : 86 + (offset % 6) * 28,
+    x: 58 + (offset % 7) * 34,
+    y: 86 + (offset % 6) * 28,
     width,
     height,
   })
@@ -70,9 +77,9 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
         id: typeof item.id === 'string' ? item.id : createId(),
         app: item.app,
         sequence: Number.isFinite(item.sequence) ? item.sequence : index + 1,
-        geometry: clampWindowGeometry(item.geometry),
+        geometry: item.app === 'english' ? appGeometry('english', index) : clampWindowGeometry(item.geometry),
         minimized: Boolean(item.minimized),
-        maximized: false,
+        maximized: item.app === 'english',
         zIndex: 60 + index,
       }))
   } catch {
@@ -117,7 +124,15 @@ export function DesktopWorkspace({
         const existing = current.find((item) => item.app === kind)
         if (existing) {
           const zIndex = nextZIndex()
-          return current.map((item) => item.id === existing.id ? { ...item, minimized: false, zIndex } : item)
+          return current.map((item) => item.id === existing.id
+            ? {
+                ...item,
+                minimized: false,
+                maximized: kind === 'english' ? true : item.maximized,
+                geometry: kind === 'english' ? appGeometry('english', current.length) : item.geometry,
+                zIndex,
+              }
+            : item)
         }
       }
 
@@ -131,7 +146,7 @@ export function DesktopWorkspace({
           sequence,
           geometry: appGeometry(kind, current.length),
           minimized: false,
-          maximized: false,
+          maximized: kind === 'english',
           zIndex: nextZIndex(),
         },
       ]
