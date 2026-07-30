@@ -117,6 +117,10 @@ function scrambledLetters(word: string) {
   return shuffle(word.replace(/[^A-Za-z]/g, '').toLowerCase().split('')).join(' · ')
 }
 
+function stableLetters(word: string) {
+  return word.replace(/[^A-Za-z]/g, '').toLowerCase().split('').sort().join(' · ')
+}
+
 function chooseEntry(
   entries: GameEntry[],
   range: GameRange,
@@ -330,6 +334,16 @@ export function EnglishCasualPracticeV5({ language, profile, history, setHistory
   const rangeLabels = language === 'zh'
     ? { adaptive: '依我的程度', learned: '只複習學過的', challenge: '挑戰下一級', all: '全程度隨機' }
     : { adaptive: 'My level', learned: 'Learned only', challenge: 'Next-level challenge', all: 'All levels' }
+  const visiblePrompt = challenge.mode === 'repair'
+    ? (language === 'zh'
+      ? `請修復拼字：${targetLetterHint(challenge.answer)}`
+      : `Repair the spelling: ${targetLetterHint(challenge.answer)}`)
+    : challenge.prompt
+  const visibleHint = challenge.mode === 'repair'
+    ? (language === 'zh'
+      ? `可用字母：${stableLetters(challenge.answer)}`
+      : `Letters: ${stableLetters(challenge.answer)}`)
+    : challenge.hint
 
   return (
     <div className="casual-practice-layout">
@@ -358,9 +372,9 @@ export function EnglishCasualPracticeV5({ language, profile, history, setHistory
 
         <article className="casual-challenge" key={challenge.id}>
           <div className="casual-challenge-meta"><span>{modeLabel(challenge.mode, language)}</span><span>{challenge.entry.level} · {challenge.entry.pos}</span></div>
-          <h4>{challenge.prompt}</h4>
+          <h4>{visiblePrompt}</h4>
           {challenge.context ? <p className="casual-challenge-context">{challenge.context}</p> : null}
-          {challenge.hint ? <p className="casual-challenge-context">{language === 'zh' ? '提示：' : 'Hint: '}{challenge.hint}</p> : null}
+          {visibleHint ? <p className="casual-challenge-context">{language === 'zh' ? '提示：' : 'Hint: '}{visibleHint}</p> : null}
           {challenge.speakText ? <button className="listen-button" type="button" onClick={() => speakEnglish(challenge.speakText ?? challenge.answer, profile.accent)}>🔊 {language === 'zh' ? '播放發音' : 'Play audio'}</button> : null}
 
           <form onSubmit={submit}>
