@@ -15,6 +15,7 @@ const sources = [
 ]
 
 const validLevels = new Set(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+const minimumEntriesPerLevel = 1000
 const outputPath = path.resolve('src/generated/cefr-lexicon.ts')
 
 function parseCsvLine(line) {
@@ -142,6 +143,16 @@ function dedupe(entries) {
   return result
 }
 
+function assertCoverage(levelCounts) {
+  const insufficient = Object.entries(levelCounts)
+    .filter(([, count]) => count < minimumEntriesPerLevel)
+    .map(([level, count]) => `${level}=${count}`)
+
+  if (insufficient.length > 0) {
+    throw new Error(`CEFR coverage below ${minimumEntriesPerLevel} entries: ${insufficient.join(', ')}`)
+  }
+}
+
 async function main() {
   await mkdir(path.dirname(outputPath), { recursive: true })
 
@@ -155,6 +166,8 @@ async function main() {
     const entries = dedupe(parsedSources.flatMap((item) => item.entries))
       .sort((left, right) => left.level.localeCompare(right.level) || left.word.localeCompare(right.word))
     const levelCounts = countLevels(entries)
+    assertCoverage(levelCounts)
+
     const sourceRowCounts = parsedSources.reduce(
       (total, item) => Object.fromEntries(Object.keys(total).map((level) => [level, total[level] + item.sourceCounts[level]])),
       { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 },
@@ -168,22 +181,28 @@ async function main() {
       `export const CEFR_LEXICON = JSON.parse(CEFR_LEXICON_JSON) as GeneratedCefrEntry[]\n` +
       `export const CEFR_LEVEL_COUNTS: Record<GeneratedCefrLevel, number> = ${JSON.stringify(levelCounts)}\n` +
       `export const CEFR_SOURCE_ROW_COUNTS: Record<GeneratedCefrLevel, number> = ${JSON.stringify(sourceRowCounts)}\n` +
+      `export const CEFR_MIN_ENTRIES_PER_LEVEL = ${minimumEntriesPerLevel}\n` +
+      `export const CEFR_COVERAGE_OK = true\n` +
       `export const CEFR_SOURCE_NOTE = 'CEFR-J Vocabulary Profile 1.5 © Tono Laboratory, TUFS; Octanove Vocabulary Profile C1/C2 1.0, CC BY-SA 4.0.'\n`
 
     await writeFile(outputPath, content, 'utf8')
     console.log(`[cefr] generated ${entries.length} playable entries`)
     console.log(`[cefr] source rows ${JSON.stringify(sourceRowCounts)}`)
     console.log(`[cefr] playable entries ${JSON.stringify(levelCounts)}`)
+    console.log(`[cefr] coverage check passed: every level has at least ${minimumEntriesPerLevel} entries`)
   } catch (error) {
-    console.error(`[cefr] generation failed; writing an empty fallback: ${String(error)}`)
-    const fallback = `// Generated fallback because the remote profiles were unavailable.\n` +
+    console.error(`[cefr] generation failed; refusing to deploy incomplete coverage: ${String(error)}`)
+    const fallback = `// Generated fallback because CEFR coverage validation failed.\n` +
       `export type GeneratedCefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'\n` +
       `export type GeneratedCefrEntry = { id: string; word: string; pos: string; level: GeneratedCefrLevel; source: string; topic: string; note: string }\n` +
       `export const CEFR_LEXICON: GeneratedCefrEntry[] = []\n` +
       `export const CEFR_LEVEL_COUNTS: Record<GeneratedCefrLevel, number> = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0, C2: 0 }\n` +
       `export const CEFR_SOURCE_ROW_COUNTS = CEFR_LEVEL_COUNTS\n` +
-      `export const CEFR_SOURCE_NOTE = 'Remote CEFR profiles were unavailable during this build.'\n`
+      `export const CEFR_MIN_ENTRIES_PER_LEVEL = ${minimumEntriesPerLevel}\n` +
+      `export const CEFR_COVERAGE_OK = false\n` +
+      `export const CEFR_SOURCE_NOTE = 'CEFR coverage generation failed.'\n`
     await writeFile(outputPath, fallback, 'utf8')
+    process.exitCode = 1
   }
 }
 
