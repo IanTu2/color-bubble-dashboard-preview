@@ -1,3 +1,4 @@
 export {
-  FULL_ASSESSMENT_QUESTION_BANK as ASSESSMENT_QUESTION_BANK,
-} from './english-question-bank-v4'
+  FULL_ASSESSMENT_QUESTION_BANK_V5 as ASSESSMENT_QUESTION_BANK,
+  PER_WORD_QUESTION_COVERAGE,
+} from './english-question-bank-v5'
