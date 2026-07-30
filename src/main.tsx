@@ -11,6 +11,7 @@ import './music-studio.css'
 import './preferences-music.css'
 import './english-learning.css'
 import './english-casual-practice.css'
+import './english-bilingual-library.css'
 
 const rootElement = document.getElementById('root')
 
