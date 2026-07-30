@@ -1,3 +1,3 @@
 export {
   EnglishLearningStudio,
-} from './EnglishLearningStudioV4'
+} from './EnglishLearningStudioV5'

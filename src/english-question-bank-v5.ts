@@ -1,10 +1,12 @@
 import type { EnglishQuestion } from './english-data'
-import { CEFR_LEXICON, CEFR_LEVEL_COUNTS } from './generated/cefr-lexicon'
+import { CEFR_BILINGUAL_COUNTS, CEFR_LEXICON, CEFR_LEVEL_COUNTS } from './generated/cefr-lexicon'
 import type { GeneratedCefrEntry, GeneratedCefrLevel } from './generated/cefr-lexicon'
 import { EXPANDED_ASSESSMENT_QUESTION_BANK } from './english-question-bank-v3'
 
-const QUESTIONS_PER_LEXICON_ENTRY = 4
+const BASE_QUESTIONS_PER_ENTRY = 4
+const BILINGUAL_QUESTIONS_PER_ENTRY = 2
 const MIN_WORDS_PER_LEVEL = 1000
+const MIN_BILINGUAL_CARDS_PER_LEVEL = 1000
 
 const levelDifficulty: Record<GeneratedCefrLevel, number> = {
   A1: 1,
@@ -58,6 +60,15 @@ function scrambleCue(entry: GeneratedCefrEntry) {
   return deterministicShuffle(cleanLetters(entry.word).split(''), `${entry.id}:letters`).join(' · ')
 }
 
+function primaryTranslation(entry: GeneratedCefrEntry) {
+  const lines = entry.translation
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^\[网络\]/.test(line))
+  return (lines[0] ?? entry.translation.trim()).slice(0, 180)
+}
+
 const entriesByLevel = CEFR_LEXICON.reduce<Record<GeneratedCefrLevel, GeneratedCefrEntry[]>>(
   (record, entry) => {
     record[entry.level].push(entry)
@@ -87,7 +98,23 @@ function recognitionChoices(entry: GeneratedCefrEntry) {
   return deterministicShuffle([entry.word, ...alternatives], `${entry.id}:choices`)
 }
 
-function questionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQuestion[] {
+function meaningChoices(entry: GeneratedCefrEntry) {
+  const answer = primaryTranslation(entry)
+  const source = entriesByLevel[entry.level].filter((candidate) => candidate.id !== entry.id && candidate.translation)
+  const start = seededNumber(`${entry.id}:meaning`) % Math.max(1, source.length)
+  const alternatives: string[] = []
+
+  for (let offset = 0; alternatives.length < 3 && offset < source.length; offset += 1) {
+    const candidate = source[(start + offset * 43) % source.length]
+    if (!candidate) continue
+    const meaning = primaryTranslation(candidate)
+    if (meaning && meaning !== answer && !alternatives.includes(meaning)) alternatives.push(meaning)
+  }
+
+  return deterministicShuffle([answer, ...alternatives], `${entry.id}:meaning-choices`)
+}
+
+function baseQuestionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQuestion[] {
   const difficulty = levelDifficulty[entry.level]
   const metadata = `${entry.level} · ${entry.pos}${entry.topic ? ` · ${entry.topic}` : ''}`
   const explanation = `${entry.word} 收錄於 ${entry.source}，分級為 ${entry.level}。`
@@ -138,6 +165,46 @@ function questionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQue
   ]
 }
 
+function bilingualQuestionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQuestion[] {
+  if (!entry.translation) return []
+
+  const difficulty = levelDifficulty[entry.level]
+  const meaning = primaryTranslation(entry)
+  const metadata = `${entry.level} · ${entry.pos}${entry.phonetic ? ` · /${entry.phonetic}/` : ''}`
+  const explanation = `${entry.word}：${entry.translation}\n${entry.definition || `分級來源：${entry.source}`}`
+
+  return [
+    {
+      id: `cefr-meaning-${index}-${entry.id}`,
+      type: 'choice',
+      skill: 'recognition',
+      difficulty: Math.max(1, difficulty - 0.15),
+      prompt: `「${entry.word}」在這張學習卡中最接近哪個中文意思？`,
+      answer: meaning,
+      choices: meaningChoices(entry),
+      context: metadata,
+      explanation,
+    },
+    {
+      id: `cefr-target-recall-${index}-${entry.id}`,
+      type: 'typing',
+      skill: 'spelling',
+      difficulty: Math.min(6, difficulty + 0.1),
+      prompt: `請輸入本卡目標字：${meaning}`,
+      answer: entry.word,
+      context: `${metadata} · 首尾字母提示 ${spellingPattern(entry.word)}`,
+      explanation: `本卡目標字是 ${entry.word}。${explanation}`,
+    },
+  ]
+}
+
+function questionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQuestion[] {
+  return [
+    ...baseQuestionsForEntry(entry, index),
+    ...bilingualQuestionsForEntry(entry, index),
+  ]
+}
+
 export const CEFR_PER_WORD_QUESTIONS: EnglishQuestion[] = CEFR_LEXICON.flatMap(questionsForEntry)
 
 export const FULL_ASSESSMENT_QUESTION_BANK_V5: EnglishQuestion[] = [
@@ -147,11 +214,15 @@ export const FULL_ASSESSMENT_QUESTION_BANK_V5: EnglishQuestion[] = [
 
 export const PER_WORD_QUESTION_COVERAGE = {
   words: CEFR_LEXICON.length,
-  questionsPerWord: QUESTIONS_PER_LEXICON_ENTRY,
+  baseQuestionsPerWord: BASE_QUESTIONS_PER_ENTRY,
+  bilingualQuestionsPerWord: BILINGUAL_QUESTIONS_PER_ENTRY,
   generatedQuestions: CEFR_PER_WORD_QUESTIONS.length,
   richQuestions: EXPANDED_ASSESSMENT_QUESTION_BANK.length,
   totalQuestions: FULL_ASSESSMENT_QUESTION_BANK_V5.length,
   minimumWordsPerLevel: MIN_WORDS_PER_LEVEL,
+  minimumBilingualCardsPerLevel: MIN_BILINGUAL_CARDS_PER_LEVEL,
   levelCounts: CEFR_LEVEL_COUNTS,
+  bilingualCounts: CEFR_BILINGUAL_COUNTS,
   allLevelsMeetMinimum: Object.values(CEFR_LEVEL_COUNTS).every((count) => count >= MIN_WORDS_PER_LEVEL),
+  allLevelsMeetBilingualMinimum: Object.values(CEFR_BILINGUAL_COUNTS).every((count) => count >= MIN_BILINGUAL_CARDS_PER_LEVEL),
 }
