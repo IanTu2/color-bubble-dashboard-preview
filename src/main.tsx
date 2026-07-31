@@ -12,6 +12,7 @@ import './preferences-music.css'
 import './english-learning.css'
 import './english-casual-practice.css'
 import './english-bilingual-library.css'
+import './english-assessment-reading.css'
 
 const rootElement = document.getElementById('root')
 
