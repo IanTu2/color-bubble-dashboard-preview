@@ -21,6 +21,11 @@ function cleanLetters(value: string) {
   return value.replace(/[^A-Za-z]/g, '').toLowerCase()
 }
 
+function compactCue(value: string, limit = 220) {
+  const cleaned = value.replace(/\r/g, '').replace(/\n+/g, '；').replace(/\s+/g, ' ').trim()
+  return cleaned.length > limit ? `${cleaned.slice(0, limit).trim()}…` : cleaned
+}
+
 function spellingPattern(value: string) {
   return value
     .split(/(\s+|-)/)
@@ -66,7 +71,30 @@ function primaryTranslation(entry: GeneratedCefrEntry) {
     .map((line) => line.trim())
     .filter(Boolean)
     .filter((line) => !/^\[网络\]/.test(line))
-  return (lines[0] ?? entry.translation.trim()).slice(0, 180)
+  return compactCue(lines[0] ?? entry.translation.trim(), 180)
+}
+
+function semanticCue(entry: GeneratedCefrEntry) {
+  const meaning = primaryTranslation(entry)
+  if (meaning) return `中文意思：${meaning}`
+
+  const definition = compactCue(entry.definition)
+  if (definition) return `英文解釋：${definition}`
+
+  return null
+}
+
+function partOfSpeechKey(entry: GeneratedCefrEntry) {
+  const value = `${entry.dictionaryPos || ''} ${entry.pos || ''}`.toLowerCase()
+  if (value.includes('noun') || /(^|[\s;,/])n\./.test(value)) return 'noun'
+  if (value.includes('verb') || /(^|[\s;,/])v\./.test(value)) return 'verb'
+  if (value.includes('adjective') || value.includes('adj.')) return 'adjective'
+  if (value.includes('adverb') || value.includes('adv.')) return 'adverb'
+  if (value.includes('preposition') || value.includes('prep.')) return 'preposition'
+  if (value.includes('pronoun') || value.includes('pron.')) return 'pronoun'
+  if (value.includes('conjunction') || value.includes('conj.')) return 'conjunction'
+  if (value.includes('phrase') || entry.word.trim().includes(' ')) return 'phrase'
+  return value.split(/[\s;,/]+/).find(Boolean) ?? 'other'
 }
 
 const entriesByLevel = CEFR_LEXICON.reduce<Record<GeneratedCefrLevel, GeneratedCefrEntry[]>>(
@@ -77,14 +105,32 @@ const entriesByLevel = CEFR_LEXICON.reduce<Record<GeneratedCefrLevel, GeneratedC
   { A1: [], A2: [], B1: [], B2: [], C1: [], C2: [] },
 )
 
-function recognitionChoices(entry: GeneratedCefrEntry) {
-  const pool = entriesByLevel[entry.level]
-  const targetLength = cleanLetters(entry.word).length
-  const similar = pool.filter((candidate) => (
+function orderedDistractorPool(entry: GeneratedCefrEntry, requireTranslation = false) {
+  const targetPos = partOfSpeechKey(entry)
+  const targetTopic = entry.topic.trim().toLowerCase()
+  const pool = entriesByLevel[entry.level].filter((candidate) => (
     candidate.id !== entry.id
-    && Math.abs(cleanLetters(candidate.word).length - targetLength) <= 2
+    && (!requireTranslation || Boolean(primaryTranslation(candidate)))
   ))
-  const source = similar.length >= 3 ? similar : pool.filter((candidate) => candidate.id !== entry.id)
+
+  const groups = [
+    pool.filter((candidate) => partOfSpeechKey(candidate) === targetPos && Boolean(targetTopic) && candidate.topic.trim().toLowerCase() === targetTopic),
+    pool.filter((candidate) => partOfSpeechKey(candidate) === targetPos),
+    pool.filter((candidate) => Boolean(targetTopic) && candidate.topic.trim().toLowerCase() === targetTopic),
+    pool,
+  ]
+
+  const seen = new Set<string>()
+  return groups.flatMap((group) => group.filter((candidate) => {
+    const key = candidate.word.trim().toLowerCase()
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  }))
+}
+
+function recognitionChoices(entry: GeneratedCefrEntry) {
+  const source = orderedDistractorPool(entry)
   const start = seededNumber(entry.id) % Math.max(1, source.length)
   const alternatives: string[] = []
 
@@ -100,7 +146,7 @@ function recognitionChoices(entry: GeneratedCefrEntry) {
 
 function meaningChoices(entry: GeneratedCefrEntry) {
   const answer = primaryTranslation(entry)
-  const source = entriesByLevel[entry.level].filter((candidate) => candidate.id !== entry.id && candidate.translation)
+  const source = orderedDistractorPool(entry, true)
   const start = seededNumber(`${entry.id}:meaning`) % Math.max(1, source.length)
   const alternatives: string[] = []
 
@@ -114,49 +160,97 @@ function meaningChoices(entry: GeneratedCefrEntry) {
   return deterministicShuffle([answer, ...alternatives], `${entry.id}:meaning-choices`)
 }
 
+function entryExplanation(entry: GeneratedCefrEntry) {
+  return [
+    `${entry.word} 收錄於 ${entry.source}，分級為 ${entry.level}。`,
+    entry.translation ? `中文：${compactCue(entry.translation, 320)}` : '',
+    entry.definition ? `英文解釋：${compactCue(entry.definition, 320)}` : '',
+  ].filter(Boolean).join('\n')
+}
+
+function listeningQuestion(
+  entry: GeneratedCefrEntry,
+  id: string,
+  difficulty: number,
+  prompt: string,
+): EnglishQuestion {
+  return {
+    id,
+    type: 'listening',
+    skill: 'listening',
+    difficulty,
+    prompt,
+    answer: entry.word,
+    audioText: entry.word,
+    explanation: entryExplanation(entry),
+  }
+}
+
 function baseQuestionsForEntry(entry: GeneratedCefrEntry, index: number): EnglishQuestion[] {
   const difficulty = levelDifficulty[entry.level]
   const metadata = `${entry.level} · ${entry.pos}${entry.topic ? ` · ${entry.topic}` : ''}`
-  const explanation = `${entry.word} 收錄於 ${entry.source}，分級為 ${entry.level}。`
+  const cue = semanticCue(entry)
+  const listening = listeningQuestion(
+    entry,
+    `cefr-listening-${index}-${entry.id}`,
+    difficulty,
+    '播放後，輸入你聽到的完整單字或片語。',
+  )
+
+  if (!cue) {
+    return [
+      listening,
+      listeningQuestion(
+        entry,
+        `cefr-repair-${index}-${entry.id}`,
+        Math.min(6, difficulty + 0.05),
+        '再次播放發音，完整輸入你聽到的單字或片語。',
+      ),
+      listeningQuestion(
+        entry,
+        `cefr-unscramble-${index}-${entry.id}`,
+        Math.min(6, difficulty + 0.15),
+        '仔細分辨每個音節，輸入完整拼字。',
+      ),
+      listeningQuestion(
+        entry,
+        `cefr-recognition-${index}-${entry.id}`,
+        Math.max(1, difficulty - 0.1),
+        '播放發音後，輸入完整內容；不要只填部分字母。',
+      ),
+    ]
+  }
+
+  const explanation = entryExplanation(entry)
 
   return [
-    {
-      id: `cefr-listening-${index}-${entry.id}`,
-      type: 'listening',
-      skill: 'listening',
-      difficulty,
-      prompt: '播放後，輸入你聽到的單字或片語。',
-      answer: entry.word,
-      audioText: entry.word,
-      context: metadata,
-      explanation,
-    },
+    listening,
     {
       id: `cefr-repair-${index}-${entry.id}`,
       type: 'typing',
       skill: 'spelling',
       difficulty: Math.min(6, difficulty + 0.05),
-      prompt: `請依首尾字母完成拼字：${spellingPattern(entry.word)}`,
+      prompt: `請依語意與拼字格完成單字或片語：\n${cue}\n拼字格：${spellingPattern(entry.word)}`,
       answer: entry.word,
       context: metadata,
-      explanation: `完整拼法是 ${entry.word}。${explanation}`,
+      explanation: `完整拼法是 ${entry.word}。\n${explanation}`,
     },
     {
       id: `cefr-unscramble-${index}-${entry.id}`,
       type: 'typing',
       skill: 'spelling',
       difficulty: Math.min(6, difficulty + 0.15),
-      prompt: `重新排列成正確單字或片語：${scrambleCue(entry)}`,
+      prompt: `請依語意重新排列成正確單字或片語：\n${cue}\n字母／詞序：${scrambleCue(entry)}`,
       answer: entry.word,
-      context: `${metadata} · 提示 ${spellingPattern(entry.word)}`,
-      explanation: `正確排列是 ${entry.word}。${explanation}`,
+      context: metadata,
+      explanation: `正確排列是 ${entry.word}。\n${explanation}`,
     },
     {
       id: `cefr-recognition-${index}-${entry.id}`,
       type: 'choice',
       skill: 'recognition',
       difficulty: Math.max(1, difficulty - 0.1),
-      prompt: `哪個單字或片語符合拼字線索「${spellingPattern(entry.word)}」？`,
+      prompt: `哪個單字或片語最符合以下內容？\n${cue}`,
       answer: entry.word,
       choices: recognitionChoices(entry),
       context: metadata,
@@ -190,9 +284,9 @@ function bilingualQuestionsForEntry(entry: GeneratedCefrEntry, index: number): E
       type: 'typing',
       skill: 'spelling',
       difficulty: Math.min(6, difficulty + 0.1),
-      prompt: `請輸入本卡目標字：${meaning}`,
+      prompt: `請依中文意思輸入本卡目標字：\n中文意思：${meaning}`,
       answer: entry.word,
-      context: `${metadata} · 首尾字母提示 ${spellingPattern(entry.word)}`,
+      context: metadata,
       explanation: `本卡目標字是 ${entry.word}。${explanation}`,
     },
   ]
