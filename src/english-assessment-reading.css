@@ -1,0 +1,25 @@
+.english-assessment .assessment-card > p {
+  white-space: pre-line;
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+  max-height: min(46vh, 560px);
+  overflow-y: auto;
+  padding-right: 10px;
+  scrollbar-gutter: stable;
+}
+
+.english-assessment .assessment-card > p::-webkit-scrollbar {
+  width: 8px;
+}
+
+.english-assessment .assessment-card > p::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+@media (max-width: 760px) {
+  .english-assessment .assessment-card > p {
+    max-height: 42vh;
+    line-height: 1.68;
+  }
+}
