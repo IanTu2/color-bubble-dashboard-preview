@@ -76,16 +76,26 @@ function makeAssessmentFair(question: EnglishQuestion): EnglishQuestion {
 export const FULL_ASSESSMENT_QUESTION_BANK_V7: EnglishQuestion[] =
   FULL_ASSESSMENT_QUESTION_BANK_V6.map(makeAssessmentFair)
 
+const preAnswerGrammarHints = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => question.skill === 'grammar' && Boolean(question.context),
+).length
+const preAnswerListeningHints = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => question.skill === 'listening' && Boolean(question.context),
+).length
+const preAnswerMeaningHints = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => asksForMeaning(question) && Boolean(question.context),
+).length
+
+if (preAnswerGrammarHints + preAnswerListeningHints + preAnswerMeaningHints > 0) {
+  throw new Error(
+    `Assessment hint leak detected: grammar=${preAnswerGrammarHints}, listening=${preAnswerListeningHints}, meaning=${preAnswerMeaningHints}`,
+  )
+}
+
 export const FAIR_ASSESSMENT_COVERAGE = {
   ...COMPLETE_QUESTION_COVERAGE,
   totalQuestions: FULL_ASSESSMENT_QUESTION_BANK_V7.length,
-  preAnswerGrammarHints: FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
-    (question) => question.skill === 'grammar' && Boolean(question.context),
-  ).length,
-  preAnswerListeningHints: FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
-    (question) => question.skill === 'listening' && Boolean(question.context),
-  ).length,
-  preAnswerMeaningHints: FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
-    (question) => asksForMeaning(question) && Boolean(question.context),
-  ).length,
+  preAnswerGrammarHints,
+  preAnswerListeningHints,
+  preAnswerMeaningHints,
 }
