@@ -48,11 +48,15 @@ function asksForMeaning(question: EnglishQuestion) {
   return /中文意思|哪個意思|最接近哪個意思|meaning/i.test(question.prompt)
 }
 
+function isCefrVocabularyQuestion(question: EnglishQuestion) {
+  return question.id.startsWith('cefr-')
+}
+
 function shouldHideContextUntilAnswered(question: EnglishQuestion) {
   return question.skill === 'grammar'
     || question.skill === 'listening'
     || asksForMeaning(question)
-    || question.id.startsWith('cefr-target-recall-')
+    || isCefrVocabularyQuestion(question)
 }
 
 function makeAssessmentFair(question: EnglishQuestion): EnglishQuestion {
@@ -85,10 +89,51 @@ const preAnswerListeningHints = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
 const preAnswerMeaningHints = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
   (question) => asksForMeaning(question) && Boolean(question.context),
 ).length
+const preAnswerCefrMetadata = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => isCefrVocabularyQuestion(question) && Boolean(question.context),
+).length
+const trivialSpellingChoiceQuestions = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => (
+    question.id.startsWith('cefr-recognition-')
+    && question.type === 'choice'
+    && (/拼字線索/.test(question.prompt) || /_{2,}/.test(question.prompt))
+  ),
+).length
+const semanticSpellingCueMissing = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => (
+    (question.id.startsWith('cefr-repair-') || question.id.startsWith('cefr-unscramble-'))
+    && question.type === 'typing'
+    && !/中文意思：|英文解釋：/.test(question.prompt)
+  ),
+).length
+const directAnswerPrompts = FULL_ASSESSMENT_QUESTION_BANK_V7.filter(
+  (question) => (
+    isCefrVocabularyQuestion(question)
+    && question.type === 'typing'
+    && normalizeLookup(question.prompt) === normalizeLookup(question.answer)
+  ),
+).length
 
-if (preAnswerGrammarHints + preAnswerListeningHints + preAnswerMeaningHints > 0) {
+const qualityFailureCount = preAnswerGrammarHints
+  + preAnswerListeningHints
+  + preAnswerMeaningHints
+  + preAnswerCefrMetadata
+  + trivialSpellingChoiceQuestions
+  + semanticSpellingCueMissing
+  + directAnswerPrompts
+
+if (qualityFailureCount > 0) {
   throw new Error(
-    `Assessment hint leak detected: grammar=${preAnswerGrammarHints}, listening=${preAnswerListeningHints}, meaning=${preAnswerMeaningHints}`,
+    [
+      'Assessment quality validation failed',
+      `grammarHints=${preAnswerGrammarHints}`,
+      `listeningHints=${preAnswerListeningHints}`,
+      `meaningHints=${preAnswerMeaningHints}`,
+      `cefrMetadata=${preAnswerCefrMetadata}`,
+      `trivialSpellingChoices=${trivialSpellingChoiceQuestions}`,
+      `missingSemanticSpellingCues=${semanticSpellingCueMissing}`,
+      `directAnswerPrompts=${directAnswerPrompts}`,
+    ].join(', '),
   )
 }
 
@@ -98,4 +143,8 @@ export const FAIR_ASSESSMENT_COVERAGE = {
   preAnswerGrammarHints,
   preAnswerListeningHints,
   preAnswerMeaningHints,
+  preAnswerCefrMetadata,
+  trivialSpellingChoiceQuestions,
+  semanticSpellingCueMissing,
+  directAnswerPrompts,
 }
