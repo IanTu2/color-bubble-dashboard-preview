@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Language } from '../types'
 import { EnglishBilingualCardLibrary } from './EnglishBilingualCardLibrary'
-import { EnglishContextClozeHub } from './EnglishContextClozeHub'
+import { EnglishContextClozeHubV2 } from './EnglishContextClozeHubV2'
 import { EnglishJourneyHub } from './EnglishJourneyHub'
 import { EnglishLearningStudio as EnglishLearningStudioV4 } from './EnglishLearningStudioV4'
 import { readEnglishStored, englishStorageKey, DEFAULT_PROFILE } from '../english-learning'
@@ -21,7 +21,7 @@ export function EnglishLearningStudio({ language, userId }: Props) {
   return (
     <div className="english-studio-v5-shell">
       {mode === 'context' ? (
-        <EnglishContextClozeHub
+        <EnglishContextClozeHubV2
           language={language}
           userId={userId}
           onOpenJourney={() => setMode('journey')}
