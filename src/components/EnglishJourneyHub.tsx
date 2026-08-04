@@ -88,12 +88,11 @@ function prepareQuestion(question: EnglishQuestion) {
 }
 
 function primaryMeaning(entry: GeneratedCefrEntry) {
-  return entry.translation
+  const first = entry.translation
     .split(/\n+/)
     .map((item) => item.trim())
     .find((item) => item && !/^\[網路\]|^\[网络\]/.test(item))
-    ?? entry.translation.trim()
-    ?? entry.definition.trim()
+  return first || entry.translation.trim() || entry.definition.trim()
 }
 
 function skillLabel(skill: EnglishSkill, language: Language) {
@@ -109,12 +108,6 @@ function speechRecognitionConstructor() {
     webkitSpeechRecognition?: SpeechRecognitionConstructor
   }
   return target.SpeechRecognition ?? target.webkitSpeechRecognition ?? null
-}
-
-function addDays(date: string, days: number) {
-  const next = new Date(`${date}T00:00:00`)
-  next.setDate(next.getDate() + days)
-  return next.toISOString().slice(0, 10)
 }
 
 function buildReviewQuestions(entries: GeneratedCefrEntry[]) {
@@ -145,7 +138,9 @@ function selectSessionQuestions(kind: SessionKind, ability: number, reviewEntrie
     && Math.abs(question.difficulty - ability) <= 0.9
   ))
   const fallback = ASSESSMENT_QUESTION_BANK.filter((question) => allowedSkills.includes(question.skill))
-  return shuffle(candidates.length >= 8 ? candidates : fallback).slice(0, kind === 'mixed' ? 7 : 6).map(prepareQuestion)
+  return shuffle(candidates.length >= 8 ? candidates : fallback)
+    .slice(0, kind === 'mixed' ? 7 : 6)
+    .map(prepareQuestion)
 }
 
 function courseLevelTitle(course: JourneyCourseId, level: number, language: Language) {
@@ -202,16 +197,14 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
         title: '英文學習旅程', subtitle: '30 級個人化路線 · 每日任務 · 智慧複習 · 情境口說',
         fullStudio: assessmentResult ? '能力測驗與完整學習室' : '先完成能力測驗',
         today: '今天', path: '學習路線', review: '智慧複習', conversation: '情境會話', collection: '收藏', league: '聯盟', profile: '角色',
-        level: '旅程等級', dailyGoal: '今日目標', streak: '連續學習', coins: '學習幣', xp: 'XP',
-        continue: '開始任務', completed: '已完成', claim: '領取每日寶箱', claimed: '今日已領取',
-        course: '目前課程', weak: '優先補強', due: '今日待複習', savedWords: '收藏單字', savedSentences: '收藏句子',
+        level: '旅程等級', dailyGoal: '今日目標', weak: '優先補強', due: '今日待複習', savedWords: '收藏單字', savedSentences: '收藏句子',
+        continue: '開始任務', completed: '已完成', claim: '領取每日寶箱', claimed: '今日已領取', course: '目前課程',
         startReview: '開始智慧複習', noReview: '目前沒有到期卡片，先收藏幾個單字或完成課程。',
         mic: '開始語音輸入', stopMic: '停止錄音', textFallback: '也可以直接輸入文字回答', submit: '送出回答', next: '下一段',
         localCoach: '本機情境教練：語音由瀏覽器轉成文字，再依關鍵內容與完整度回饋；不是發音評分或生成式 AI。',
         localLeague: '本機練習聯盟：其他名次為固定模擬資料，用來呈現每週目標，不代表真人排名。',
-        addSentence: '收藏句子', englishSentence: '英文句子', chineseNote: '中文意思或筆記', save: '儲存',
-        noSavedWords: '尚未收藏單字。完成課程後，可在答案解析旁加入複習。',
-        noSavedSentences: '尚未收藏句子。',
+        englishSentence: '英文句子', chineseNote: '中文意思或筆記', save: '儲存',
+        noSavedWords: '尚未收藏單字。完成課程後，可在答案解析旁加入複習。', noSavedSentences: '尚未收藏句子。',
         avatar: '角色造型', frame: '名牌外框', dailyTarget: '每日 XP 目標', badges: '成就徽章',
         question: '題目', check: '檢查答案', hear: '播放', bookmark: '加入智慧複習', bookmarked: '已加入複習',
         returnJourney: '返回旅程', finish: '完成課程', correct: '答對',
@@ -220,14 +213,13 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
         title: 'English Learning Journey', subtitle: '30 personalized levels · Daily quests · Smart review · Roleplay speaking',
         fullStudio: assessmentResult ? 'Placement and full studio' : 'Take the placement test first',
         today: 'Today', path: 'Learning path', review: 'Smart review', conversation: 'Roleplay', collection: 'Collection', league: 'League', profile: 'Avatar',
-        level: 'Journey level', dailyGoal: 'Daily goal', streak: 'Streak', coins: 'Coins', xp: 'XP',
-        continue: 'Start quest', completed: 'Completed', claim: 'Claim daily chest', claimed: 'Claimed today',
-        course: 'Current course', weak: 'Priority skill', due: 'Due today', savedWords: 'Saved words', savedSentences: 'Saved sentences',
+        level: 'Journey level', dailyGoal: 'Daily goal', weak: 'Priority skill', due: 'Due today', savedWords: 'Saved words', savedSentences: 'Saved sentences',
+        continue: 'Start quest', completed: 'Completed', claim: 'Claim daily chest', claimed: 'Claimed today', course: 'Current course',
         startReview: 'Start smart review', noReview: 'No cards are due. Save words or complete a lesson first.',
         mic: 'Start voice input', stopMic: 'Stop recording', textFallback: 'You can also type your answer', submit: 'Submit response', next: 'Next turn',
         localCoach: 'Local scenario coach: your browser transcribes speech and the app checks key content and completeness. It is not pronunciation scoring or generative AI.',
         localLeague: 'Local practice league: other positions are simulated weekly targets, not live people.',
-        addSentence: 'Save a sentence', englishSentence: 'English sentence', chineseNote: 'Chinese meaning or note', save: 'Save',
+        englishSentence: 'English sentence', chineseNote: 'Chinese meaning or note', save: 'Save',
         noSavedWords: 'No saved words yet. Add words from lesson feedback.', noSavedSentences: 'No saved sentences yet.',
         avatar: 'Avatar', frame: 'Nameplate frame', dailyTarget: 'Daily XP target', badges: 'Achievements',
         question: 'Question', check: 'Check answer', hear: 'Play', bookmark: 'Add to smart review', bookmarked: 'Added to review',
@@ -269,19 +261,27 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
 
   const recommendedEntries = useMemo(() => {
     const level = microLevelToCefr(journey.microLevel)
+    const offset = (new Date().getDate() * 13) % 400
     return CEFR_LEXICON
       .filter((entry) => entry.level === level && entry.translation)
       .filter((entry) => !journey.savedWordIds.includes(entry.id))
-      .slice((new Date().getDate() * 13) % 400, ((new Date().getDate() * 13) % 400) + 8)
+      .slice(offset, offset + 8)
   }, [journey.microLevel, journey.savedWordIds])
 
-  const missionDefinitions = [
+  const missionDefinitions: Array<{
+    id: string
+    icon: string
+    title: string
+    detail: string
+    kind: SessionKind | null
+    xp: number
+  }> = [
     {
       id: `${today}-weak-${weakestSkill}`,
       icon: '🧭',
       title: language === 'zh' ? `補強 ${skillLabel(weakestSkill, language)}` : `Strengthen ${skillLabel(weakestSkill, language)}`,
       detail: language === 'zh' ? '依程度測驗弱項安排 6 題。' : 'Six questions based on your weakest placement skill.',
-      kind: weakestSkill === 'grammar' ? 'grammar' : weakestSkill === 'listening' ? 'listening' : 'vocabulary' as SessionKind,
+      kind: weakestSkill === 'grammar' ? 'grammar' : weakestSkill === 'listening' ? 'listening' : 'vocabulary',
       xp: 45,
     },
     {
@@ -289,7 +289,7 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
       icon: currentCourse.icon,
       title: language === 'zh' ? `${currentCourse.zhTitle}綜合課` : `${currentCourse.enTitle} mix`,
       detail: language === 'zh' ? '字彙、文法、閱讀與聽力混合。' : 'Mixed vocabulary, grammar, reading, and listening.',
-      kind: 'mixed' as SessionKind,
+      kind: 'mixed',
       xp: 55,
     },
     {
@@ -297,7 +297,7 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
       icon: '🧠',
       title: language === 'zh' ? `智慧複習 ${dueEntries.length} 張` : `${dueEntries.length} smart reviews`,
       detail: language === 'zh' ? '依答題結果安排 1、3、7 天以上間隔。' : 'Spaced review expands from 1 to 3 to 7+ days.',
-      kind: 'review' as SessionKind,
+      kind: 'review',
       xp: 35,
     },
     {
@@ -512,19 +512,14 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
       <div className="journey-shell journey-session-shell">
         <header className="journey-session-head">
           <button type="button" onClick={() => setActiveSession(null)}>← {copy.returnJourney}</button>
-          <div>
-            <span>{activeSession.index + 1} / {activeSession.questions.length}</span>
-            <strong>{skillLabel(question.skill, language)}</strong>
-          </div>
+          <div><span>{activeSession.index + 1} / {activeSession.questions.length}</span><strong>{skillLabel(question.skill, language)}</strong></div>
         </header>
         <div className="journey-session-progress"><span style={{ width: `${((activeSession.index + 1) / activeSession.questions.length) * 100}%` }} /></div>
         <section className="journey-question-card">
           <p className="journey-kicker">{copy.question} · {microLevelToCefr(journey.microLevel)}</p>
           <h2>{question.prompt}</h2>
           {question.context ? <div className="journey-question-context">{question.context}</div> : null}
-          {question.type === 'listening' ? (
-            <button className="journey-audio-button" type="button" onClick={() => speakEnglish(question.audioText ?? question.answer, profile.accent)}>🔊 {copy.hear}</button>
-          ) : null}
+          {question.type === 'listening' ? <button className="journey-audio-button" type="button" onClick={() => speakEnglish(question.audioText ?? question.answer, profile.accent)}>🔊 {copy.hear}</button> : null}
           <form onSubmit={submitSessionAnswer}>
             {question.type === 'choice' && question.choices ? (
               <div className="journey-choice-grid">
@@ -532,19 +527,12 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
                   <button className={activeSession.response === choice ? 'active' : ''} type="button" key={choice} disabled={Boolean(activeSession.feedback)} onClick={() => setActiveSession((current) => current ? { ...current, response: choice } : current)}>{choice}</button>
                 ))}
               </div>
-            ) : (
-              <input className="journey-answer-input" value={activeSession.response} disabled={Boolean(activeSession.feedback)} autoFocus autoComplete="off" onChange={(event) => setActiveSession((current) => current ? { ...current, response: event.target.value } : current)} />
-            )}
-            {!activeSession.feedback ? (
-              <button className="journey-primary" type="submit" disabled={!activeSession.response.trim()}>{copy.check}</button>
-            ) : (
+            ) : <input className="journey-answer-input" value={activeSession.response} disabled={Boolean(activeSession.feedback)} autoFocus autoComplete="off" onChange={(event) => setActiveSession((current) => current ? { ...current, response: event.target.value } : current)} />}
+            {!activeSession.feedback ? <button className="journey-primary" type="submit" disabled={!activeSession.response.trim()}>{copy.check}</button> : (
               <div className={`journey-feedback ${activeSession.feedback.score === 1 ? 'correct' : activeSession.feedback.score === 0.5 ? 'almost' : 'wrong'}`}>
                 <strong>{activeSession.feedback.score === 1 ? '✓ Correct' : activeSession.feedback.score === 0.5 ? '△ Almost' : `✕ ${question.answer}`}</strong>
                 <p>{activeSession.feedback.explanation}</p>
-                <div>
-                  {entry ? <button type="button" disabled={isSaved} onClick={() => saveWord(entry)}>{isSaved ? copy.bookmarked : copy.bookmark}</button> : null}
-                  <button className="journey-primary" type="button" onClick={nextSessionQuestion}>{activeSession.index >= activeSession.questions.length - 1 ? copy.finish : copy.next}</button>
-                </div>
+                <div>{entry ? <button type="button" disabled={isSaved} onClick={() => saveWord(entry)}>{isSaved ? copy.bookmarked : copy.bookmark}</button> : null}<button className="journey-primary" type="button" onClick={nextSessionQuestion}>{activeSession.index >= activeSession.questions.length - 1 ? copy.finish : copy.next}</button></div>
               </div>
             )}
           </form>
@@ -556,82 +544,36 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
   return (
     <div className={`journey-shell frame-${journey.frame}`}>
       <header className="journey-header">
-        <div className="journey-brand">
-          <div className="journey-avatar">{journey.avatar}</div>
-          <div>
-            <p className="journey-kicker">BUBBLE ENGLISH JOURNEY</p>
-            <h1>{copy.title}</h1>
-            <span>{copy.subtitle}</span>
-          </div>
-        </div>
-        <div className="journey-header-actions">
-          <div><span>🔥</span><strong>{journey.streak}</strong></div>
-          <div><span>🪙</span><strong>{journey.coins}</strong></div>
-          <button type="button" onClick={onOpenStudio}>{copy.fullStudio}</button>
-        </div>
+        <div className="journey-brand"><div className="journey-avatar">{journey.avatar}</div><div><p className="journey-kicker">BUBBLE ENGLISH JOURNEY</p><h1>{copy.title}</h1><span>{copy.subtitle}</span></div></div>
+        <div className="journey-header-actions"><div><span>🔥</span><strong>{journey.streak}</strong></div><div><span>🪙</span><strong>{journey.coins}</strong></div><button type="button" onClick={onOpenStudio}>{copy.fullStudio}</button></div>
       </header>
 
       <nav className="journey-tabs">
         {([
-          ['today', '☀️', copy.today], ['path', '🗺️', copy.path], ['review', '🧠', copy.review],
-          ['conversation', '🎙️', copy.conversation], ['collection', '🔖', copy.collection],
-          ['league', '🏆', copy.league], ['profile', journey.avatar, copy.profile],
-        ] as Array<[JourneyTab, string, string]>).map(([id, icon, label]) => (
-          <button className={tab === id ? 'active' : ''} type="button" key={id} onClick={() => setTab(id)}><span>{icon}</span>{label}</button>
-        ))}
+          ['today', '☀️', copy.today], ['path', '🗺️', copy.path], ['review', '🧠', copy.review], ['conversation', '🎙️', copy.conversation],
+          ['collection', '🔖', copy.collection], ['league', '🏆', copy.league], ['profile', journey.avatar, copy.profile],
+        ] as Array<[JourneyTab, string, string]>).map(([id, icon, label]) => <button className={tab === id ? 'active' : ''} type="button" key={id} onClick={() => setTab(id)}><span>{icon}</span>{label}</button>)}
       </nav>
 
-      {sessionSummary ? (
-        <div className="journey-toast">
-          <strong>+{sessionSummary.xp} XP</strong>
-          <span>{sessionSummary.correct} / {sessionSummary.total} {copy.correct}</span>
-          <button type="button" onClick={() => setSessionSummary(null)}>×</button>
-        </div>
-      ) : null}
+      {sessionSummary ? <div className="journey-toast"><strong>+{sessionSummary.xp} XP</strong><span>{sessionSummary.correct} / {sessionSummary.total} {copy.correct}</span><button type="button" onClick={() => setSessionSummary(null)}>×</button></div> : null}
 
       {tab === 'today' ? (
         <main className="journey-today">
           <section className="journey-hero-card">
-            <div>
-              <p>{currentCourse.icon} {copy.course}</p>
-              <h2>{language === 'zh' ? currentCourse.zhTitle : currentCourse.enTitle}</h2>
-              <span>{language === 'zh' ? currentCourse.zhDescription : currentCourse.enDescription}</span>
-              <div className="journey-hero-actions">
-                <button className="journey-primary" type="button" onClick={() => startSession('mixed', `${today}-hero-course`)}>{copy.continue}</button>
-                <button type="button" onClick={() => setTab('path')}>{copy.path}</button>
-              </div>
-            </div>
-            <div className="journey-level-dial">
-              <span>{copy.level}</span>
-              <strong>{journey.microLevel}</strong>
-              <small>{microLevelToCefr(journey.microLevel)} · {journey.xp.toLocaleString()} XP</small>
-            </div>
+            <div><p>{currentCourse.icon} {copy.course}</p><h2>{language === 'zh' ? currentCourse.zhTitle : currentCourse.enTitle}</h2><span>{language === 'zh' ? currentCourse.zhDescription : currentCourse.enDescription}</span><div className="journey-hero-actions"><button className="journey-primary" type="button" onClick={() => startSession('mixed', `${today}-hero-course`)}>{copy.continue}</button><button type="button" onClick={() => setTab('path')}>{copy.path}</button></div></div>
+            <div className="journey-level-dial"><span>{copy.level}</span><strong>{journey.microLevel}</strong><small>{microLevelToCefr(journey.microLevel)} · {journey.xp.toLocaleString()} XP</small></div>
           </section>
-
           <section className="journey-stat-grid">
             <article><span>🎯</span><div><strong>{todayXp} / {journey.dailyTargetXp} XP</strong><small>{copy.dailyGoal}</small></div><i><b style={{ width: `${dailyProgress}%` }} /></i></article>
             <article><span>🧭</span><div><strong>{skillLabel(weakestSkill, language)}</strong><small>{copy.weak}</small></div></article>
             <article><span>🧠</span><div><strong>{dueEntries.length}</strong><small>{copy.due}</small></div></article>
             <article><span>📚</span><div><strong>{CEFR_BILINGUAL_CARD_COUNT.toLocaleString()}</strong><small>{language === 'zh' ? '中英雙語卡' : 'Bilingual cards'}</small></div></article>
           </section>
-
           <div className="journey-section-title"><div><p>DAILY QUESTS</p><h2>{language === 'zh' ? '今日任務' : 'Today’s quests'}</h2></div><button type="button" disabled={journey.claimedDailyRewardDate === today} onClick={claimDailyReward}>{journey.claimedDailyRewardDate === today ? copy.claimed : `🎁 ${copy.claim}`}</button></div>
           <section className="journey-mission-grid">
             {missionDefinitions.map((mission) => {
               const completed = journey.completedMissionIds.includes(mission.id)
-              return (
-                <article className={completed ? 'completed' : ''} key={mission.id}>
-                  <span>{mission.icon}</span>
-                  <div><h3>{mission.title}</h3><p>{mission.detail}</p><small>+{mission.xp} XP</small></div>
-                  <button type="button" disabled={completed || (mission.kind === 'review' && dueEntries.length === 0)} onClick={() => {
-                    if (mission.kind) startSession(mission.kind, mission.id)
-                    else {
-                      setTab('conversation')
-                      changeScenario(selectedScenario)
-                    }
-                  }}>{completed ? copy.completed : copy.continue}</button>
-                </article>
-              )
+              return <article className={completed ? 'completed' : ''} key={mission.id}><span>{mission.icon}</span><div><h3>{mission.title}</h3><p>{mission.detail}</p><small>+{mission.xp} XP</small></div><button type="button" disabled={completed || (mission.kind === 'review' && dueEntries.length === 0)} onClick={() => { if (mission.kind) startSession(mission.kind, mission.id); else { setTab('conversation'); changeScenario(selectedScenario) } }}>{completed ? copy.completed : copy.continue}</button></article>
             })}
           </section>
         </main>
@@ -639,133 +581,47 @@ export function EnglishJourneyHub({ language, userId, onOpenStudio }: Props) {
 
       {tab === 'path' ? (
         <main className="journey-path-page">
-          <section className="journey-course-selector">
-            {COURSE_TRACKS.map((course) => (
-              <button className={journey.selectedCourse === course.id ? 'active' : ''} type="button" key={course.id} onClick={() => selectCourse(course.id)}>
-                <span>{course.icon}</span><strong>{language === 'zh' ? course.zhTitle : course.enTitle}</strong><small>{language === 'zh' ? course.zhDescription : course.enDescription}</small>
-              </button>
-            ))}
-          </section>
-          <section className="journey-path-track">
-            {Array.from({ length: 30 }, (_, index) => index + 1).map((level) => {
-              const locked = level > journey.microLevel + 1
-              const completed = level < journey.microLevel || journey.completedLessonIds.includes(`path-${journey.selectedCourse}-${level}`)
-              return (
-                <button className={`${locked ? 'locked' : ''} ${completed ? 'completed' : ''} ${level === journey.microLevel ? 'current' : ''}`} type="button" key={level} disabled={locked} onClick={() => startSession('mixed', `path-${journey.selectedCourse}-${level}`)}>
-                  <span>{completed ? '✓' : locked ? '🔒' : level}</span>
-                  <div><strong>{courseLevelTitle(journey.selectedCourse, level, language)}</strong><small>Level {level} · {microLevelToCefr(level)}</small></div>
-                  <i />
-                </button>
-              )
-            })}
-          </section>
+          <section className="journey-course-selector">{COURSE_TRACKS.map((course) => <button className={journey.selectedCourse === course.id ? 'active' : ''} type="button" key={course.id} onClick={() => selectCourse(course.id)}><span>{course.icon}</span><strong>{language === 'zh' ? course.zhTitle : course.enTitle}</strong><small>{language === 'zh' ? course.zhDescription : course.enDescription}</small></button>)}</section>
+          <section className="journey-path-track">{Array.from({ length: 30 }, (_, index) => index + 1).map((level) => {
+            const locked = level > journey.microLevel + 1
+            const completed = level < journey.microLevel || journey.completedLessonIds.includes(`path-${journey.selectedCourse}-${level}`)
+            return <button className={`${locked ? 'locked' : ''} ${completed ? 'completed' : ''} ${level === journey.microLevel ? 'current' : ''}`} type="button" key={level} disabled={locked} onClick={() => startSession('mixed', `path-${journey.selectedCourse}-${level}`)}><span>{completed ? '✓' : locked ? '🔒' : level}</span><div><strong>{courseLevelTitle(journey.selectedCourse, level, language)}</strong><small>Level {level} · {microLevelToCefr(level)}</small></div><i /></button>
+          })}</section>
         </main>
       ) : null}
 
       {tab === 'review' ? (
         <main className="journey-review-page">
-          <section className="journey-review-hero">
-            <div><p>SPACED REVIEW</p><h2>{copy.review}</h2><span>{language === 'zh' ? '答錯後隔天再見；答對後逐步延長到 3、7、14 天以上。' : 'Wrong answers return tomorrow; correct answers expand toward 3, 7, and 14+ days.'}</span></div>
-            <div><strong>{dueEntries.length}</strong><span>{copy.due}</span><button className="journey-primary" type="button" disabled={dueEntries.length === 0} onClick={() => startSession('review', `${today}-review-page`)}>{copy.startReview}</button></div>
-          </section>
-          {savedEntries.length === 0 ? <p className="journey-empty">{copy.noReview}</p> : (
-            <div className="journey-review-list">
-              {savedEntries.map((entry) => {
-                const schedule = journey.reviewSchedule[entry.id]
-                const isDue = !schedule || schedule.dueDate <= today
-                return (
-                  <article key={entry.id}>
-                    <button type="button" onClick={() => speakEnglish(entry.word, profile.accent)}>🔊</button>
-                    <div><strong>{entry.word}</strong><p>{primaryMeaning(entry)}</p><small>{entry.level} · {entry.pos}</small></div>
-                    <span className={isDue ? 'due' : ''}>{isDue ? (language === 'zh' ? '今天' : 'Today') : schedule?.dueDate}</span>
-                  </article>
-                )
-              })}
-            </div>
-          )}
+          <section className="journey-review-hero"><div><p>SPACED REVIEW</p><h2>{copy.review}</h2><span>{language === 'zh' ? '答錯後隔天再見；答對後逐步延長到 3、7、14 天以上。' : 'Wrong answers return tomorrow; correct answers expand toward 3, 7, and 14+ days.'}</span></div><div><strong>{dueEntries.length}</strong><span>{copy.due}</span><button className="journey-primary" type="button" disabled={dueEntries.length === 0} onClick={() => startSession('review', `${today}-review-page`)}>{copy.startReview}</button></div></section>
+          {savedEntries.length === 0 ? <p className="journey-empty">{copy.noReview}</p> : <div className="journey-review-list">{savedEntries.map((entry) => { const schedule = journey.reviewSchedule[entry.id]; const isDue = !schedule || schedule.dueDate <= today; return <article key={entry.id}><button type="button" onClick={() => speakEnglish(entry.word, profile.accent)}>🔊</button><div><strong>{entry.word}</strong><p>{primaryMeaning(entry)}</p><small>{entry.level} · {entry.pos}</small></div><span className={isDue ? 'due' : ''}>{isDue ? (language === 'zh' ? '今天' : 'Today') : schedule?.dueDate}</span></article> })}</div>}
         </main>
       ) : null}
 
       {tab === 'conversation' ? (
         <main className="journey-conversation-page">
-          <aside className="journey-scenario-list">
-            <h2>{copy.conversation}</h2>
-            {ROLEPLAY_SCENARIOS.map((scenario) => (
-              <button className={selectedScenario.id === scenario.id ? 'active' : ''} type="button" key={scenario.id} onClick={() => changeScenario(scenario)}>
-                <span>{scenario.icon}</span><div><strong>{language === 'zh' ? scenario.zhTitle : scenario.enTitle}</strong><small>{microLevelToCefr(scenario.level * 5)}</small></div>
-              </button>
-            ))}
-          </aside>
+          <aside className="journey-scenario-list"><h2>{copy.conversation}</h2>{ROLEPLAY_SCENARIOS.map((scenario) => <button className={selectedScenario.id === scenario.id ? 'active' : ''} type="button" key={scenario.id} onClick={() => changeScenario(scenario)}><span>{scenario.icon}</span><div><strong>{language === 'zh' ? scenario.zhTitle : scenario.enTitle}</strong><small>{microLevelToCefr(scenario.level * 5)}</small></div></button>)}</aside>
           <section className="journey-roleplay-panel">
             <header><div><p>{selectedScenario.icon} ROLEPLAY</p><h2>{language === 'zh' ? selectedScenario.zhTitle : selectedScenario.enTitle}</h2><span>{language === 'zh' ? selectedScenario.zhDescription : selectedScenario.enDescription}</span></div><strong>{roleplayTurn + 1} / {selectedScenario.stages.length}</strong></header>
             <p className="journey-local-note">{copy.localCoach}</p>
-            <div className="journey-dialogue-bubble">
-              <span>{currentStage.speaker}</span>
-              <p>{currentStage.prompt}</p>
-              <button type="button" onClick={() => speakEnglish(currentStage.prompt, profile.accent)}>🔊</button>
-            </div>
-            <form onSubmit={submitRoleplay}>
-              <textarea value={roleplayResponse} disabled={Boolean(roleplayFeedback)} placeholder={copy.textFallback} onChange={(event) => setRoleplayResponse(event.target.value)} />
-              <div className="journey-roleplay-actions">
-                <button type="button" disabled={Boolean(roleplayFeedback)} onClick={isListening ? stopSpeechInput : startSpeechInput}>{isListening ? `⏹ ${copy.stopMic}` : `🎙️ ${copy.mic}`}</button>
-                <button className="journey-primary" type="submit" disabled={!roleplayResponse.trim() || Boolean(roleplayFeedback)}>{copy.submit}</button>
-              </div>
-            </form>
+            <div className="journey-dialogue-bubble"><span>{currentStage.speaker}</span><p>{currentStage.prompt}</p><button type="button" onClick={() => speakEnglish(currentStage.prompt, profile.accent)}>🔊</button></div>
+            <form onSubmit={submitRoleplay}><textarea value={roleplayResponse} disabled={Boolean(roleplayFeedback)} placeholder={copy.textFallback} onChange={(event) => setRoleplayResponse(event.target.value)} /><div className="journey-roleplay-actions"><button type="button" disabled={Boolean(roleplayFeedback)} onClick={isListening ? stopSpeechInput : startSpeechInput}>{isListening ? `⏹ ${copy.stopMic}` : `🎙️ ${copy.mic}`}</button><button className="journey-primary" type="submit" disabled={!roleplayResponse.trim() || Boolean(roleplayFeedback)}>{copy.submit}</button></div></form>
             {speechMessage ? <p className="journey-speech-message">{speechMessage}</p> : null}
-            {roleplayFeedback ? (
-              <div className={`journey-feedback ${roleplayFeedback.passed ? 'correct' : 'wrong'}`}>
-                <strong>{roleplayFeedback.passed ? '✓ Good response' : '△ Try again'}</strong>
-                <p>{roleplayFeedback.message}</p>
-                <button className="journey-primary" type="button" onClick={nextRoleplayTurn}>{roleplayFeedback.passed ? copy.next : (language === 'zh' ? '重新回答' : 'Try again')}</button>
-              </div>
-            ) : null}
+            {roleplayFeedback ? <div className={`journey-feedback ${roleplayFeedback.passed ? 'correct' : 'wrong'}`}><strong>{roleplayFeedback.passed ? '✓ Good response' : '△ Try again'}</strong><p>{roleplayFeedback.message}</p><button className="journey-primary" type="button" onClick={nextRoleplayTurn}>{roleplayFeedback.passed ? copy.next : (language === 'zh' ? '重新回答' : 'Try again')}</button></div> : null}
           </section>
         </main>
       ) : null}
 
       {tab === 'collection' ? (
         <main className="journey-collection-page">
-          <section>
-            <div className="journey-section-title"><div><p>WORD COLLECTION</p><h2>{copy.savedWords} · {savedEntries.length}</h2></div></div>
-            {savedEntries.length === 0 ? <p className="journey-empty">{copy.noSavedWords}</p> : (
-              <div className="journey-saved-word-grid">{savedEntries.map((entry) => <article key={entry.id}><button type="button" onClick={() => speakEnglish(entry.word, profile.accent)}>🔊</button><strong>{entry.word}</strong><span>{primaryMeaning(entry)}</span><small>{entry.level} · {entry.pos}</small></article>)}</div>
-            )}
-            <div className="journey-section-title compact"><div><p>RECOMMENDED</p><h2>{language === 'zh' ? '今日推薦' : 'Today’s picks'}</h2></div></div>
-            <div className="journey-saved-word-grid">{recommendedEntries.map((entry) => <article key={entry.id}><button type="button" onClick={() => saveWord(entry)}>＋</button><strong>{entry.word}</strong><span>{primaryMeaning(entry)}</span><small>{entry.level} · {entry.pos}</small></article>)}</div>
-          </section>
-          <section>
-            <div className="journey-section-title"><div><p>SENTENCE COLLECTION</p><h2>{copy.savedSentences} · {journey.savedSentences.length}</h2></div></div>
-            <form className="journey-sentence-form" onSubmit={saveSentence}>
-              <input value={sentenceEnglish} placeholder={copy.englishSentence} onChange={(event) => setSentenceEnglish(event.target.value)} />
-              <input value={sentenceChinese} placeholder={copy.chineseNote} onChange={(event) => setSentenceChinese(event.target.value)} />
-              <button className="journey-primary" type="submit" disabled={!sentenceEnglish.trim()}>{copy.save}</button>
-            </form>
-            {journey.savedSentences.length === 0 ? <p className="journey-empty">{copy.noSavedSentences}</p> : (
-              <div className="journey-sentence-list">{journey.savedSentences.map((sentence) => <article key={sentence.id}><button type="button" onClick={() => speakEnglish(sentence.english, profile.accent)}>🔊</button><div><strong>{sentence.english}</strong><span>{sentence.chinese || '—'}</span></div><button type="button" onClick={() => updateJourney((current) => ({ ...current, savedSentences: current.savedSentences.filter((item) => item.id !== sentence.id) }))}>×</button></article>)}</div>
-            )}
-          </section>
+          <section><div className="journey-section-title"><div><p>WORD COLLECTION</p><h2>{copy.savedWords} · {savedEntries.length}</h2></div></div>{savedEntries.length === 0 ? <p className="journey-empty">{copy.noSavedWords}</p> : <div className="journey-saved-word-grid">{savedEntries.map((entry) => <article key={entry.id}><button type="button" onClick={() => speakEnglish(entry.word, profile.accent)}>🔊</button><strong>{entry.word}</strong><span>{primaryMeaning(entry)}</span><small>{entry.level} · {entry.pos}</small></article>)}</div>}<div className="journey-section-title compact"><div><p>RECOMMENDED</p><h2>{language === 'zh' ? '今日推薦' : 'Today’s picks'}</h2></div></div><div className="journey-saved-word-grid">{recommendedEntries.map((entry) => <article key={entry.id}><button type="button" onClick={() => saveWord(entry)}>＋</button><strong>{entry.word}</strong><span>{primaryMeaning(entry)}</span><small>{entry.level} · {entry.pos}</small></article>)}</div></section>
+          <section><div className="journey-section-title"><div><p>SENTENCE COLLECTION</p><h2>{copy.savedSentences} · {journey.savedSentences.length}</h2></div></div><form className="journey-sentence-form" onSubmit={saveSentence}><input value={sentenceEnglish} placeholder={copy.englishSentence} onChange={(event) => setSentenceEnglish(event.target.value)} /><input value={sentenceChinese} placeholder={copy.chineseNote} onChange={(event) => setSentenceChinese(event.target.value)} /><button className="journey-primary" type="submit" disabled={!sentenceEnglish.trim()}>{copy.save}</button></form>{journey.savedSentences.length === 0 ? <p className="journey-empty">{copy.noSavedSentences}</p> : <div className="journey-sentence-list">{journey.savedSentences.map((sentence) => <article key={sentence.id}><button type="button" onClick={() => speakEnglish(sentence.english, profile.accent)}>🔊</button><div><strong>{sentence.english}</strong><span>{sentence.chinese || '—'}</span></div><button type="button" onClick={() => updateJourney((current) => ({ ...current, savedSentences: current.savedSentences.filter((item) => item.id !== sentence.id) }))}>×</button></article>)}</div>}</section>
         </main>
       ) : null}
 
-      {tab === 'league' ? (
-        <main className="journey-league-page">
-          <section className="journey-league-card">
-            <header><div><p>WEEKLY PRACTICE LEAGUE</p><h2>Crystal League</h2><span>{copy.localLeague}</span></div><div><strong>{weeklyXp(journey)}</strong><span>{language === 'zh' ? '本週 XP' : 'Weekly XP'}</span></div></header>
-            <div className="journey-league-table">{localLeagueRows(journey).map((row) => <article className={row.isUser ? 'user' : ''} key={row.name}><strong>#{row.rank}</strong><span>{row.avatar}</span><div>{row.name}{row.isUser ? <small>{language === 'zh' ? '（你）' : ' (you)'}</small> : null}</div><b>{row.xp} XP</b></article>)}</div>
-          </section>
-        </main>
-      ) : null}
+      {tab === 'league' ? <main className="journey-league-page"><section className="journey-league-card"><header><div><p>WEEKLY PRACTICE LEAGUE</p><h2>Crystal League</h2><span>{copy.localLeague}</span></div><div><strong>{weeklyXp(journey)}</strong><span>{language === 'zh' ? '本週 XP' : 'Weekly XP'}</span></div></header><div className="journey-league-table">{localLeagueRows(journey).map((row) => <article className={row.isUser ? 'user' : ''} key={row.name}><strong>#{row.rank}</strong><span>{row.avatar}</span><div>{row.name}{row.isUser ? <small>{language === 'zh' ? '（你）' : ' (you)'}</small> : null}</div><b>{row.xp} XP</b></article>)}</div></section></main> : null}
 
       {tab === 'profile' ? (
-        <main className="journey-profile-page">
-          <section className="journey-profile-preview"><div className={`journey-avatar-large frame-${journey.frame}`}>{journey.avatar}</div><h2>{language === 'zh' ? '你的學習角色' : 'Your learner avatar'}</h2><p>Level {journey.microLevel} · {microLevelToCefr(journey.microLevel)} · {journey.xp.toLocaleString()} XP</p></section>
-          <section className="journey-customization">
-            <h3>{copy.avatar}</h3><div className="journey-avatar-options">{AVATARS.map((avatar) => <button className={journey.avatar === avatar ? 'active' : ''} type="button" key={avatar} onClick={() => updateJourney((current) => ({ ...current, avatar }))}>{avatar}</button>)}</div>
-            <h3>{copy.frame}</h3><div className="journey-frame-options">{FRAMES.map((frame) => <button className={journey.frame === frame ? 'active' : ''} type="button" key={frame} onClick={() => updateJourney((current) => ({ ...current, frame }))}>{frame}</button>)}</div>
-            <h3>{copy.dailyTarget}</h3><div className="journey-target-setting"><input type="range" min="20" max="150" step="10" value={journey.dailyTargetXp} onChange={(event) => updateJourney((current) => ({ ...current, dailyTargetXp: Number(event.target.value) }))} /><strong>{journey.dailyTargetXp} XP</strong></div>
-          </section>
-          <section className="journey-badges"><h3>{copy.badges}</h3><div>{badges.map((badge) => <article className={badge.unlocked ? 'unlocked' : ''} key={badge.label}><span>{badge.icon}</span><strong>{badge.label}</strong><small>{badge.unlocked ? '✓' : '🔒'}</small></article>)}</div></section>
-        </main>
+        <main className="journey-profile-page"><section className="journey-profile-preview"><div className={`journey-avatar-large frame-${journey.frame}`}>{journey.avatar}</div><h2>{language === 'zh' ? '你的學習角色' : 'Your learner avatar'}</h2><p>Level {journey.microLevel} · {microLevelToCefr(journey.microLevel)} · {journey.xp.toLocaleString()} XP</p></section><section className="journey-customization"><h3>{copy.avatar}</h3><div className="journey-avatar-options">{AVATARS.map((avatar) => <button className={journey.avatar === avatar ? 'active' : ''} type="button" key={avatar} onClick={() => updateJourney((current) => ({ ...current, avatar }))}>{avatar}</button>)}</div><h3>{copy.frame}</h3><div className="journey-frame-options">{FRAMES.map((frame) => <button className={journey.frame === frame ? 'active' : ''} type="button" key={frame} onClick={() => updateJourney((current) => ({ ...current, frame }))}>{frame}</button>)}</div><h3>{copy.dailyTarget}</h3><div className="journey-target-setting"><input type="range" min="20" max="150" step="10" value={journey.dailyTargetXp} onChange={(event) => updateJourney((current) => ({ ...current, dailyTargetXp: Number(event.target.value) }))} /><strong>{journey.dailyTargetXp} XP</strong></div></section><section className="journey-badges"><h3>{copy.badges}</h3><div>{badges.map((badge) => <article className={badge.unlocked ? 'unlocked' : ''} key={badge.label}><span>{badge.icon}</span><strong>{badge.label}</strong><small>{badge.unlocked ? '✓' : '🔒'}</small></article>)}</div></section></main>
       ) : null}
     </div>
   )
