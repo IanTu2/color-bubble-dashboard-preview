@@ -13,6 +13,7 @@ import './english-learning.css'
 import './english-casual-practice.css'
 import './english-bilingual-library.css'
 import './english-assessment-reading.css'
+import './english-journey.css'
 
 const rootElement = document.getElementById('root')
 
