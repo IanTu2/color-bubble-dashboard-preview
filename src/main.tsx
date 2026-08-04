@@ -14,6 +14,7 @@ import './english-casual-practice.css'
 import './english-bilingual-library.css'
 import './english-assessment-reading.css'
 import './english-journey.css'
+import './english-journey-bridge.css'
 
 const rootElement = document.getElementById('root')
 
