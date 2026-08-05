@@ -29,7 +29,7 @@ type ManagedWindow = {
   zIndex: number
 }
 
-type StoredWindow = Pick<ManagedWindow, 'id' | 'app' | 'sequence' | 'geometry' | 'minimized'>
+type StoredWindow = Pick<ManagedWindow, 'id' | 'app' | 'sequence' | 'geometry' | 'minimized' | 'maximized'>
 
 function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
@@ -77,9 +77,9 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
         id: typeof item.id === 'string' ? item.id : createId(),
         app: item.app,
         sequence: Number.isFinite(item.sequence) ? item.sequence : index + 1,
-        geometry: item.app === 'english' ? appGeometry('english', index) : clampWindowGeometry(item.geometry),
+        geometry: clampWindowGeometry(item.geometry),
         minimized: Boolean(item.minimized),
-        maximized: item.app === 'english',
+        maximized: Boolean(item.maximized),
         zIndex: 60 + index,
       }))
   } catch {
@@ -128,8 +128,6 @@ export function DesktopWorkspace({
             ? {
                 ...item,
                 minimized: false,
-                maximized: kind === 'english' ? true : item.maximized,
-                geometry: kind === 'english' ? appGeometry('english', current.length) : item.geometry,
                 zIndex,
               }
             : item)
@@ -172,6 +170,7 @@ export function DesktopWorkspace({
       sequence: item.sequence,
       geometry: item.geometry,
       minimized: item.minimized,
+      maximized: item.maximized,
     }))
     window.localStorage.setItem(key, JSON.stringify(storedWindows))
   }, [rememberWindows, userId, windows])
@@ -207,22 +206,27 @@ export function DesktopWorkspace({
 
   return (
     <>
-      {windows.map((item) => item.minimized ? null : (
-        <WindowFrame
+      {windows.map((item) => (
+        <div
           key={item.id}
-          title={windowTitle(item)}
-          icon={appIcon(item.app)}
-          geometry={item.geometry}
-          maximized={item.maximized}
-          zIndex={item.zIndex}
-          onFocus={() => focusWindow(item.id)}
-          onMinimize={() => updateWindow(item.id, { minimized: true })}
-          onToggleMaximize={() => updateWindow(item.id, { maximized: !item.maximized, minimized: false, zIndex: nextZIndex() })}
-          onClose={() => setWindows((current) => current.filter((windowItem) => windowItem.id !== item.id))}
-          onGeometryChange={(geometry) => updateWindow(item.id, { geometry })}
+          aria-hidden={item.minimized}
+          style={{ display: item.minimized ? 'none' : 'contents' }}
         >
-          {appContent(item)}
-        </WindowFrame>
+          <WindowFrame
+            title={windowTitle(item)}
+            icon={appIcon(item.app)}
+            geometry={item.geometry}
+            maximized={item.maximized}
+            zIndex={item.zIndex}
+            onFocus={() => focusWindow(item.id)}
+            onMinimize={() => updateWindow(item.id, { minimized: true })}
+            onToggleMaximize={() => updateWindow(item.id, { maximized: !item.maximized, minimized: false, zIndex: nextZIndex() })}
+            onClose={() => setWindows((current) => current.filter((windowItem) => windowItem.id !== item.id))}
+            onGeometryChange={(geometry) => updateWindow(item.id, { geometry })}
+          >
+            {appContent(item)}
+          </WindowFrame>
+        </div>
       ))}
 
       <nav className="desktop-dock" aria-label={copy.launch}>
