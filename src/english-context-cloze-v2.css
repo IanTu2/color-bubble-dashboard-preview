@@ -2,6 +2,66 @@
   max-width: 880px;
 }
 
+/* Keep the course header compact so the lesson itself stays above the fold. */
+.context-main-header {
+  gap: 14px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.context-brand {
+  gap: 10px;
+}
+
+.context-brand > div {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 23px;
+}
+
+.context-brand h1 {
+  margin: 1px 0 2px;
+  font-size: 20px;
+  line-height: 1.18;
+}
+
+.context-brand span {
+  display: block;
+  max-width: 520px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-brand .context-eyebrow {
+  font-size: 10px;
+}
+
+.context-header-actions {
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.context-header-actions > span,
+.context-header-actions button {
+  padding: 7px 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.context-tabs {
+  margin-bottom: 12px;
+}
+
+.context-tabs button {
+  min-height: 42px;
+  padding: 8px 12px;
+}
+
 .context-listening-panel {
   display: flex;
   align-items: center;
@@ -35,6 +95,16 @@
 .context-hint-button:hover {
   border-color: rgba(128, 240, 220, .58);
   background: rgba(128, 240, 220, .14);
+}
+
+/* The cloze sentence is the question, not a decorative heading. */
+.context-question-card-v2 > h1 {
+  padding: 16px 18px;
+  border: 1px solid rgba(119, 234, 213, .24);
+  border-radius: 17px;
+  background: rgba(119, 234, 213, .055);
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: .01em;
 }
 
 .context-hint-panel {
@@ -72,11 +142,70 @@
   min-width: 150px;
 }
 
+/* The post-answer next action must be unmistakable and use white text. */
+.context-feedback-actions .context-primary,
+.assessment-feedback .primary-button {
+  min-width: 156px;
+  color: #fff !important;
+  font-weight: 900;
+  background: linear-gradient(135deg, #1e9f8b, #3478d4);
+  box-shadow: 0 12px 30px rgba(48, 151, 181, .28);
+}
+
+.context-feedback-actions .context-primary:hover,
+.assessment-feedback .primary-button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+/* The imported CEFR tag is a source classification, not a universal word-difficulty score. */
+.assessment-meta span:last-child {
+  font-size: 0;
+}
+
+.assessment-meta span:last-child::after {
+  content: "CEFR 來源分級";
+  font-size: 12px;
+  letter-spacing: .04em;
+}
+
 .context-answer-feedback.wrong > strong:first-child {
   line-height: 1.55;
 }
 
+@media (max-width: 980px) {
+  .context-main-header {
+    align-items: flex-start;
+  }
+
+  .context-header-actions {
+    flex-wrap: wrap;
+  }
+
+  .context-brand span {
+    white-space: normal;
+  }
+}
+
 @media (max-width: 700px) {
+  .context-main-header {
+    position: relative;
+    display: grid;
+    margin-top: -24px;
+    padding: 12px 14px;
+  }
+
+  .context-header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .context-header-actions > span,
+  .context-header-actions button {
+    min-width: 0;
+    white-space: normal;
+  }
+
   .context-listening-panel,
   .context-question-actions-v2 {
     align-items: stretch;
