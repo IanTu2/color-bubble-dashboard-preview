@@ -17,6 +17,7 @@ type SideDrawerProps = {
   onOpenSettings: () => void
   onOpenAuth: () => void
   onOpenDesktopApp: (app: DesktopAppKind) => void
+  onOpenCourse: (grade: number, subject: CurriculumSubjectId) => void
 }
 
 type CurriculumStage = 'elementary' | 'junior' | 'senior'
@@ -86,6 +87,7 @@ export function SideDrawer({
   onOpenSettings,
   onOpenAuth,
   onOpenDesktopApp,
+  onOpenCourse,
 }: SideDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanel>(null)
   const [selectedStage, setSelectedStage] = useState<CurriculumStage>('elementary')
@@ -99,7 +101,7 @@ export function SideDrawer({
         learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊', settings: '設定', curriculum: '課程總覽', curriculumHint: '選擇學段、年級與科目', grade: '年級', subject: '科目',
         roadmap: '課程規劃', roadmapHint: '依十二年國教領域方向整理的平台課程藍圖', viewPlan: '查看課程規劃', semesterOne: '上學期', semesterTwo: '下學期',
-        sourceNote: '這是 Bubble Space 依官方課綱學習方向整理的課程藍圖，不是特定出版社課本目錄。', materialPending: '教材尚未製作',
+        sourceNote: '這是 Bubble Space 依官方課綱學習方向整理的課程藍圖，不是特定出版社課本目錄。', plannedLessons: '6 課教學流程已規劃', startCourse: '進入正式課程 →',
         foundation: '基礎', core: '核心', stretch: '延伸',
         back: '返回主選單', practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具',
         practiceTitle: '練習場與學習工具', practiceDescription: '這裡放跨年級的練習 App；正式國英數自社教材則留在課程總覽。',
@@ -110,7 +112,7 @@ export function SideDrawer({
         learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', curriculumHint: 'Choose school stage, grade, and subject', grade: 'Grade', subject: 'Subject',
         roadmap: 'Course roadmap', roadmapHint: 'Bubble Space roadmap aligned to Taiwan curriculum domains', viewPlan: 'View roadmap', semesterOne: 'Semester 1', semesterTwo: 'Semester 2',
-        sourceNote: 'This is a Bubble Space learning roadmap aligned to official curriculum directions, not a textbook publisher table of contents.', materialPending: 'Lesson content pending',
+        sourceNote: 'This is a Bubble Space learning roadmap aligned to official curriculum directions, not a textbook publisher table of contents.', plannedLessons: '6-lesson learning flow planned', startCourse: 'Open formal course →',
         foundation: 'Foundation', core: 'Core', stretch: 'Stretch',
         back: 'Back to main menu', practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path',
         practiceTitle: 'Practice lab and learning tools', practiceDescription: 'Cross-grade practice apps live here; formal school-subject lessons stay in the course browser.',
@@ -144,6 +146,14 @@ export function SideDrawer({
   const openDesktopApp = (app: DesktopAppKind) => {
     closeAll()
     onOpenDesktopApp(app)
+  }
+
+  const openCourse = () => {
+    if (!selectedSubject) return
+    const grade = selectedGradeNumber
+    const subject = selectedSubject
+    closeAll()
+    onOpenCourse(grade, subject)
   }
 
   const chooseStage = (stage: CurriculumStage) => {
@@ -340,11 +350,13 @@ export function SideDrawer({
                         <span className={`difficulty-${unit.difficultyBand}`}>{difficultyLabel(unit.difficultyBand)}</span>
                       </div>
                       <p>{unit.focus}</p>
-                      <small>{copy.materialPending}</small>
+                      <small>{copy.plannedLessons}</small>
                     </div>
                   </article>
                 ))}
               </div>
+
+              <button className="curriculum-start-course" type="button" onClick={openCourse}>{copy.startCourse}</button>
             </section>
           ) : null}
         </section>
