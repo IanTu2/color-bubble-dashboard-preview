@@ -1,0 +1,357 @@
+.curriculum-rich-pack {
+  display: grid;
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.curriculum-rich-bridge,
+.curriculum-rich-visual,
+.curriculum-rich-practice,
+.curriculum-rich-takeaway {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  background: rgba(255,255,255,.025);
+}
+
+.curriculum-rich-bridge,
+.curriculum-rich-visual,
+.curriculum-rich-practice {
+  padding: 22px;
+}
+
+.curriculum-rich-kicker {
+  margin: 0 0 5px;
+  color: #73dfcd;
+  font-size: .62rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.curriculum-rich-pack h3,
+.curriculum-rich-pack h4,
+.curriculum-rich-pack p {
+  margin-top: 0;
+}
+
+.curriculum-rich-pack h3 {
+  margin-bottom: 13px;
+  font-size: 1rem;
+}
+
+.curriculum-rich-bridge p,
+.curriculum-rich-visual > p,
+.curriculum-rich-practice p,
+.curriculum-rich-takeaway p {
+  color: rgba(248,248,255,.7);
+  line-height: 1.75;
+}
+
+.curriculum-rich-visual-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.curriculum-rich-visual-head > div p {
+  margin: 5px 0 0;
+  color: rgba(248,248,255,.48);
+  font-size: .72rem;
+}
+
+.curriculum-audio-button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid rgba(91,215,195,.24);
+  border-radius: 11px;
+  color: #c8fff5;
+  background: rgba(91,215,195,.08);
+  cursor: pointer;
+}
+
+.curriculum-visual-canvas {
+  position: relative;
+  display: grid;
+  gap: 10px;
+}
+
+.curriculum-visual-canvas.kind-concept-map,
+.curriculum-visual-canvas.kind-experiment,
+.curriculum-visual-canvas.kind-spatial {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.curriculum-visual-node {
+  position: relative;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+}
+
+.curriculum-visual-node strong,
+.curriculum-visual-node span {
+  display: block;
+}
+
+.curriculum-visual-node strong {
+  margin-bottom: 5px;
+  color: #ecfbf8;
+  font-size: .78rem;
+}
+
+.curriculum-visual-node span {
+  color: rgba(248,248,255,.58);
+  font-size: .68rem;
+  line-height: 1.55;
+}
+
+.curriculum-visual-canvas.kind-number-line {
+  grid-template-columns: repeat(5, 1fr);
+  align-items: start;
+  padding-top: 24px;
+}
+
+.curriculum-visual-canvas.kind-number-line::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 5%;
+  left: 5%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(112,225,207,.25), rgba(112,225,207,.9), rgba(112,225,207,.25));
+}
+
+.curriculum-visual-canvas.kind-number-line .curriculum-visual-node {
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.curriculum-visual-canvas.kind-number-line .curriculum-visual-node::before {
+  content: '';
+  position: absolute;
+  top: -17px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #7be5d2;
+  border-radius: 50%;
+  background: #111726;
+  transform: translateX(-50%);
+}
+
+.curriculum-visual-canvas.kind-timeline {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  padding-top: 18px;
+}
+
+.curriculum-visual-canvas.kind-timeline::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 4%;
+  left: 4%;
+  height: 2px;
+  background: rgba(125,114,255,.3);
+}
+
+.curriculum-visual-canvas.kind-timeline .curriculum-visual-node::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8f83ff;
+  box-shadow: 0 0 0 4px rgba(143,131,255,.12);
+}
+
+.curriculum-visual-canvas.kind-reading {
+  display: block;
+}
+
+.curriculum-visual-canvas.kind-reading .curriculum-visual-node {
+  padding: 22px;
+  border-left: 4px solid rgba(112,225,207,.65);
+  border-radius: 0 14px 14px 0;
+}
+
+.curriculum-visual-canvas.kind-reading .curriculum-visual-node span {
+  color: rgba(248,248,255,.82);
+  font-size: .84rem;
+  line-height: 2;
+}
+
+.curriculum-visual-canvas.kind-dialogue {
+  grid-template-columns: 1fr;
+}
+
+.curriculum-visual-canvas.kind-dialogue .curriculum-visual-node {
+  width: min(78%, 680px);
+}
+
+.curriculum-visual-canvas.kind-dialogue .curriculum-visual-node:nth-child(even) {
+  justify-self: end;
+  background: rgba(99,120,255,.08);
+}
+
+.curriculum-rich-practice-list {
+  display: grid;
+  gap: 12px;
+}
+
+.curriculum-practice-card {
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 15px;
+  background: rgba(255,255,255,.025);
+}
+
+.curriculum-practice-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+
+.curriculum-practice-level {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #9aeadc;
+  background: rgba(85,213,191,.08);
+  font-size: .58rem;
+  font-weight: 900;
+}
+
+.curriculum-practice-card h4 {
+  margin: 0 0 12px;
+  font-size: .86rem;
+  line-height: 1.55;
+}
+
+.curriculum-practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.curriculum-practice-actions button,
+.curriculum-rich-report {
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 10px;
+  color: rgba(248,248,255,.72);
+  background: rgba(255,255,255,.035);
+  cursor: pointer;
+}
+
+.curriculum-practice-hint,
+.curriculum-practice-solution {
+  margin-top: 11px;
+  padding: 12px 13px;
+  border-radius: 11px;
+  line-height: 1.65;
+}
+
+.curriculum-practice-hint {
+  color: #ffe2a2;
+  background: rgba(255,198,81,.07);
+}
+
+.curriculum-practice-solution {
+  color: rgba(248,248,255,.78);
+  background: rgba(104,222,201,.065);
+}
+
+.curriculum-practice-solution strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #95eadb;
+}
+
+.curriculum-rich-report-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.curriculum-rich-report {
+  color: #86dece;
+  border-color: rgba(94,218,197,.18);
+}
+
+.curriculum-rich-takeaway {
+  padding: 18px 20px;
+  border-left: 4px solid #79dfcd;
+  border-radius: 0 16px 16px 0;
+  background: rgba(89,218,196,.055);
+}
+
+.curriculum-rich-takeaway strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #8ee8d8;
+  font-size: .7rem;
+}
+
+.curriculum-rich-takeaway p {
+  margin-bottom: 0;
+}
+
+html[data-theme='light'] .curriculum-rich-bridge,
+html[data-theme='light'] .curriculum-rich-visual,
+html[data-theme='light'] .curriculum-rich-practice,
+html[data-theme='light'] .curriculum-practice-card {
+  border-color: rgba(29,46,58,.09);
+  background: rgba(255,255,255,.72);
+}
+
+html[data-theme='light'] .curriculum-rich-bridge p,
+html[data-theme='light'] .curriculum-rich-visual-head > div p,
+html[data-theme='light'] .curriculum-rich-practice p,
+html[data-theme='light'] .curriculum-rich-takeaway p,
+html[data-theme='light'] .curriculum-visual-node span {
+  color: rgba(26,39,50,.7);
+}
+
+html[data-theme='light'] .curriculum-visual-node {
+  background: rgba(23,52,69,.045);
+}
+
+html[data-theme='light'] .curriculum-visual-node strong,
+html[data-theme='light'] .curriculum-practice-card h4 {
+  color: #17313e;
+}
+
+html[data-theme='light'] .curriculum-visual-canvas.kind-number-line .curriculum-visual-node::before {
+  background: #f8fbfb;
+}
+
+html[data-theme='light'] .curriculum-practice-actions button,
+html[data-theme='light'] .curriculum-rich-report {
+  color: #31505c;
+  border-color: rgba(29,46,58,.1);
+  background: rgba(29,46,58,.035);
+}
+
+html[data-theme='light'] .curriculum-practice-solution {
+  color: #294652;
+}
+
+@media (max-width: 720px) {
+  .curriculum-rich-bridge,
+  .curriculum-rich-visual,
+  .curriculum-rich-practice { padding: 16px; }
+  .curriculum-rich-visual-head { flex-direction: column; }
+  .curriculum-visual-canvas.kind-number-line { grid-template-columns: repeat(5, minmax(54px, 1fr)); overflow-x: auto; }
+  .curriculum-visual-canvas.kind-timeline { grid-template-columns: 1fr; padding-top: 0; }
+  .curriculum-visual-canvas.kind-timeline::before { display: none; }
+  .curriculum-visual-canvas.kind-timeline .curriculum-visual-node::before { display: none; }
+  .curriculum-visual-canvas.kind-dialogue .curriculum-visual-node { width: 92%; }
+}
