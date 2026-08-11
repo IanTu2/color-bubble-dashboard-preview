@@ -13,7 +13,7 @@
   opacity: 0;
   pointer-events: none;
   transform: translateX(-28px);
-  transition: opacity .2s ease, transform .34s cubic-bezier(.22,.85,.32,1);
+  transition: width .28s ease, left .28s ease, opacity .2s ease, transform .34s cubic-bezier(.22,.85,.32,1);
 }
 
 .curriculum-layer.open {
@@ -22,23 +22,36 @@
   transform: translateX(0);
 }
 
+/*
+ * Desktop behaviour:
+ * Only the newest curtain keeps a full reading width. Previous choices collapse
+ * into slim breadcrumb rails so the three-step path does not consume the screen.
+ */
 .curriculum-grade-curtain {
-  z-index: 39;
-  left: 292px;
-  width: 270px;
+  z-index: 41;
+  left: 304px;
+  width: 360px;
+}
+
+.curriculum-grade-curtain.rail {
+  width: 68px;
 }
 
 .curriculum-subject-curtain {
-  z-index: 38;
-  left: 550px;
-  width: 286px;
+  z-index: 42;
+  left: 364px;
+  width: 360px;
+}
+
+.curriculum-subject-curtain.rail {
+  width: 68px;
 }
 
 .curriculum-content-curtain {
-  z-index: 37;
-  left: 824px;
-  width: min(470px, calc(100vw - 840px));
-  min-width: 360px;
+  z-index: 43;
+  left: 424px;
+  width: min(760px, calc(100vw - 440px));
+  min-width: 430px;
 }
 
 .curriculum-layer-head {
@@ -88,6 +101,40 @@
   line-height: 1.35;
 }
 
+.curriculum-rail-label {
+  display: none;
+}
+
+.curriculum-layer.rail .curriculum-layer-head {
+  grid-template-columns: 1fr;
+  align-content: start;
+  justify-items: center;
+  gap: 14px;
+  min-height: 100%;
+  padding: 18px 8px;
+}
+
+.curriculum-layer.rail .curriculum-layer-head > div,
+.curriculum-layer.rail .curriculum-vertical-scroll,
+.curriculum-layer.rail .curriculum-subject-list {
+  display: none;
+}
+
+.curriculum-layer.rail .curriculum-layer-head > button {
+  width: 38px;
+  height: 38px;
+}
+
+.curriculum-layer.rail .curriculum-rail-label {
+  display: block;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  color: rgba(248,248,255,.72);
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+
 .curriculum-vertical-scroll,
 .curriculum-content-body {
   overflow: auto;
@@ -118,10 +165,10 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 56px;
-  padding: 8px 10px;
+  min-height: 58px;
+  padding: 9px 11px;
   border: 0;
-  border-radius: 11px;
+  border-radius: 12px;
   color: rgba(248,248,255,.74);
   background: transparent;
   cursor: pointer;
@@ -156,14 +203,14 @@
 }
 
 .curriculum-list-copy strong {
-  font-size: .78rem;
+  font-size: .8rem;
   font-weight: 850;
 }
 
 .curriculum-list-copy small {
   overflow: hidden;
   color: rgba(248,248,255,.38);
-  font-size: .55rem;
+  font-size: .56rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -179,20 +226,27 @@
 }
 
 .curriculum-subject-list > button {
-  min-height: 64px;
+  min-height: 66px;
+}
+
+.curriculum-content-body {
+  padding: 18px 20px 22px;
 }
 
 .curriculum-content-body .curriculum-roadmap-intro {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
 .curriculum-content-body .curriculum-unit-list {
-  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .curriculum-content-body .curriculum-unit-card {
-  grid-template-columns: 34px minmax(0,1fr);
-  border-radius: 12px;
+  grid-template-columns: 38px minmax(0,1fr);
+  padding: 14px;
+  border-radius: 14px;
   background: rgba(255,255,255,.025);
 }
 
@@ -200,39 +254,93 @@
   position: sticky;
   bottom: 0;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 18px;
   box-shadow: 0 -12px 30px rgba(9,11,20,.72), 0 14px 28px rgba(55,139,129,.16);
 }
 
-@media (max-width: 1280px) {
-  .curriculum-grade-curtain { width: 248px; }
-  .curriculum-subject-curtain { left: 528px; width: 254px; }
-  .curriculum-content-curtain { left: 770px; width: calc(100vw - 786px); min-width: 0; }
+/* Light mode keeps the same layered hierarchy without reverting to dark panels. */
+html[data-theme='light'] .curriculum-layer {
+  border-color: rgba(24,39,54,.10);
+  background: linear-gradient(165deg, rgba(255,255,255,.99), rgba(247,250,252,.99));
+  box-shadow: 24px 0 60px rgba(36,55,72,.12);
 }
 
-@media (max-width: 1120px) {
+html[data-theme='light'] .curriculum-layer-head {
+  border-bottom-color: rgba(24,39,54,.08);
+}
+
+html[data-theme='light'] .curriculum-layer-head > button {
+  color: #284050;
+  border-color: rgba(24,39,54,.10);
+  background: rgba(31,72,82,.04);
+}
+
+html[data-theme='light'] .curriculum-layer-head h2,
+html[data-theme='light'] .curriculum-list-copy strong,
+html[data-theme='light'] .curriculum-layer.rail .curriculum-rail-label {
+  color: #1f3341;
+}
+
+html[data-theme='light'] .curriculum-layer-head span,
+html[data-theme='light'] .curriculum-grade-group h3,
+html[data-theme='light'] .curriculum-list-copy small {
+  color: rgba(31,51,65,.52);
+}
+
+html[data-theme='light'] .curriculum-vertical-list > button {
+  color: #334d5e;
+}
+
+html[data-theme='light'] .curriculum-vertical-list > button:hover,
+html[data-theme='light'] .curriculum-vertical-list > button.active {
+  color: #173844;
+  background: rgba(70,190,170,.10);
+}
+
+html[data-theme='light'] .curriculum-content-body .curriculum-unit-card {
+  border-color: rgba(24,39,54,.08);
+  background: rgba(28,62,73,.025);
+}
+
+@media (max-width: 1180px) {
+  .curriculum-grade-curtain { width: 330px; }
+  .curriculum-subject-curtain { width: 330px; }
+  .curriculum-content-curtain {
+    width: calc(100vw - 440px);
+    min-width: 0;
+  }
+}
+
+/* At tablet widths, use one full curtain at a time instead of squeezing layers. */
+@media (max-width: 980px) {
+  .curriculum-layer,
   .curriculum-grade-curtain,
   .curriculum-subject-curtain,
-  .curriculum-content-curtain {
-    left: 292px;
-    width: min(430px, calc(100vw - 308px));
-  }
-  .curriculum-grade-curtain { z-index: 39; }
-  .curriculum-subject-curtain { z-index: 40; }
-  .curriculum-content-curtain { z-index: 41; }
-}
-
-@media (max-width: 840px) {
-  .curriculum-layer {
+  .curriculum-content-curtain,
+  .curriculum-grade-curtain.rail,
+  .curriculum-subject-curtain.rail {
     top: 10px;
     right: 10px;
     bottom: 10px;
     left: 10px;
     width: auto;
+    min-width: 0;
     border: 1px solid rgba(255,255,255,.1);
     border-radius: 22px;
   }
+
   .curriculum-grade-curtain { z-index: 47; }
   .curriculum-subject-curtain { z-index: 48; }
   .curriculum-content-curtain { z-index: 49; }
+
+  .curriculum-layer.rail {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .curriculum-layer.rail .curriculum-layer-head,
+  .curriculum-layer.rail .curriculum-vertical-scroll,
+  .curriculum-layer.rail .curriculum-subject-list {
+    display: none;
+  }
 }

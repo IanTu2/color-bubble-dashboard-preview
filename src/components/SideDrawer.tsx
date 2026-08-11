@@ -65,8 +65,8 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
         menu: '主要選單', close: '關閉選單', workspace: '工作視窗', notes: '記事本', search: '新增搜尋視窗', searchHint: '可同時開啟多個',
         learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊', settings: '設定', curriculum: '課程總覽', chooseGrade: '選擇年級', chooseGradeHint: '一年級到高三，直式排列',
-        chooseSubject: '選擇科目', chooseSubjectHint: '國文、英文、數學、自然、社會', roadmap: '課程內容', roadmapHint: '選擇學期後查看單元，再進入正式教學',
-        semesterOne: '上學期', semesterTwo: '下學期', sourceNote: '依十二年國教領域方向整理，不綁定單一出版社版本。', startCourse: '開始上課 →', lessons: '6 段教學流程',
+        chooseSubject: '選擇科目', chooseSubjectHint: '國文、英文、數學、自然、社會', roadmap: '課程內容', roadmapHint: '選擇學期與單元，再進入正式教學',
+        semesterOne: '上學期', semesterTwo: '下學期', sourceNote: '依十二年國教領域方向整理，不綁定單一出版社版本。', startCourse: '開始上課 →', lessons: '觀念・示範・練習・解析',
         practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具', practiceTitle: '練習場與學習工具',
         practiceDescription: '跨年級練習 App 放這裡；正式國英數自社教材走課程總覽。', englishPractice: '英文情境練習', englishPracticeHint: '程度測驗、情境挖空、無限練習、複習與單字工具', open: '開啟', coming: '更多練習工具會陸續加入',
       }
@@ -74,8 +74,8 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
         menu: 'Main menu', close: 'Close menu', workspace: 'Work windows', notes: 'Notes', search: 'New search window', searchHint: 'Open multiple windows',
         learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', chooseGrade: 'Choose grade', chooseGradeHint: 'Grades 1–12 in one vertical list',
-        chooseSubject: 'Choose subject', chooseSubjectHint: 'Chinese, English, Math, Science, Social studies', roadmap: 'Course content', roadmapHint: 'Choose semester and units, then enter the formal lesson',
-        semesterOne: 'Semester 1', semesterTwo: 'Semester 2', sourceNote: 'Aligned to Taiwan curriculum domains without binding to one publisher.', startCourse: 'Start course →', lessons: '6-part guided lesson',
+        chooseSubject: 'Choose subject', chooseSubjectHint: 'Chinese, English, Math, Science, Social studies', roadmap: 'Course content', roadmapHint: 'Choose semester and unit, then enter the formal lesson',
+        semesterOne: 'Semester 1', semesterTwo: 'Semester 2', sourceNote: 'Aligned to Taiwan curriculum domains without binding to one publisher.', startCourse: 'Start course →', lessons: 'Concept · example · practice · explanation',
         practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path', practiceTitle: 'Practice lab and learning tools',
         practiceDescription: 'Cross-grade apps stay here; formal subjects use the course browser.', englishPractice: 'English context practice', englishPracticeHint: 'Placement, context cloze, continuous practice, review, and vocabulary tools', open: 'Open', coming: 'More practice tools will be added later',
       }
@@ -151,8 +151,12 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
       </aside>
 
       {loggedIn ? (
-        <section className={`curriculum-layer curriculum-grade-curtain${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
-          <header className="curriculum-layer-head"><button type="button" onClick={() => setPanel(null)}>‹</button><div><p>COURSE · 01</p><h2>{copy.chooseGrade}</h2><span>{copy.chooseGradeHint}</span></div></header>
+        <section className={`curriculum-layer curriculum-grade-curtain${selectedGrade ? ' rail' : ''}${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
+          <header className="curriculum-layer-head">
+            <button type="button" aria-label={language === 'zh' ? '返回主選單' : 'Back to main menu'} onClick={() => setPanel(null)}>‹</button>
+            <div><p>COURSE · 01</p><h2>{copy.chooseGrade}</h2><span>{copy.chooseGradeHint}</span></div>
+            {selectedGrade ? <span className="curriculum-rail-label">{gradeLabel(selectedGrade, language)}</span> : null}
+          </header>
           <div className="curriculum-vertical-scroll">
             {GRADE_GROUPS.map((group) => (
               <section className="curriculum-grade-group" key={group.id}>
@@ -171,8 +175,12 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
       ) : null}
 
       {loggedIn && selectedGrade ? (
-        <section className={`curriculum-layer curriculum-subject-curtain${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
-          <header className="curriculum-layer-head"><button type="button" onClick={() => { setSelectedGrade(null); setSelectedSubject(null) }}>‹</button><div><p>COURSE · 02</p><h2>{copy.chooseSubject}</h2><span>{gradeLabel(selectedGrade, language)} · {copy.chooseSubjectHint}</span></div></header>
+        <section className={`curriculum-layer curriculum-subject-curtain${selectedSubject ? ' rail' : ''}${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
+          <header className="curriculum-layer-head">
+            <button type="button" aria-label={language === 'zh' ? '返回年級' : 'Back to grades'} onClick={() => { setSelectedGrade(null); setSelectedSubject(null) }}>‹</button>
+            <div><p>COURSE · 02</p><h2>{copy.chooseSubject}</h2><span>{gradeLabel(selectedGrade, language)} · {copy.chooseSubjectHint}</span></div>
+            {selectedSubjectMeta ? <span className="curriculum-rail-label">{language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</span> : null}
+          </header>
           <div className="curriculum-vertical-list curriculum-subject-list">
             {CURRICULUM_SUBJECTS.map((subject) => (
               <button type="button" className={selectedSubject === subject.id ? 'active' : ''} key={subject.id} onClick={() => { setSelectedSubject(subject.id); setSelectedSemester(1) }}>
@@ -185,7 +193,7 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
 
       {loggedIn && selectedGrade && selectedSubject && selectedTrack && selectedSubjectMeta ? (
         <section className={`curriculum-layer curriculum-content-curtain${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
-          <header className="curriculum-layer-head"><button type="button" onClick={() => setSelectedSubject(null)}>‹</button><div><p>COURSE · 03</p><h2>{copy.roadmap}</h2><span>{gradeLabel(selectedGrade, language)} · {language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</span></div></header>
+          <header className="curriculum-layer-head"><button type="button" aria-label={language === 'zh' ? '返回科目' : 'Back to subjects'} onClick={() => setSelectedSubject(null)}>‹</button><div><p>COURSE · 03</p><h2>{copy.roadmap}</h2><span>{gradeLabel(selectedGrade, language)} · {language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</span></div></header>
           <div className="curriculum-content-body">
             <div className="curriculum-roadmap-intro"><strong>{copy.roadmapHint}</strong><p>{selectedTrack.note ?? copy.sourceNote}</p></div>
             <div className="curriculum-semester-tabs" role="tablist"><button type="button" className={selectedSemester === 1 ? 'active' : ''} onClick={() => setSelectedSemester(1)}>{copy.semesterOne}</button><button type="button" className={selectedSemester === 2 ? 'active' : ''} onClick={() => setSelectedSemester(2)}>{copy.semesterTwo}</button></div>
