@@ -1,0 +1,138 @@
+.practice-entry {
+  margin-top: 9px;
+  background: linear-gradient(135deg, rgba(255, 184, 92, .1), rgba(255, 108, 168, .055));
+}
+
+.practice-entry:hover,
+.practice-entry.active {
+  border-color: rgba(255, 199, 111, .42);
+  background: linear-gradient(135deg, rgba(255, 184, 92, .18), rgba(255, 108, 168, .09));
+}
+
+.practice-entry-icon {
+  color: #2b1c0a;
+  background: linear-gradient(145deg, #ffe09c, #ffb65f);
+  box-shadow: 0 10px 24px rgba(255, 184, 92, .14);
+}
+
+.practice-entry.active .curriculum-entry-arrow {
+  color: #ffd18a;
+}
+
+.practice-curtain {
+  background:
+    radial-gradient(circle at 86% 0%, rgba(255, 187, 99, .12), transparent 31%),
+    radial-gradient(circle at 12% 84%, rgba(255, 105, 168, .07), transparent 34%),
+    linear-gradient(155deg, rgba(20, 18, 27, .988), rgba(11, 12, 21, .988));
+}
+
+.practice-curtain-head > div > span {
+  max-width: 440px;
+  line-height: 1.55;
+}
+
+.practice-tool-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.practice-tool-card {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 92px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 19px;
+  color: #f9f7ff;
+  background: linear-gradient(135deg, rgba(88, 226, 210, .08), rgba(156, 124, 255, .08));
+  cursor: pointer;
+  text-align: left;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.practice-tool-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(110, 231, 211, .38);
+  background: linear-gradient(135deg, rgba(88, 226, 210, .13), rgba(156, 124, 255, .12));
+}
+
+.practice-tool-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 16px;
+  color: #102421;
+  background: linear-gradient(145deg, #9cf4dd, #60d9c6);
+  font-size: .78rem;
+  font-weight: 950;
+}
+
+.practice-tool-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.practice-tool-copy strong {
+  font-size: .94rem;
+}
+
+.practice-tool-copy small {
+  color: rgba(249, 247, 255, .55);
+  font-size: .66rem;
+  line-height: 1.55;
+}
+
+.practice-tool-open {
+  color: #8debdc;
+  font-size: .67rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.practice-coming-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  border: 1px dashed rgba(255, 255, 255, .11);
+  border-radius: 15px;
+  color: rgba(249, 247, 255, .46);
+  background: rgba(255, 255, 255, .025);
+}
+
+.practice-coming-note > span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .05);
+  font-weight: 900;
+}
+
+.practice-coming-note p {
+  margin: 0;
+  font-size: .67rem;
+}
+
+@media (max-width: 520px) {
+  .practice-tool-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .practice-tool-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .practice-tool-open {
+    grid-column: 2;
+  }
+}
