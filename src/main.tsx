@@ -26,6 +26,7 @@ import './english-journey-bridge.css'
 import './english-tool-curtain.css'
 import './theme-appearance.css'
 import './desktop-light-v2.css'
+import './curriculum-paged-v4.css'
 
 const rootElement = document.getElementById('root')
 
