@@ -1,0 +1,84 @@
+.curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 360px) !important;
+  column-gap: clamp(28px, 3vw, 44px) !important;
+  align-items: center;
+  min-height: 430px;
+}
+
+.curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page) > :not(.curriculum-side-visual) {
+  grid-column: 1;
+}
+
+.curriculum-course-v8 .curriculum-side-visual {
+  grid-column: 2 !important;
+  grid-row: 1 / span 30 !important;
+  align-self: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 360px;
+  margin: 0 !important;
+  contain: layout paint;
+  transform: none !important;
+  transition: none !important;
+}
+
+.curriculum-course-v8 .curriculum-vetted-media-image {
+  width: 100%;
+  min-height: 0 !important;
+  aspect-ratio: 4 / 3;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.curriculum-course-v8 .curriculum-vetted-media-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none !important;
+  object-fit: contain;
+}
+
+.curriculum-course-v8 .curriculum-v8-generic-visual .curriculum-side-visual-canvas {
+  width: 100%;
+  aspect-ratio: 320 / 220;
+  min-height: 0;
+}
+
+.curriculum-course-v8 .curriculum-v8-generic-visual .curriculum-side-visual-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page):not(.curriculum-v8-has-visual)::after {
+  content: '';
+  grid-column: 2;
+  grid-row: 1 / span 30;
+  width: 100%;
+  min-height: 300px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255,255,255,.018), rgba(255,255,255,.006));
+  opacity: .34;
+}
+
+html[data-theme='light'] .curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page):not(.curriculum-v8-has-visual)::after {
+  background: linear-gradient(145deg, rgba(48,80,94,.025), rgba(48,80,94,.01));
+}
+
+@media (max-width: 980px) {
+  .curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page) {
+    display: block !important;
+    min-height: 0;
+  }
+
+  .curriculum-course-v8 .curriculum-side-visual {
+    width: min(100%, 560px);
+    max-width: none;
+    margin: 24px auto 0 !important;
+  }
+
+  .curriculum-course-v8 .curriculum-page-card:not(.curriculum-page-question):not(.curriculum-editorial-page):not(.curriculum-v8-has-visual)::after {
+    display: none;
+  }
+}
