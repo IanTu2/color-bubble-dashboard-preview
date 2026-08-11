@@ -6,6 +6,7 @@ import {
   type CurriculumLessonPlan,
   type CurriculumUnitBundle,
 } from '../curriculum-course-engine'
+import { buildRichLessonPack, type RichLessonPack } from '../curriculum-rich-content'
 import { buildTeachingBlocks, type TeachingBlock } from '../curriculum-teaching-content'
 import type { CurriculumSemester, CurriculumSubjectId } from '../curriculum-plan'
 import type { Language } from '../types'
@@ -94,6 +95,87 @@ function TeachingSection({ block, language, onReport }: { block: TeachingBlock; 
   )
 }
 
+function RichLessonSection({ pack, language, onReport }: { pack: RichLessonPack; language: Language; onReport: (blockId: string, blockTitle: string) => void }) {
+  const [hintIds, setHintIds] = useState<string[]>([])
+  const [answerIds, setAnswerIds] = useState<string[]>([])
+
+  const toggleHint = (id: string) => {
+    setHintIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  }
+
+  const toggleAnswer = (id: string) => {
+    setAnswerIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
+  }
+
+  const speak = () => {
+    if (!pack.visual.audioText || typeof window === 'undefined' || !('speechSynthesis' in window)) return
+    window.speechSynthesis.cancel()
+    const utterance = new SpeechSynthesisUtterance(pack.visual.audioText)
+    utterance.lang = 'en-US'
+    utterance.rate = 0.92
+    window.speechSynthesis.speak(utterance)
+  }
+
+  return (
+    <div className="curriculum-rich-pack">
+      <section className="curriculum-rich-bridge">
+        <p className="curriculum-rich-kicker">DEEP DIVE</p>
+        <h3>{language === 'zh' ? '再講清楚一點' : 'Go deeper'}</h3>
+        {pack.bridge.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+      </section>
+
+      <section className="curriculum-rich-visual">
+        <div className="curriculum-rich-visual-head">
+          <div>
+            <p className="curriculum-rich-kicker">VISUAL LEARNING</p>
+            <h3>{pack.visual.title}</h3>
+            <p>{pack.visual.caption}</p>
+          </div>
+          {pack.visual.audioText ? <button type="button" className="curriculum-audio-button" onClick={speak}>🔊 {language === 'zh' ? '朗讀教材' : 'Read aloud'}</button> : null}
+        </div>
+        <div className={`curriculum-visual-canvas kind-${pack.visual.kind}`}>
+          {pack.visual.items.map((item, index) => (
+            <article className="curriculum-visual-node" key={`${item.label}-${index}`}>
+              <strong>{item.label}</strong>
+              <span>{item.detail}</span>
+            </article>
+          ))}
+        </div>
+        <div className="curriculum-rich-report-row"><button type="button" className="curriculum-rich-report" onClick={() => onReport('rich-visual', pack.visual.title)}>{language === 'zh' ? '內容有問題？反映問題' : 'Report this content'}</button></div>
+      </section>
+
+      <section className="curriculum-rich-practice">
+        <p className="curriculum-rich-kicker">PRACTICE</p>
+        <h3>{language === 'zh' ? '換你練習｜先想再看解析' : 'Your turn · think before revealing'}</h3>
+        <div className="curriculum-rich-practice-list">
+          {pack.practices.map((item, index) => {
+            const hintOpen = hintIds.includes(item.id)
+            const answerOpen = answerIds.includes(item.id)
+            return (
+              <article className="curriculum-practice-card" key={item.id}>
+                <div className="curriculum-practice-top"><span className="curriculum-practice-level">{item.level}</span><span>{String(index + 1).padStart(2, '0')}</span></div>
+                <h4>{item.question}</h4>
+                <div className="curriculum-practice-actions">
+                  <button type="button" onClick={() => toggleHint(item.id)}>{hintOpen ? (language === 'zh' ? '收起提示' : 'Hide hint') : (language === 'zh' ? '看提示' : 'Hint')}</button>
+                  <button type="button" onClick={() => toggleAnswer(item.id)}>{answerOpen ? (language === 'zh' ? '收起解析' : 'Hide solution') : (language === 'zh' ? '看答案與解析' : 'Answer & explanation')}</button>
+                  <button type="button" onClick={() => onReport(item.id, `${language === 'zh' ? '練習題' : 'Practice'} ${index + 1}`)}>{language === 'zh' ? '反映問題' : 'Report'}</button>
+                </div>
+                {hintOpen ? <div className="curriculum-practice-hint">💡 {item.hint}</div> : null}
+                {answerOpen ? <div className="curriculum-practice-solution"><strong>{language === 'zh' ? `答案：${item.answer}` : `Answer: ${item.answer}`}</strong><span>{item.explanation}</span></div> : null}
+              </article>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="curriculum-rich-takeaway">
+        <strong>{language === 'zh' ? '這頁真正要記住' : 'Key takeaway'}</strong>
+        <p>{pack.takeaway}</p>
+      </section>
+    </div>
+  )
+}
+
 export function CurriculumCourseApp({ language, userId, grade, subject }: Props) {
   const course = useMemo(() => getCurriculumCourseBundle(grade, subject), [grade, subject])
   const [semester, setSemester] = useState<CurriculumSemester>(1)
@@ -110,13 +192,13 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
     ? {
         directory: '課程目錄', semesterOne: '上學期', semesterTwo: '下學期', progress: '整體進度', lesson: '本課', objective: '這堂要學會什麼',
         complete: '完成這一課', completed: '已完成', next: '下一課 →', previous: '← 上一課', minutes: '分鐘', source: '課程依據', unitProgress: '單元進度', close: '關閉', noCourse: '找不到這門課的課程藍圖。',
-        planVersion: '正式課程 v2', reportTitle: '內容有問題？反映問題', reportHint: '系統已自動帶入目前的年級、科目、單元、課次與內容區塊。之後串接課程 AI 時，AI 就從這個 context 回答，而不是讓你重新描述整題。',
+        planVersion: '正式課程 v3', reportTitle: '內容有問題？反映問題', reportHint: '系統已自動帶入目前的年級、科目、單元、課次與內容區塊。之後串接課程 AI 時，AI 就從這個 context 回答，而不是讓你重新描述整題。',
         reportDetail: '補充說明', reportPlaceholder: '例如：我不懂第二步為什麼要這樣算；或我覺得答案可能有問題……', submitReport: '送出問題', reportDone: '已記錄這個問題。這個入口就是之後課程 AI 的反應位置。',
       }
     : {
         directory: 'Course directory', semesterOne: 'Semester 1', semesterTwo: 'Semester 2', progress: 'Overall progress', lesson: 'Lesson', objective: 'Learning goal',
         complete: 'Complete lesson', completed: 'Completed', next: 'Next lesson →', previous: '← Previous', minutes: 'min', source: 'Curriculum basis', unitProgress: 'Unit progress', close: 'Close', noCourse: 'No curriculum roadmap was found.',
-        planVersion: 'Formal course v2', reportTitle: 'Report a content issue', reportHint: 'Grade, subject, unit, lesson, and content block are attached automatically. A future course AI can answer with this exact context.',
+        planVersion: 'Formal course v3', reportTitle: 'Report a content issue', reportHint: 'Grade, subject, unit, lesson, and content block are attached automatically. A future course AI can answer with this exact context.',
         reportDetail: 'Details', reportPlaceholder: 'For example: I do not understand step 2, or I think the answer may be wrong…', submitReport: 'Submit issue', reportDone: 'Issue saved. This is the integration point for the future course AI.',
       }
 
@@ -129,6 +211,7 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
   const safeLessonIndex = Math.min(lessonIndex, Math.max(0, unit.lessons.length - 1))
   const lesson = unit.lessons[safeLessonIndex]
   const teachingBlocks = buildTeachingBlocks(subject, grade, unit, lesson)
+  const richPack = buildRichLessonPack(subject, grade, unit, lesson)
   const allLessons = course.semesters.flatMap((item) => item.units.flatMap((entry) => entry.lessons))
   const completedInCourse = allLessons.filter((item) => completedLessonIds.includes(item.id)).length
   const overallProgress = allLessons.length ? Math.round((completedInCourse / allLessons.length) * 100) : 0
@@ -192,6 +275,13 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
     setReportSaved(false)
   }
 
+  const openRichReport = (blockId: string, blockTitle: string) => {
+    setReportContext({ blockId, blockTitle })
+    setIssueKind('unclear')
+    setIssueText('')
+    setReportSaved(false)
+  }
+
   const submitReport = () => {
     if (!reportContext) return
     saveReport(userId, {
@@ -227,6 +317,8 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
         <div className="curriculum-teaching-stack">
           {teachingBlocks.map((block) => <TeachingSection key={block.id} block={block} language={language} onReport={openReport} />)}
         </div>
+
+        <RichLessonSection key={lesson.id} pack={richPack} language={language} onReport={openRichReport} />
 
         <footer className="curriculum-lesson-footer">
           <button type="button" className="curriculum-secondary-action" disabled={safeUnitIndex === 0 && safeLessonIndex === 0} onClick={goPrevious}>{copy.previous}</button>
