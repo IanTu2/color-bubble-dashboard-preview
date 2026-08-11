@@ -476,7 +476,7 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
         <h2>{language === 'zh' ? '這堂課真正要帶走的內容' : 'What to remember'}</h2>
         <p className="curriculum-recap-main">{pack.takeaway}</p>
         <div className="curriculum-success-grid compact">
-          {lesson.successCriteria.map((criterion, index) => <div key={criterion}><span>✓</span><strong>{criterion}</strong></div>)}
+          {lesson.successCriteria.map((criterion) => <div key={criterion}><span>✓</span><strong>{criterion}</strong></div>)}
         </div>
         <button type="button" className="curriculum-complete-page" onClick={completeLesson}>
           {completedLessonIds.includes(lesson.id) ? '✓ 已完成這一課' : '標記這一課完成'}
