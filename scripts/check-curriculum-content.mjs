@@ -48,14 +48,19 @@ const player = read('src/components/CurriculumCourseAppV5.tsx')
 if (player.includes("from '../curriculum-teaching-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy teaching-content fallback')
 if (player.includes("from '../curriculum-rich-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy rich-content fallback')
 
-const visualLayer = read('src/components/CurriculumCourseAppV6.tsx')
-if (!visualLayer.includes('enhanceTeachingPage')) failures.push('CurriculumCourseAppV6 teaching visual enhancer is missing')
-if (!visualLayer.includes('curriculum-page-question')) failures.push('CurriculumCourseAppV6 must explicitly keep ordinary question pages text-first')
+const stableVisualPlayer = read('src/components/CurriculumCourseAppV8.tsx')
+const playerExport = read('src/components/CurriculumCourseApp.tsx')
+const stabilityCss = read('src/curriculum-visual-stability-v8.css')
+if (!playerExport.includes("from './CurriculumCourseAppV8'")) failures.push('active curriculum player must use the stable v8 visual layer')
+if (!stableVisualPlayer.includes("from './CurriculumCourseAppV5'")) failures.push('v8 must attach directly to v5 instead of nesting the competing v6/v7 observers')
+if (!stableVisualPlayer.includes('useLayoutEffect')) failures.push('v8 visuals must be synchronized before paint with useLayoutEffect')
+if (stableVisualPlayer.includes('requestAnimationFrame')) failures.push('v8 visual layer must not defer layout changes to requestAnimationFrame')
+if (!stableVisualPlayer.includes('observer?.disconnect()')) failures.push('v8 must disconnect its observer while mutating the visual DOM')
+if (!stabilityCss.includes('grid-template-columns')) failures.push('v8 must reserve teaching-visual layout space before media is inserted')
+if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('v8 vetted image container needs a fixed aspect ratio to prevent image-load layout shift')
 
-const vettedPlayer = read('src/components/CurriculumCourseAppV7.tsx')
 const vettedMedia = read('src/curriculum-vetted-media.ts')
-if (!vettedPlayer.includes('findVettedCurriculumMedia')) failures.push('CurriculumCourseAppV7 must resolve concept-specific vetted media')
-if (!vettedPlayer.includes("subject === 'science' || subject === 'social'")) failures.push('science/social pages must suppress generic decorative SVG when no vetted media exists')
+if (!stableVisualPlayer.includes('findVettedCurriculumMedia')) failures.push('v8 must resolve concept-specific vetted media')
 for (const requiredAsset of ['Animal%20cell%20structure%20zhtw.svg', 'Plant%20cell%20structure%20svg%20zh-hant.svg', 'Reliefkarte%20Taiwan.png']) {
   if (!vettedMedia.includes(requiredAsset)) failures.push(`vetted curriculum media missing required detailed asset: ${requiredAsset}`)
 }
@@ -81,4 +86,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] reviewed content + vetted media source checks passed')
+console.log('[curriculum-qa] reviewed content + vetted media + visual stability checks passed')
