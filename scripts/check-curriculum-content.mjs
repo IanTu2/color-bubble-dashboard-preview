@@ -9,6 +9,9 @@ const activeModules = [
   { file: 'src/curriculum-reviewed-math7.ts', units: 6, questions: 48 },
   { file: 'src/curriculum-reviewed-math7-v2.ts', units: 5, questions: 40 },
   { file: 'src/curriculum-reviewed-science7.ts', units: 6, questions: 48 },
+  { file: 'src/curriculum-reviewed-chinese7.ts', units: 6, questions: 48 },
+  { file: 'src/curriculum-reviewed-english7.ts', units: 6, questions: 48 },
+  { file: 'src/curriculum-reviewed-social7.ts', units: 6, questions: 48 },
 ]
 
 const failures = []
@@ -17,7 +20,9 @@ const count = (text, pattern) => (text.match(pattern) ?? []).length
 for (const target of activeModules) {
   const text = read(target.file)
   const reviewedCount = count(text, /reviewStatus:\s*['"]reviewed['"]/g)
-  const questionCount = count(text, /kind:\s*['"](?:choice|response)['"]/g)
+  // 作者檔允許 QA 期間用強制型別標記；正式 player 會依 options/sampleAnswer 正規化題型。
+  // 這裡用 question id 數量確認題庫，不讓拼字型別標記掩蓋「其實少題」。
+  const questionCount = count(text, /id:\s*['"][^'"]+-q\d+['"]/g)
   const workedExampleCount = count(text, /workedExamples\s*:/g)
 
   if (reviewedCount < target.units) failures.push(`${target.file}: reviewed units ${reviewedCount} < ${target.units}`)
@@ -42,6 +47,14 @@ if (player.includes("from '../curriculum-rich-content'")) failures.push('Curricu
 const aggregator = read('src/curriculum-reviewed-content.ts')
 if (!aggregator.includes('stableHash')) failures.push('reviewed choices must use stable per-question option shuffling')
 if (!aggregator.includes('sanitizeReviewedUnit')) failures.push('reviewed content sanitizer is missing')
+if (!aggregator.includes('normalizeChoiceQuestion')) failures.push('reviewed content must normalize choice questions from their actual options')
+
+const planV5 = read('src/curriculum-plan-v5.ts')
+for (const requiredChapter of ['二元一次聯立方程式', '直角坐標與二元一次方程式圖形', '一元一次不等式']) {
+  if (!planV5.includes(requiredChapter)) failures.push(`grade 7 math researched roadmap missing: ${requiredChapter}`)
+}
+if (planV5.includes('公民：民主與法律')) failures.push('grade 7 social roadmap must not place the old politics/law unit in grade 7')
+if (!planV5.includes('公民：社會互動、規範、文化與福利')) failures.push('grade 7 social researched roadmap is missing the corrected social-life unit')
 
 if (failures.length) {
   console.error('[curriculum-qa] FAILED')
