@@ -57,6 +57,22 @@ function App() {
   }, [preferences])
 
   useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = () => {
+      const resolvedTheme = preferences.themeMode === 'system'
+        ? media.matches ? 'dark' : 'light'
+        : preferences.themeMode
+      document.documentElement.dataset.theme = resolvedTheme
+      document.documentElement.style.colorScheme = resolvedTheme
+    }
+
+    applyTheme()
+    if (preferences.themeMode !== 'system') return
+    media.addEventListener('change', applyTheme)
+    return () => media.removeEventListener('change', applyTheme)
+  }, [preferences.themeMode])
+
+  useEffect(() => {
     document.body.classList.toggle('dialog-open', settingsOpen || authOpen)
     return () => document.body.classList.remove('dialog-open')
   }, [settingsOpen, authOpen])
@@ -98,11 +114,7 @@ function App() {
   }
 
   const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId) => {
-    setDesktopRequest({
-      id: Date.now() + Math.random(),
-      kind: 'course',
-      course: { grade, subject },
-    })
+    setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject } })
   }
 
   const resetAllSettings = () => {
@@ -113,65 +125,27 @@ function App() {
 
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
-    setToast(
-      error
-        ? error.message
-        : language === 'zh'
-          ? '已安全登出。'
-          : 'You are safely logged out.',
-    )
+    setToast(error ? error.message : language === 'zh' ? '已安全登出。' : 'You are safely logged out.')
   }
 
   return (
     <div className="app-shell">
-      <Background
-        animationLevel={preferences.animationLevel}
-        bubbleCount={preferences.bubbleCount}
-      />
+      <Background animationLevel={preferences.animationLevel} bubbleCount={preferences.bubbleCount} />
       <SideDrawer
         language={language}
         open={drawerOpen}
         loggedIn={Boolean(user)}
         onToggle={() => setDrawerOpen((current) => !current)}
         onClose={() => setDrawerOpen(false)}
-        onOpenSettings={() => {
-          setDrawerOpen(false)
-          setAuthOpen(false)
-          setSettingsOpen(true)
-        }}
+        onOpenSettings={() => { setDrawerOpen(false); setAuthOpen(false); setSettingsOpen(true) }}
         onOpenAuth={openAuth}
         onOpenDesktopApp={requestDesktopApp}
         onOpenCourse={requestCurriculumCourse}
       />
-      <Topbar
-        language={language}
-        user={user}
-        authLoading={authLoading}
-        onOpenAuth={openAuth}
-        onLogout={logout}
-      />
-      <HomeDashboard
-        language={language}
-        loggedIn={Boolean(user)}
-        userId={user?.id}
-        onNotice={setToast}
-      />
-      {user ? (
-        <DesktopWorkspace
-          language={language}
-          userId={user.id}
-          request={desktopRequest}
-          rememberWindows={preferences.rememberWindows}
-        />
-      ) : null}
-      {user ? (
-        <PersistentMusicPlayer
-          language={language}
-          userId={user.id}
-          enabled={preferences.musicEnabled}
-          onNotice={setToast}
-        />
-      ) : null}
+      <Topbar language={language} user={user} authLoading={authLoading} onOpenAuth={openAuth} onLogout={logout} />
+      <HomeDashboard language={language} loggedIn={Boolean(user)} userId={user?.id} onNotice={setToast} />
+      {user ? <DesktopWorkspace language={language} userId={user.id} request={desktopRequest} rememberWindows={preferences.rememberWindows} /> : null}
+      {user ? <PersistentMusicPlayer language={language} userId={user.id} enabled={preferences.musicEnabled} onNotice={setToast} /> : null}
       <SettingsDialog
         language={language}
         fontScale={fontScale}
@@ -183,12 +157,7 @@ function App() {
         onPreferencesChange={setPreferences}
         onResetAll={resetAllSettings}
       />
-      <AuthDialog
-        language={language}
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        onSuccess={setToast}
-      />
+      <AuthDialog language={language} open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={setToast} />
       {toast ? <div className="toast" role="status">{toast}</div> : null}
     </div>
   )
