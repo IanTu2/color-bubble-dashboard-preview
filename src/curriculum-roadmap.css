@@ -1,0 +1,162 @@
+.curriculum-roadmap-curtain {
+  width: min(620px, calc(100vw - 316px));
+}
+
+.curriculum-subject-grid button.active {
+  border-color: rgba(126, 238, 218, .42);
+  background: rgba(126, 238, 218, .09);
+}
+
+.curriculum-roadmap-section {
+  padding-bottom: 16px;
+}
+
+.curriculum-roadmap-intro {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 13px 14px;
+  border: 1px solid rgba(126, 238, 218, .16);
+  border-radius: 14px;
+  background: rgba(126, 238, 218, .045);
+}
+
+.curriculum-roadmap-intro strong {
+  color: #dffbf6;
+  font-size: .73rem;
+}
+
+.curriculum-roadmap-intro p {
+  margin: 0;
+  color: rgba(249, 247, 255, .55);
+  font-size: .63rem;
+  line-height: 1.55;
+}
+
+.curriculum-semester-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 12px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.curriculum-semester-tabs button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 10px;
+  color: rgba(249, 247, 255, .6);
+  background: transparent;
+  cursor: pointer;
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.curriculum-semester-tabs button.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(119, 232, 211, .16), rgba(137, 111, 255, .14));
+  box-shadow: inset 0 0 0 1px rgba(126, 238, 218, .18);
+}
+
+.curriculum-unit-list {
+  display: grid;
+  gap: 9px;
+}
+
+.curriculum-unit-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 11px;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, .085);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, .03);
+}
+
+.curriculum-unit-index {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: #9aeadc;
+  background: rgba(95, 218, 197, .08);
+  font-size: .64rem;
+  font-weight: 900;
+}
+
+.curriculum-unit-copy {
+  min-width: 0;
+}
+
+.curriculum-unit-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.curriculum-unit-title-row strong {
+  color: #f8f7ff;
+  font-size: .8rem;
+}
+
+.curriculum-unit-title-row span {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: .54rem;
+  font-weight: 850;
+}
+
+.curriculum-unit-title-row .difficulty-foundation {
+  color: #baf7e9;
+  background: rgba(82, 221, 190, .1);
+}
+
+.curriculum-unit-title-row .difficulty-core {
+  color: #ddd5ff;
+  background: rgba(147, 119, 255, .12);
+}
+
+.curriculum-unit-title-row .difficulty-stretch {
+  color: #ffe0a3;
+  background: rgba(255, 190, 79, .11);
+}
+
+.curriculum-unit-copy p {
+  margin: 6px 0 7px;
+  color: rgba(249, 247, 255, .58);
+  font-size: .65rem;
+  line-height: 1.52;
+}
+
+.curriculum-unit-copy > small {
+  color: rgba(249, 247, 255, .34);
+  font-size: .55rem;
+}
+
+@media (max-width: 840px) {
+  .curriculum-roadmap-curtain {
+    width: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .curriculum-unit-card {
+    grid-template-columns: 32px minmax(0, 1fr);
+    padding: 11px;
+  }
+
+  .curriculum-unit-index {
+    width: 30px;
+    height: 30px;
+  }
+
+  .curriculum-unit-title-row {
+    align-items: flex-start;
+  }
+}

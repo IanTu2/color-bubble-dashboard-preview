@@ -1,4 +1,10 @@
 import { useState } from 'react'
+import {
+  getCurriculumTrack,
+  gradeNumberFromStage,
+  type CurriculumSemester,
+  type CurriculumSubjectId,
+} from '../curriculum-plan'
 import type { Language } from '../types'
 import type { DesktopAppKind } from './DesktopWorkspace'
 
@@ -27,7 +33,7 @@ type CurriculumStageOption = {
 }
 
 type CurriculumSubject = {
-  id: 'chinese' | 'english' | 'math' | 'science' | 'social'
+  id: CurriculumSubjectId
   icon: string
   labelZh: string
   labelEn: string
@@ -84,14 +90,17 @@ export function SideDrawer({
   const [panel, setPanel] = useState<DrawerPanel>(null)
   const [selectedStage, setSelectedStage] = useState<CurriculumStage>('elementary')
   const [selectedGradeIndex, setSelectedGradeIndex] = useState(0)
-  const [plannedSubject, setPlannedSubject] = useState<string>('')
+  const [selectedSubject, setSelectedSubject] = useState<CurriculumSubjectId | null>(null)
+  const [selectedSemester, setSelectedSemester] = useState<CurriculumSemester>(1)
 
   const copy = language === 'zh'
     ? {
         menu: '主要選單', close: '關閉選單', workspace: '工作視窗', notes: '記事本', search: '新增搜尋視窗', searchHint: '可同時開啟多個',
         learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊', settings: '設定', curriculum: '課程總覽', curriculumHint: '選擇學段、年級與科目', grade: '年級', subject: '科目',
-        planned: '學校課程規劃中', plannedHint: '目前先建立完整的學段、年級與科目骨架，之後再接入章節、單元、教材與練習題。',
+        roadmap: '課程規劃', roadmapHint: '依十二年國教領域方向整理的平台課程藍圖', viewPlan: '查看課程規劃', semesterOne: '上學期', semesterTwo: '下學期',
+        sourceNote: '這是 Bubble Space 依官方課綱學習方向整理的課程藍圖，不是特定出版社課本目錄。', materialPending: '教材尚未製作',
+        foundation: '基礎', core: '核心', stretch: '延伸',
         back: '返回主選單', practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具',
         practiceTitle: '練習場與學習工具', practiceDescription: '這裡放跨年級的練習 App；正式國英數自社教材則留在課程總覽。',
         englishPractice: '英文情境練習', englishPracticeHint: '程度測驗、情境挖空、無限練習、複習與單字工具', open: '開啟', coming: '更多練習工具會陸續加入',
@@ -100,7 +109,9 @@ export function SideDrawer({
         menu: 'Main menu', close: 'Close menu', workspace: 'Work windows', notes: 'Notes', search: 'New search window', searchHint: 'Open multiple windows',
         learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', curriculumHint: 'Choose school stage, grade, and subject', grade: 'Grade', subject: 'Subject',
-        planned: 'School course in planning', plannedHint: 'The school-stage, grade, and subject structure comes first; chapters, lessons, resources, and exercises will be connected next.',
+        roadmap: 'Course roadmap', roadmapHint: 'Bubble Space roadmap aligned to Taiwan curriculum domains', viewPlan: 'View roadmap', semesterOne: 'Semester 1', semesterTwo: 'Semester 2',
+        sourceNote: 'This is a Bubble Space learning roadmap aligned to official curriculum directions, not a textbook publisher table of contents.', materialPending: 'Lesson content pending',
+        foundation: 'Foundation', core: 'Core', stretch: 'Stretch',
         back: 'Back to main menu', practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path',
         practiceTitle: 'Practice lab and learning tools', practiceDescription: 'Cross-grade practice apps live here; formal school-subject lessons stay in the course browser.',
         englishPractice: 'English context practice', englishPracticeHint: 'Placement, context cloze, continuous practice, review, and vocabulary tools', open: 'Open', coming: 'More practice tools will be added later',
@@ -109,10 +120,19 @@ export function SideDrawer({
   const currentStage = CURRICULUM_STAGES.find((stage) => stage.id === selectedStage) ?? CURRICULUM_STAGES[0]
   const currentGrades = language === 'zh' ? currentStage.gradesZh : currentStage.gradesEn
   const selectedGrade = currentGrades[selectedGradeIndex] ?? currentGrades[0]
+  const selectedGradeNumber = gradeNumberFromStage(selectedStage, selectedGradeIndex)
+  const selectedSubjectMeta = CURRICULUM_SUBJECTS.find((subject) => subject.id === selectedSubject) ?? null
+  const selectedTrack = selectedSubject ? getCurriculumTrack(selectedGradeNumber, selectedSubject) : null
+  const selectedSemesterPlan = selectedTrack?.semesters.find((item) => item.semester === selectedSemester) ?? null
+
+  const resetCurriculumSelection = () => {
+    setSelectedSubject(null)
+    setSelectedSemester(1)
+  }
 
   const closeAll = () => {
     setPanel(null)
-    setPlannedSubject('')
+    resetCurriculumSelection()
     onClose()
   }
 
@@ -129,17 +149,23 @@ export function SideDrawer({
   const chooseStage = (stage: CurriculumStage) => {
     setSelectedStage(stage)
     setSelectedGradeIndex(0)
-    setPlannedSubject('')
+    resetCurriculumSelection()
   }
 
   const chooseSubject = (subject: CurriculumSubject) => {
-    const subjectLabel = language === 'zh' ? subject.labelZh : subject.labelEn
-    setPlannedSubject(`${selectedGrade} · ${subjectLabel}`)
+    setSelectedSubject(subject.id)
+    setSelectedSemester(1)
   }
 
   const togglePanel = (nextPanel: Exclude<DrawerPanel, null>) => {
-    setPlannedSubject('')
+    resetCurriculumSelection()
     setPanel((current) => current === nextPanel ? null : nextPanel)
+  }
+
+  const difficultyLabel = (band: 'foundation' | 'core' | 'stretch') => {
+    if (band === 'foundation') return copy.foundation
+    if (band === 'stretch') return copy.stretch
+    return copy.core
   }
 
   return (
@@ -207,6 +233,7 @@ export function SideDrawer({
 
         <button className="settings-button" type="button" onClick={() => {
           setPanel(null)
+          resetCurriculumSelection()
           onOpenSettings()
         }}>
           <span className="settings-icon" aria-hidden="true">⚙</span><span>{copy.settings}</span><span className="settings-arrow" aria-hidden="true">›</span>
@@ -216,7 +243,7 @@ export function SideDrawer({
       {loggedIn ? (
         <section
           id="curriculum-curtain"
-          className={`curriculum-curtain${open && panel === 'curriculum' ? ' open' : ''}`}
+          className={`curriculum-curtain curriculum-roadmap-curtain${open && panel === 'curriculum' ? ' open' : ''}`}
           aria-hidden={!(open && panel === 'curriculum')}
         >
           <header className="curriculum-curtain-head">
@@ -257,7 +284,7 @@ export function SideDrawer({
                   key={grade}
                   onClick={() => {
                     setSelectedGradeIndex(index)
-                    setPlannedSubject('')
+                    resetCurriculumSelection()
                   }}
                 >
                   {grade}
@@ -270,21 +297,55 @@ export function SideDrawer({
             <div className="curriculum-section-title"><span>02</span><strong>{copy.subject}</strong><small>{selectedGrade}</small></div>
             <div className="curriculum-subject-grid">
               {CURRICULUM_SUBJECTS.map((subject) => (
-                <button type="button" key={subject.id} onClick={() => chooseSubject(subject)}>
+                <button
+                  className={selectedSubject === subject.id ? 'active' : ''}
+                  type="button"
+                  key={subject.id}
+                  onClick={() => chooseSubject(subject)}
+                >
                   <span className={`subject-icon subject-${subject.id}`}>{subject.icon}</span>
                   <strong>{language === 'zh' ? subject.labelZh : subject.labelEn}</strong>
-                  <small>{copy.planned}</small>
+                  <small>{copy.viewPlan}</small>
                   <i aria-hidden="true">›</i>
                 </button>
               ))}
             </div>
           </section>
 
-          {plannedSubject ? (
-            <div className="curriculum-planned-note" role="status">
-              <span>✦</span>
-              <div><strong>{plannedSubject}</strong><p>{copy.plannedHint}</p></div>
-            </div>
+          {selectedTrack && selectedSubjectMeta ? (
+            <section className="curriculum-section curriculum-roadmap-section">
+              <div className="curriculum-section-title">
+                <span>03</span>
+                <strong>{copy.roadmap}</strong>
+                <small>{selectedGrade} · {language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</small>
+              </div>
+
+              <div className="curriculum-roadmap-intro">
+                <strong>{copy.roadmapHint}</strong>
+                <p>{selectedTrack.note ?? copy.sourceNote}</p>
+              </div>
+
+              <div className="curriculum-semester-tabs" role="tablist" aria-label={copy.roadmap}>
+                <button type="button" role="tab" aria-selected={selectedSemester === 1} className={selectedSemester === 1 ? 'active' : ''} onClick={() => setSelectedSemester(1)}>{copy.semesterOne}</button>
+                <button type="button" role="tab" aria-selected={selectedSemester === 2} className={selectedSemester === 2 ? 'active' : ''} onClick={() => setSelectedSemester(2)}>{copy.semesterTwo}</button>
+              </div>
+
+              <div className="curriculum-unit-list">
+                {selectedSemesterPlan?.units.map((unit, index) => (
+                  <article className="curriculum-unit-card" key={unit.id}>
+                    <div className="curriculum-unit-index">{String(index + 1).padStart(2, '0')}</div>
+                    <div className="curriculum-unit-copy">
+                      <div className="curriculum-unit-title-row">
+                        <strong>{unit.title}</strong>
+                        <span className={`difficulty-${unit.difficultyBand}`}>{difficultyLabel(unit.difficultyBand)}</span>
+                      </div>
+                      <p>{unit.focus}</p>
+                      <small>{copy.materialPending}</small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           ) : null}
         </section>
       ) : null}
