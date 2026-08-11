@@ -1,0 +1,240 @@
+html[data-theme="light"] {
+  color-scheme: light;
+  --ink: #1e293b;
+  --muted: rgba(51,65,85,.68);
+  --line: rgba(51,65,85,.13);
+  --purple: #725bd2;
+  --pink: #df6fa8;
+  --aqua: #2da995;
+  --yellow: #f3c85b;
+  --shadow: 0 24px 70px rgba(49,63,84,.13);
+  color: #1e293b;
+  background: #eef4f6;
+}
+
+html[data-theme="light"] body {
+  color: #1e293b;
+  background: #eef4f6;
+}
+
+html[data-theme="light"] .moving-screen {
+  background:
+    radial-gradient(circle at 14% 12%, rgba(249,190,220,.72) 0, transparent 32%),
+    radial-gradient(circle at 83% 18%, rgba(183,196,255,.72) 0, transparent 34%),
+    linear-gradient(135deg, #f7f5fb 0%, #e9f4f3 48%, #edf5fb 100%);
+}
+
+html[data-theme="light"] .moving-screen::after { opacity: .06; }
+html[data-theme="light"] .field-one { background: #ffd6e8; opacity: .55; }
+html[data-theme="light"] .field-two { background: #cdd6ff; opacity: .55; }
+html[data-theme="light"] .field-three { background: #c9f0e7; opacity: .55; }
+html[data-theme="light"] .bubble {
+  border-color: rgba(255,255,255,.7);
+  background: radial-gradient(circle at 28% 24%, rgba(255,255,255,.95) 0 4%, rgba(255,255,255,.48) 13%, transparent 36%), linear-gradient(145deg, rgba(255,191,224,.15), rgba(84,197,180,.12));
+  box-shadow: inset -8px -12px 24px rgba(105,126,154,.07), 0 12px 26px rgba(86,104,129,.08);
+}
+
+html[data-theme="light"] .status-pill,
+html[data-theme="light"] .profile-button,
+html[data-theme="light"] .icon-button,
+html[data-theme="light"] .modal-close {
+  color: #334155;
+  border-color: rgba(71,85,105,.14);
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 8px 24px rgba(71,85,105,.08);
+}
+
+html[data-theme="light"] .drawer-trigger {
+  border-color: rgba(51,65,85,.13);
+  background: rgba(255,255,255,.84);
+  box-shadow: 0 10px 28px rgba(71,85,105,.1);
+}
+html[data-theme="light"] .drawer-trigger:hover { background: #fff; }
+html[data-theme="light"] .drawer-trigger span { background: rgba(30,41,59,.7); }
+
+html[data-theme="light"] .side-drawer,
+html[data-theme="light"] .learning-side-drawer {
+  color: #1e293b;
+  border-color: rgba(51,65,85,.1);
+  background: rgba(250,252,252,.96);
+  box-shadow: 24px 0 64px rgba(71,85,105,.14);
+}
+
+html[data-theme="light"] .drawer-section-label,
+html[data-theme="light"] .curriculum-entry-copy small,
+html[data-theme="light"] .nav-single small { color: rgba(51,65,85,.55); }
+html[data-theme="light"] .curriculum-entry-copy em { color: #248d7d; }
+html[data-theme="light"] .curriculum-entry,
+html[data-theme="light"] .nav-single,
+html[data-theme="light"] .settings-button {
+  color: #253247;
+  border-color: rgba(51,65,85,.1);
+  background: rgba(255,255,255,.7);
+}
+html[data-theme="light"] .curriculum-entry:hover,
+html[data-theme="light"] .curriculum-entry.active,
+html[data-theme="light"] .nav-single:hover,
+html[data-theme="light"] .settings-button:hover {
+  color: #172033;
+  border-color: rgba(45,169,149,.26);
+  background: #fff;
+}
+
+html[data-theme="light"] .curriculum-layer,
+html[data-theme="light"] .curriculum-curtain {
+  color: #213047;
+  border-color: rgba(51,65,85,.1);
+  background: linear-gradient(165deg, rgba(253,254,254,.99), rgba(244,248,248,.99));
+  box-shadow: 24px 0 64px rgba(71,85,105,.13);
+}
+html[data-theme="light"] .curriculum-layer-head,
+html[data-theme="light"] .curriculum-curtain-head { border-color: rgba(51,65,85,.1); }
+html[data-theme="light"] .curriculum-layer-head > button,
+html[data-theme="light"] .curriculum-back {
+  color: #334155;
+  border-color: rgba(51,65,85,.12);
+  background: #fff;
+}
+html[data-theme="light"] .curriculum-layer-head span,
+html[data-theme="light"] .curriculum-grade-group h3,
+html[data-theme="light"] .curriculum-list-copy small { color: rgba(51,65,85,.52); }
+html[data-theme="light"] .curriculum-vertical-list > button { color: #334155; }
+html[data-theme="light"] .curriculum-vertical-list > button:hover,
+html[data-theme="light"] .curriculum-vertical-list > button.active { color: #172033; background: rgba(45,169,149,.08); }
+html[data-theme="light"] .curriculum-list-index { color: #267f72; background: rgba(45,169,149,.1); }
+html[data-theme="light"] .curriculum-roadmap-intro {
+  color: #334155;
+  border-color: rgba(45,169,149,.16);
+  background: rgba(45,169,149,.055);
+}
+html[data-theme="light"] .curriculum-roadmap-intro strong { color: #206f64; }
+html[data-theme="light"] .curriculum-roadmap-intro p { color: rgba(51,65,85,.67); }
+html[data-theme="light"] .curriculum-semester-tabs { border-color: rgba(51,65,85,.1); background: #eef3f4; }
+html[data-theme="light"] .curriculum-semester-tabs button { color: rgba(51,65,85,.62); }
+html[data-theme="light"] .curriculum-semester-tabs button.active { color: #173934; background: #fff; box-shadow: 0 4px 14px rgba(71,85,105,.08); }
+html[data-theme="light"] .curriculum-unit-card {
+  color: #253247;
+  border-color: rgba(51,65,85,.1);
+  background: #fff;
+}
+html[data-theme="light"] .curriculum-unit-title-row strong { color: #223047; }
+html[data-theme="light"] .curriculum-unit-copy p { color: rgba(51,65,85,.7); }
+html[data-theme="light"] .curriculum-unit-copy > small { color: rgba(51,65,85,.45); }
+
+html[data-theme="light"] .curriculum-course-app {
+  color: #223047;
+  background: #f5f8f8;
+}
+html[data-theme="light"] .curriculum-course-header {
+  color: #223047;
+  border-color: rgba(51,65,85,.1);
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 6px 26px rgba(71,85,105,.07);
+}
+html[data-theme="light"] .curriculum-course-brand p,
+html[data-theme="light"] .curriculum-course-brand span,
+html[data-theme="light"] .curriculum-course-directory header p { color: rgba(51,65,85,.55); }
+html[data-theme="light"] .curriculum-course-progress-chip,
+html[data-theme="light"] .curriculum-directory-button,
+html[data-theme="light"] .curriculum-secondary-action,
+html[data-theme="light"] .curriculum-lesson-completion button {
+  color: #334155;
+  border-color: rgba(51,65,85,.11);
+  background: #fff;
+}
+html[data-theme="light"] .curriculum-lesson-meta-row span { color: rgba(51,65,85,.62); background: rgba(71,85,105,.06); }
+html[data-theme="light"] .curriculum-lesson-hero {
+  color: #213047;
+  border-color: rgba(51,65,85,.09);
+  background: #fff;
+  box-shadow: 0 18px 52px rgba(71,85,105,.08);
+}
+html[data-theme="light"] .curriculum-lesson-objective { background: rgba(45,169,149,.06); }
+html[data-theme="light"] .curriculum-lesson-objective strong { color: #26364d; }
+html[data-theme="light"] .curriculum-teaching-stack {
+  border-color: rgba(51,65,85,.09);
+  background: #fff;
+  box-shadow: 0 14px 46px rgba(71,85,105,.06);
+}
+html[data-theme="light"] .curriculum-teaching-block + .curriculum-teaching-block { border-color: rgba(51,65,85,.09); }
+html[data-theme="light"] .curriculum-teaching-heading h3 { color: #223047; }
+html[data-theme="light"] .curriculum-teaching-copy p,
+html[data-theme="light"] .curriculum-teaching-bullets,
+html[data-theme="light"] .curriculum-worked-example li { color: rgba(38,54,77,.82); }
+html[data-theme="light"] .curriculum-worked-example { background: #f2faf8; }
+html[data-theme="light"] .curriculum-worked-example ol { border-color: rgba(51,65,85,.08); }
+html[data-theme="light"] .curriculum-example-answer { background: rgba(255,255,255,.6); }
+html[data-theme="light"] .curriculum-problem-link-row { color: rgba(51,65,85,.48); }
+
+html[data-theme="light"] .curriculum-course-directory,
+html[data-theme="light"] .curriculum-issue-curtain {
+  color: #223047;
+  border-color: rgba(51,65,85,.1);
+  background: linear-gradient(155deg, #fff, #f5f8f8);
+  box-shadow: -24px 0 70px rgba(71,85,105,.15);
+}
+html[data-theme="light"] .curriculum-course-directory header,
+html[data-theme="light"] .curriculum-issue-curtain > header { border-color: rgba(51,65,85,.09); }
+html[data-theme="light"] .curriculum-course-directory header button,
+html[data-theme="light"] .curriculum-issue-curtain > header button { color: #334155; border-color: rgba(51,65,85,.1); background: #fff; }
+html[data-theme="light"] .curriculum-directory-semesters { background: #eef3f4; }
+html[data-theme="light"] .curriculum-directory-semesters button { color: rgba(51,65,85,.62); }
+html[data-theme="light"] .curriculum-directory-semesters button.active { color: #183c36; background: #fff; }
+html[data-theme="light"] .curriculum-directory-units > section { border-color: rgba(51,65,85,.08); background: #fff; }
+html[data-theme="light"] .curriculum-directory-unit-title { color: #223047; }
+html[data-theme="light"] .curriculum-directory-unit-title small,
+html[data-theme="light"] .curriculum-directory-lessons small,
+html[data-theme="light"] .curriculum-course-directory footer p { color: rgba(51,65,85,.52); }
+html[data-theme="light"] .curriculum-directory-lessons button { color: rgba(51,65,85,.7); }
+html[data-theme="light"] .curriculum-directory-lessons button.active,
+html[data-theme="light"] .curriculum-directory-lessons button:hover { color: #1f2e44; background: rgba(45,169,149,.07); }
+html[data-theme="light"] .curriculum-report-context,
+html[data-theme="light"] .curriculum-issue-types button,
+html[data-theme="light"] .curriculum-report-text textarea { color: #2a3950; border-color: rgba(51,65,85,.1); background: #fff; }
+html[data-theme="light"] .curriculum-report-context span,
+html[data-theme="light"] .curriculum-report-context small,
+html[data-theme="light"] .curriculum-report-hint { color: rgba(51,65,85,.62); }
+html[data-theme="light"] .curriculum-issue-types button.active { color: #173934; border-color: rgba(45,169,149,.28); background: rgba(45,169,149,.08); }
+
+html[data-theme="light"] .modal { background: rgba(42,55,73,.2); }
+html[data-theme="light"] .settings-shell,
+html[data-theme="light"] .auth-shell {
+  color: #223047;
+  border-color: rgba(51,65,85,.1);
+  background: rgba(252,254,254,.98);
+  box-shadow: 0 28px 80px rgba(71,85,105,.18);
+}
+html[data-theme="light"] .settings-section {
+  border-color: rgba(51,65,85,.09);
+  background: rgba(255,255,255,.75);
+}
+html[data-theme="light"] .setting-description,
+html[data-theme="light"] .settings-subtitle,
+html[data-theme="light"] .setting-hint { color: rgba(51,65,85,.62); }
+html[data-theme="light"] .segmented { background: #eef3f4; }
+html[data-theme="light"] .language-option { color: rgba(51,65,85,.64); }
+html[data-theme="light"] .language-option.active { color: #183c36; background: #fff; box-shadow: 0 4px 14px rgba(71,85,105,.08); }
+
+html[data-theme="light"] .dashboard-card,
+html[data-theme="light"] .hero-card {
+  color: #223047;
+  border-color: rgba(51,65,85,.11);
+  background: rgba(255,255,255,.7);
+  box-shadow: 0 18px 54px rgba(71,85,105,.1);
+}
+html[data-theme="light"] .hero-kicker,
+html[data-theme="light"] .date,
+html[data-theme="light"] .hero-footer { color: rgba(38,54,77,.72); }
+html[data-theme="light"] .clock { color: #1f2e44; text-shadow: none; }
+
+html[data-theme="light"] .window-frame,
+html[data-theme="light"] .desktop-window {
+  color: #223047;
+}
+
+.theme-options .language-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
