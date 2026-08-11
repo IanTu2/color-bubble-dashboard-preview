@@ -16,6 +16,7 @@ import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
 import type {
   ReviewedChoiceQuestion,
   ReviewedQuestion,
+  ReviewedResponseQuestion,
   ReviewedUnitContent,
 } from './curriculum-reviewed-social10'
 
@@ -25,26 +26,39 @@ function stableHash(value: string) {
   return Math.abs(hash)
 }
 
-function normalizeChoiceQuestion(question: ReviewedQuestion | Record<string, unknown>): ReviewedChoiceQuestion | null {
-  const options = Array.isArray((question as { options?: unknown }).options)
-    ? (question as { options: unknown[] }).options.map((option) => String(option).replace(/\s*בלבד/g, '').trim())
+function normalizeChoiceQuestion(question: Record<string, unknown>): ReviewedChoiceQuestion | null {
+  const options = Array.isArray(question.options)
+    ? question.options.map((option) => String(option).replace(/\s*בלבד/g, '').trim())
     : []
   if (options.length < 2) return null
 
-  const id = String((question as { id?: unknown }).id ?? '')
-  const rawCorrectIndex = Number((question as { correctIndex?: unknown }).correctIndex ?? 0)
+  const id = String(question.id ?? '')
+  const rawCorrectIndex = Number(question.correctIndex ?? 0)
   const safeCorrectIndex = Number.isInteger(rawCorrectIndex) && rawCorrectIndex >= 0 && rawCorrectIndex < options.length ? rawCorrectIndex : 0
   const shift = stableHash(id) % options.length
 
   return {
     id,
     kind: 'choice',
-    level: (question as ReviewedChoiceQuestion).level ?? '理解',
-    context: (question as ReviewedChoiceQuestion).context,
-    prompt: String((question as { prompt?: unknown }).prompt ?? ''),
+    level: (question.level as ReviewedChoiceQuestion['level']) ?? '理解',
+    context: typeof question.context === 'string' ? question.context : undefined,
+    prompt: String(question.prompt ?? ''),
     options: [...options.slice(shift), ...options.slice(0, shift)],
     correctIndex: (safeCorrectIndex - shift + options.length) % options.length,
-    explanation: String((question as { explanation?: unknown }).explanation ?? ''),
+    explanation: String(question.explanation ?? ''),
+  }
+}
+
+function normalizeResponseQuestion(question: Record<string, unknown>): ReviewedResponseQuestion | null {
+  if (typeof question.sampleAnswer !== 'string') return null
+  return {
+    id: String(question.id ?? ''),
+    kind: 'response',
+    level: (question.level as ReviewedResponseQuestion['level']) ?? '理解',
+    context: typeof question.context === 'string' ? question.context : undefined,
+    prompt: String(question.prompt ?? ''),
+    sampleAnswer: question.sampleAnswer,
+    explanation: String(question.explanation ?? ''),
   }
 }
 
@@ -52,14 +66,19 @@ function sanitizeReviewedUnit(unit: ReviewedUnitContent | null): ReviewedUnitCon
   if (!unit) return null
   return {
     ...unit,
-    questions: unit.questions.map((question) => {
-      // 來源作者檔以「是否有 options」判斷選擇題，避免一個誤打的 kind 字串讓 UI 把選擇題當開放題。
-      const normalizedChoice = normalizeChoiceQuestion(question as unknown as Record<string, unknown>)
+    questions: unit.questions.map((question): ReviewedQuestion => {
+      const raw = question as unknown as Record<string, unknown>
+      // 以實際資料欄位決定題型，而不是完全相信作者檔的 kind 字串。
+      // 這可避免編輯時誤打 kind 讓有選項的題目被 UI 當成開放題。
+      const normalizedChoice = normalizeChoiceQuestion(raw)
       if (normalizedChoice) return normalizedChoice
-      return {
-        ...question,
-        kind: 'response' as const,
-      }
+
+      const normalizedResponse = normalizeResponseQuestion(raw)
+      if (normalizedResponse) return normalizedResponse
+
+      // Reviewed source 正常情況不會進到這裡；保留原題讓 TypeScript 與 QA
+      // 能繼續暴露資料缺欄，而不是偷偷造一個假的參考答案。
+      return question
     }),
   }
 }
