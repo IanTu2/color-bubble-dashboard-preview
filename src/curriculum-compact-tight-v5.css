@@ -1,0 +1,52 @@
+.curriculum-course-v5 .curriculum-compact-bar {
+  flex-basis: 46px;
+  min-height: 46px;
+  padding: 5px 10px;
+  gap: 10px;
+}
+
+.curriculum-course-v5 .curriculum-compact-icon {
+  flex-basis: 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: .61rem;
+}
+
+.curriculum-course-v5 .curriculum-compact-identity strong {
+  font-size: .74rem;
+}
+
+.curriculum-course-v5 .curriculum-compact-identity small {
+  max-width: min(34vw, 360px);
+  font-size: .56rem;
+}
+
+.curriculum-course-v5 .curriculum-compact-meta > span,
+.curriculum-course-v5 .curriculum-compact-progress {
+  padding: 4px 7px;
+  font-size: .54rem;
+}
+
+.curriculum-course-v5 .curriculum-compact-actions > button {
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: .63rem;
+}
+
+.curriculum-course-v5 .curriculum-paged-stage-v5 {
+  padding-top: 5px;
+}
+
+@media (max-width: 640px) {
+  .curriculum-course-v5 .curriculum-compact-bar {
+    flex-basis: 42px;
+    min-height: 42px;
+    padding: 4px 7px;
+  }
+
+  .curriculum-course-v5 .curriculum-compact-icon {
+    display: none;
+  }
+}
