@@ -1,0 +1,151 @@
+/* Desktop chrome light-mode completion. */
+
+html[data-theme='light'] .desktop-dock {
+  border-color: rgba(51,65,85,.12);
+  background: rgba(250,252,253,.88);
+  box-shadow: 0 18px 48px rgba(71,85,105,.16);
+  backdrop-filter: blur(26px) saturate(118%);
+}
+
+html[data-theme='light'] .desktop-dock-divider {
+  background: rgba(51,65,85,.12);
+}
+
+html[data-theme='light'] .desktop-dock button {
+  color: rgba(51,65,85,.66);
+}
+
+html[data-theme='light'] .desktop-dock button:hover {
+  color: #1f2937;
+  background: rgba(51,65,85,.065);
+}
+
+html[data-theme='light'] .desktop-dock button.active {
+  color: #184c44;
+  border-color: rgba(45,169,149,.22);
+  background: rgba(45,169,149,.09);
+}
+
+html[data-theme='light'] .desktop-dock button.minimized {
+  opacity: .54;
+}
+
+html[data-theme='light'] .desktop-window {
+  color: #223047;
+  border-color: rgba(51,65,85,.12);
+  background: rgba(250,252,253,.975);
+  box-shadow: 0 28px 90px rgba(71,85,105,.2);
+}
+
+html[data-theme='light'] .desktop-window-titlebar {
+  color: #253247;
+  border-bottom-color: rgba(51,65,85,.1);
+  background: linear-gradient(90deg, rgba(120,91,210,.07), rgba(45,169,149,.055), rgba(255,255,255,.8));
+}
+
+html[data-theme='light'] .desktop-window-title > span {
+  color: #58499e;
+  background: rgba(114,91,210,.09);
+  box-shadow: inset 0 0 0 1px rgba(114,91,210,.06);
+}
+
+html[data-theme='light'] .desktop-window-title strong {
+  color: #26354a;
+}
+
+html[data-theme='light'] .desktop-window-actions button {
+  color: #536173;
+  border-color: rgba(51,65,85,.11);
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 3px 10px rgba(71,85,105,.055);
+}
+
+html[data-theme='light'] .desktop-window-actions button:hover {
+  color: #1f2937;
+  border-color: rgba(51,65,85,.16);
+  background: #fff;
+}
+
+html[data-theme='light'] .desktop-window-actions .window-close-button {
+  color: #7c5661;
+}
+
+html[data-theme='light'] .desktop-window-actions .window-close-button:hover {
+  color: #9f1239;
+  border-color: rgba(225,29,72,.18);
+  background: rgba(255,228,230,.85);
+}
+
+html[data-theme='light'] .desktop-window-content {
+  color: #223047;
+  background: rgba(247,250,251,.72);
+}
+
+html[data-theme='light'] .desktop-window-resize-bottom::after,
+html[data-theme='light'] .desktop-window-resize-right::after {
+  background: rgba(51,65,85,.17);
+}
+
+html[data-theme='light'] .desktop-window-resize {
+  background: linear-gradient(135deg, transparent 47%, rgba(51,65,85,.18) 48% 54%, transparent 55% 63%, rgba(45,169,149,.34) 64% 70%, transparent 71%);
+}
+
+html[data-theme='light'] .desktop-note-sidebar {
+  border-right-color: rgba(51,65,85,.09);
+  background: rgba(238,244,245,.62);
+}
+
+html[data-theme='light'] .desktop-note-list > button {
+  color: rgba(51,65,85,.66);
+}
+
+html[data-theme='light'] .desktop-note-list > button:hover {
+  color: #26354a;
+  background: rgba(51,65,85,.055);
+}
+
+html[data-theme='light'] .desktop-note-list > button.active {
+  color: #194d45;
+  border-color: rgba(45,169,149,.2);
+  background: rgba(45,169,149,.08);
+}
+
+html[data-theme='light'] .desktop-note-editor-head input,
+html[data-theme='light'] .desktop-note-editor textarea {
+  color: #223047;
+  border-color: rgba(51,65,85,.11);
+  background: #fff;
+}
+
+html[data-theme='light'] .desktop-note-editor-head button {
+  color: #8f3f68;
+  border-color: rgba(190,85,139,.16);
+  background: rgba(253,240,247,.9);
+}
+
+html[data-theme='light'] .desktop-search-card {
+  color: #223047;
+  border-color: rgba(51,65,85,.1);
+  background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(238,247,245,.85));
+  box-shadow: 0 12px 34px rgba(71,85,105,.07);
+}
+
+html[data-theme='light'] .desktop-search-card select,
+html[data-theme='light'] .desktop-search-card input {
+  color: #223047;
+  border-color: rgba(51,65,85,.12);
+  background: #fff;
+}
+
+html[data-theme='light'] .desktop-search-result-placeholder,
+html[data-theme='light'] .desktop-search-history,
+html[data-theme='light'] .desktop-search-history-row {
+  color: rgba(51,65,85,.7);
+  border-color: rgba(51,65,85,.09);
+  background: rgba(255,255,255,.7);
+}
+
+html[data-theme='light'] .desktop-search-history-row:hover {
+  color: #223047;
+  background: #fff;
+}

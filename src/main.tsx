@@ -9,6 +9,7 @@ import './curriculum-layered-drawer.css'
 import './curriculum-course.css'
 import './curriculum-course-v2.css'
 import './curriculum-rich-content.css'
+import './curriculum-reading-v5.css'
 import './auth.css'
 import './member-layout.css'
 import './todo-manager.css'
@@ -24,6 +25,7 @@ import './english-journey.css'
 import './english-journey-bridge.css'
 import './english-tool-curtain.css'
 import './theme-appearance.css'
+import './desktop-light-v2.css'
 
 const rootElement = document.getElementById('root')
 

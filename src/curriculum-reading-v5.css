@@ -1,0 +1,261 @@
+/* Curriculum reading layout v5: reduce text wall, prioritize visuals and action. */
+
+.curriculum-lesson-stage {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: clamp(16px, 2.2vw, 30px);
+}
+
+.curriculum-lesson-hero {
+  padding: clamp(18px, 2vw, 26px);
+}
+
+.curriculum-lesson-hero h2 {
+  max-width: 760px;
+  margin-bottom: 12px;
+  font-size: clamp(1.55rem, 2.2vw, 2.35rem);
+  line-height: 1.18;
+}
+
+.curriculum-lesson-objective {
+  max-width: 880px;
+  padding: 12px 15px;
+}
+
+/* The old stack duplicated the richer lesson below. Keep only the worked example. */
+.curriculum-teaching-stack {
+  margin-top: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.curriculum-teaching-block {
+  display: none;
+}
+
+.curriculum-teaching-block:has(.curriculum-worked-example) {
+  display: block;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 18px;
+  background: rgba(255,255,255,.025);
+}
+
+.curriculum-teaching-block:has(.curriculum-worked-example) .curriculum-teaching-copy,
+.curriculum-teaching-block:has(.curriculum-worked-example) .curriculum-teaching-bullets {
+  display: none;
+}
+
+.curriculum-teaching-block:has(.curriculum-worked-example) .curriculum-teaching-heading {
+  margin-bottom: 12px;
+}
+
+.curriculum-worked-example {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.curriculum-worked-example ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: worked-step;
+}
+
+.curriculum-worked-example li {
+  position: relative;
+  min-height: 78px;
+  padding: 13px 13px 13px 42px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 13px;
+  background: rgba(255,255,255,.025);
+  counter-increment: worked-step;
+}
+
+.curriculum-worked-example li::before {
+  content: counter(worked-step);
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: #8ce8d8;
+  background: rgba(91,215,195,.1);
+  font-size: .65rem;
+  font-weight: 900;
+}
+
+.curriculum-rich-pack {
+  gap: 16px;
+  margin-top: 18px;
+}
+
+/* Visual first, action second, reading last. */
+.curriculum-rich-visual { order: 1; }
+.curriculum-rich-practice { order: 2; }
+.curriculum-rich-takeaway { order: 3; }
+.curriculum-rich-bridge { order: 4; }
+
+.curriculum-rich-visual,
+.curriculum-rich-practice {
+  padding: clamp(18px, 2vw, 24px);
+}
+
+.curriculum-rich-visual-head {
+  margin-bottom: 13px;
+}
+
+.curriculum-rich-visual-head h3,
+.curriculum-rich-practice > h3 {
+  margin-bottom: 6px;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+}
+
+.curriculum-visual-canvas.kind-concept-map,
+.curriculum-visual-canvas.kind-experiment,
+.curriculum-visual-canvas.kind-spatial {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.curriculum-visual-node {
+  min-height: 92px;
+  padding: 15px;
+}
+
+.curriculum-visual-node strong {
+  font-size: .86rem;
+}
+
+.curriculum-visual-node span {
+  font-size: .72rem;
+  line-height: 1.55;
+}
+
+.curriculum-rich-practice-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.curriculum-practice-card {
+  display: flex;
+  min-width: 0;
+  min-height: 210px;
+  padding: 17px;
+  flex-direction: column;
+}
+
+.curriculum-practice-card h4 {
+  margin-bottom: 16px;
+  font-size: .92rem;
+  line-height: 1.55;
+}
+
+.curriculum-practice-actions {
+  margin-top: auto;
+}
+
+.curriculum-practice-actions button {
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: .68rem;
+}
+
+.curriculum-practice-hint,
+.curriculum-practice-solution {
+  font-size: .75rem;
+}
+
+.curriculum-rich-takeaway {
+  padding: 14px 18px;
+}
+
+.curriculum-rich-takeaway p {
+  font-size: .82rem;
+  line-height: 1.55;
+}
+
+/* Supplemental reading becomes deliberately quiet: one paragraph is enough at first glance. */
+.curriculum-rich-bridge {
+  padding: 14px 18px;
+  opacity: .84;
+}
+
+.curriculum-rich-bridge h3 {
+  margin-bottom: 6px;
+  font-size: .88rem;
+}
+
+.curriculum-rich-bridge > p:not(.curriculum-rich-kicker) {
+  display: none;
+}
+
+.curriculum-rich-bridge > p:nth-of-type(2) {
+  display: block;
+  margin-bottom: 0;
+  font-size: .76rem;
+  line-height: 1.55;
+}
+
+.curriculum-rich-bridge .curriculum-rich-kicker {
+  margin-bottom: 3px;
+  font-size: .52rem;
+}
+
+.curriculum-problem-link-row,
+.curriculum-rich-report-row {
+  margin-top: 10px;
+  opacity: .7;
+}
+
+html[data-theme='light'] .curriculum-teaching-block:has(.curriculum-worked-example) {
+  border-color: rgba(35,55,70,.09);
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(57,76,92,.055);
+}
+
+html[data-theme='light'] .curriculum-worked-example li {
+  border-color: rgba(35,55,70,.075);
+  background: rgba(37,61,75,.035);
+}
+
+html[data-theme='light'] .curriculum-worked-example li::before {
+  color: #267d70;
+  background: rgba(45,169,149,.1);
+}
+
+html[data-theme='light'] .curriculum-rich-visual,
+html[data-theme='light'] .curriculum-rich-practice {
+  box-shadow: 0 12px 34px rgba(57,76,92,.055);
+}
+
+html[data-theme='light'] .curriculum-rich-bridge {
+  border-color: rgba(35,55,70,.07);
+  background: rgba(255,255,255,.52);
+}
+
+@media (max-width: 980px) {
+  .curriculum-rich-practice-list {
+    grid-template-columns: 1fr;
+  }
+
+  .curriculum-practice-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .curriculum-lesson-stage { padding: 12px; }
+  .curriculum-lesson-hero { padding: 16px; }
+  .curriculum-worked-example ol { grid-template-columns: 1fr; }
+  .curriculum-teaching-block:has(.curriculum-worked-example) { padding: 14px; }
+  .curriculum-rich-bridge { display: none; }
+}
