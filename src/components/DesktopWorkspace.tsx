@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { CurriculumCourseApp, type CurriculumCourseSelection } from './CurriculumCourseApp'
 import { EnglishLearningStudio } from './EnglishLearningStudioV3'
 import { NotesApp } from './NotesApp'
 import { SearchApp } from './SearchApp'
 import { WindowFrame, clampWindowGeometry, type WindowGeometry } from './WindowFrame'
 import type { Language } from '../types'
 
-export type DesktopAppKind = 'notes' | 'search' | 'english'
+export type DesktopAppKind = 'notes' | 'search' | 'english' | 'course'
 
 export type DesktopRequest = {
   id: number
   kind: DesktopAppKind
+  course?: CurriculumCourseSelection
 }
 
 type DesktopWorkspaceProps = {
@@ -27,9 +29,10 @@ type ManagedWindow = {
   minimized: boolean
   maximized: boolean
   zIndex: number
+  course?: CurriculumCourseSelection
 }
 
-type StoredWindow = Pick<ManagedWindow, 'id' | 'app' | 'sequence' | 'geometry' | 'minimized' | 'maximized'>
+type StoredWindow = Pick<ManagedWindow, 'id' | 'app' | 'sequence' | 'geometry' | 'minimized' | 'maximized' | 'course'>
 
 function createId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
@@ -40,7 +43,7 @@ function storageKey(userId: string) {
 }
 
 function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
-  if (app === 'english') {
+  if (app === 'english' || app === 'course') {
     return clampWindowGeometry({
       x: 8,
       y: 8,
@@ -61,6 +64,11 @@ function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
   })
 }
 
+function validCourse(course: CurriculumCourseSelection | undefined) {
+  return Boolean(course && Number.isInteger(course.grade) && course.grade >= 1 && course.grade <= 12
+    && ['chinese', 'english', 'math', 'science', 'social'].includes(course.subject))
+}
+
 function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWindow[] {
   if (!rememberWindows) return []
 
@@ -71,7 +79,8 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
     if (!Array.isArray(parsed)) return []
 
     return parsed
-      .filter((item) => item && (item.app === 'notes' || item.app === 'search' || item.app === 'english'))
+      .filter((item) => item && (item.app === 'notes' || item.app === 'search' || item.app === 'english' || item.app === 'course'))
+      .filter((item) => item.app !== 'course' || validCourse(item.course))
       .slice(0, 10)
       .map((item, index) => ({
         id: typeof item.id === 'string' ? item.id : createId(),
@@ -81,6 +90,7 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
         minimized: Boolean(item.minimized),
         maximized: Boolean(item.maximized),
         zIndex: 60 + index,
+        course: item.course,
       }))
   } catch {
     return []
@@ -90,7 +100,20 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
 function appIcon(app: DesktopAppKind) {
   if (app === 'notes') return '✎'
   if (app === 'english') return 'EN'
+  if (app === 'course') return '學'
   return '⌕'
+}
+
+function courseTitle(course: CurriculumCourseSelection | undefined, language: Language) {
+  if (!course) return language === 'zh' ? '正式課程' : 'Course'
+  const subjectZh = { chinese: '國文', english: '英文', math: '數學', science: '自然', social: '社會' }[course.subject]
+  const subjectEn = { chinese: 'Chinese', english: 'English', math: 'Math', science: 'Science', social: 'Social' }[course.subject]
+  const gradeZh = course.grade <= 6
+    ? `${['一', '二', '三', '四', '五', '六'][course.grade - 1]}年級`
+    : course.grade <= 9
+      ? `${['七', '八', '九'][course.grade - 7]}年級`
+      : `高${['一', '二', '三'][course.grade - 10]}`
+  return language === 'zh' ? `${gradeZh} ${subjectZh}` : `Grade ${course.grade} ${subjectEn}`
 }
 
 export function DesktopWorkspace({
@@ -105,6 +128,7 @@ export function DesktopWorkspace({
     notes: Math.max(0, ...windows.filter((item) => item.app === 'notes').map((item) => item.sequence)),
     search: Math.max(0, ...windows.filter((item) => item.app === 'search').map((item) => item.sequence)),
     english: Math.max(0, ...windows.filter((item) => item.app === 'english').map((item) => item.sequence)),
+    course: Math.max(0, ...windows.filter((item) => item.app === 'course').map((item) => item.sequence)),
   })
   const lastRequestRef = useRef<number | null>(null)
 
@@ -118,16 +142,18 @@ export function DesktopWorkspace({
     setWindows((current) => current.map((item) => item.id === id ? { ...item, zIndex } : item))
   }, [])
 
-  const openApp = useCallback((kind: DesktopAppKind) => {
+  const openApp = useCallback((kind: DesktopAppKind, course?: CurriculumCourseSelection) => {
     setWindows((current) => {
-      if (kind === 'notes' || kind === 'english') {
+      if (kind === 'notes' || kind === 'english' || kind === 'course') {
         const existing = current.find((item) => item.app === kind)
         if (existing) {
           const zIndex = nextZIndex()
           return current.map((item) => item.id === existing.id
             ? {
                 ...item,
+                course: kind === 'course' && course ? course : item.course,
                 minimized: false,
+                maximized: kind === 'course' ? true : item.maximized,
                 zIndex,
               }
             : item)
@@ -144,8 +170,9 @@ export function DesktopWorkspace({
           sequence,
           geometry: appGeometry(kind, current.length),
           minimized: false,
-          maximized: kind === 'english',
+          maximized: kind === 'english' || kind === 'course',
           zIndex: nextZIndex(),
+          course,
         },
       ]
     })
@@ -154,7 +181,7 @@ export function DesktopWorkspace({
   useEffect(() => {
     if (!request || request.id === lastRequestRef.current) return
     lastRequestRef.current = request.id
-    openApp(request.kind)
+    openApp(request.kind, request.course)
   }, [openApp, request])
 
   useEffect(() => {
@@ -171,17 +198,19 @@ export function DesktopWorkspace({
       geometry: item.geometry,
       minimized: item.minimized,
       maximized: item.maximized,
+      course: item.course,
     }))
     window.localStorage.setItem(key, JSON.stringify(storedWindows))
   }, [rememberWindows, userId, windows])
 
   const copy = language === 'zh'
-    ? { launch: '開啟應用程式', running: '正在執行', notes: '記事本', search: '搜尋', english: '英文學習', newSearch: '新增搜尋視窗' }
-    : { launch: 'Open applications', running: 'Running applications', notes: 'Notes', search: 'Search', english: 'English', newSearch: 'New search window' }
+    ? { launch: '開啟應用程式', running: '正在執行', notes: '記事本', search: '搜尋', english: '英文練習', newSearch: '新增搜尋視窗' }
+    : { launch: 'Open applications', running: 'Running applications', notes: 'Notes', search: 'Search', english: 'English practice', newSearch: 'New search window' }
 
   const windowTitle = (item: ManagedWindow) => {
     if (item.app === 'notes') return copy.notes
     if (item.app === 'english') return copy.english
+    if (item.app === 'course') return courseTitle(item.course, language)
     return `${copy.search} ${item.sequence}`
   }
 
@@ -201,6 +230,9 @@ export function DesktopWorkspace({
   const appContent = (item: ManagedWindow) => {
     if (item.app === 'notes') return <NotesApp language={language} userId={userId} />
     if (item.app === 'english') return <EnglishLearningStudio language={language} userId={userId} />
+    if (item.app === 'course' && item.course) {
+      return <CurriculumCourseApp language={language} userId={userId} grade={item.course.grade} subject={item.course.subject} />
+    }
     return <SearchApp language={language} userId={userId} instanceId={item.id} />
   }
 
