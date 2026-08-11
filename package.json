@@ -7,11 +7,11 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "predev": "node scripts/build-cefr-lexicon.mjs",
+    "predev": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/build-cefr-lexicon.mjs",
+    "prebuild": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
     "build": "tsc -b && vite build",
-    "pretypecheck": "node scripts/build-cefr-lexicon.mjs",
+    "pretypecheck": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview"
   },
