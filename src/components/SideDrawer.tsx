@@ -14,6 +14,7 @@ type SideDrawerProps = {
 }
 
 type CurriculumStage = 'elementary' | 'junior' | 'senior'
+type DrawerPanel = 'curriculum' | 'practice' | null
 
 type CurriculumStageOption = {
   id: CurriculumStage
@@ -30,7 +31,6 @@ type CurriculumSubject = {
   icon: string
   labelZh: string
   labelEn: string
-  available: boolean
 }
 
 const CURRICULUM_STAGES: CurriculumStageOption[] = [
@@ -64,11 +64,11 @@ const CURRICULUM_STAGES: CurriculumStageOption[] = [
 ]
 
 const CURRICULUM_SUBJECTS: CurriculumSubject[] = [
-  { id: 'chinese', icon: '文', labelZh: '國文', labelEn: 'Chinese', available: false },
-  { id: 'english', icon: 'EN', labelZh: '英文', labelEn: 'English', available: true },
-  { id: 'math', icon: '∑', labelZh: '數學', labelEn: 'Math', available: false },
-  { id: 'science', icon: '⚗', labelZh: '自然', labelEn: 'Science', available: false },
-  { id: 'social', icon: '社', labelZh: '社會', labelEn: 'Social studies', available: false },
+  { id: 'chinese', icon: '文', labelZh: '國文', labelEn: 'Chinese' },
+  { id: 'english', icon: 'EN', labelZh: '英文', labelEn: 'English' },
+  { id: 'math', icon: '∑', labelZh: '數學', labelEn: 'Math' },
+  { id: 'science', icon: '⚗', labelZh: '自然', labelEn: 'Science' },
+  { id: 'social', icon: '社', labelZh: '社會', labelEn: 'Social studies' },
 ]
 
 export function SideDrawer({
@@ -81,7 +81,7 @@ export function SideDrawer({
   onOpenAuth,
   onOpenDesktopApp,
 }: SideDrawerProps) {
-  const [curriculumOpen, setCurriculumOpen] = useState(false)
+  const [panel, setPanel] = useState<DrawerPanel>(null)
   const [selectedStage, setSelectedStage] = useState<CurriculumStage>('elementary')
   const [selectedGradeIndex, setSelectedGradeIndex] = useState(0)
   const [plannedSubject, setPlannedSubject] = useState<string>('')
@@ -89,17 +89,21 @@ export function SideDrawer({
   const copy = language === 'zh'
     ? {
         menu: '主要選單', close: '關閉選單', workspace: '工作視窗', notes: '記事本', search: '新增搜尋視窗', searchHint: '可同時開啟多個',
-        learning: '學習課程', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
+        learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊', settings: '設定', curriculum: '課程總覽', curriculumHint: '選擇學段、年級與科目', grade: '年級', subject: '科目',
-        existingEnglish: '開啟現有英文學習', planned: '課程內容規劃中', plannedHint: '目前先完成學習架構，之後再逐步接入教材、題庫與學習進度。',
-        back: '返回主選單',
+        planned: '學校課程規劃中', plannedHint: '目前先建立完整的學段、年級與科目骨架，之後再接入章節、單元、教材與練習題。',
+        back: '返回主選單', practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具',
+        practiceTitle: '練習場與學習工具', practiceDescription: '這裡放跨年級的練習 App；正式國英數自社教材則留在課程總覽。',
+        englishPractice: '英文情境練習', englishPracticeHint: '程度測驗、情境挖空、無限練習、複習與單字工具', open: '開啟', coming: '更多練習工具會陸續加入',
       }
     : {
         menu: 'Main menu', close: 'Close menu', workspace: 'Work windows', notes: 'Notes', search: 'New search window', searchHint: 'Open multiple windows',
-        learning: 'Learning courses', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
+        learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', curriculumHint: 'Choose school stage, grade, and subject', grade: 'Grade', subject: 'Subject',
-        existingEnglish: 'Open current English learning', planned: 'Course content is being planned', plannedHint: 'The curriculum structure is ready first; lessons, exercises, and progress tracking will be connected gradually.',
-        back: 'Back to main menu',
+        planned: 'School course in planning', plannedHint: 'The school-stage, grade, and subject structure comes first; chapters, lessons, resources, and exercises will be connected next.',
+        back: 'Back to main menu', practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path',
+        practiceTitle: 'Practice lab and learning tools', practiceDescription: 'Cross-grade practice apps live here; formal school-subject lessons stay in the course browser.',
+        englishPractice: 'English context practice', englishPracticeHint: 'Placement, context cloze, continuous practice, review, and vocabulary tools', open: 'Open', coming: 'More practice tools will be added later',
       }
 
   const currentStage = CURRICULUM_STAGES.find((stage) => stage.id === selectedStage) ?? CURRICULUM_STAGES[0]
@@ -107,7 +111,7 @@ export function SideDrawer({
   const selectedGrade = currentGrades[selectedGradeIndex] ?? currentGrades[0]
 
   const closeAll = () => {
-    setCurriculumOpen(false)
+    setPanel(null)
     setPlannedSubject('')
     onClose()
   }
@@ -129,13 +133,13 @@ export function SideDrawer({
   }
 
   const chooseSubject = (subject: CurriculumSubject) => {
-    if (subject.id === 'english' && subject.available) {
-      openDesktopApp('english')
-      return
-    }
-
     const subjectLabel = language === 'zh' ? subject.labelZh : subject.labelEn
     setPlannedSubject(`${selectedGrade} · ${subjectLabel}`)
+  }
+
+  const togglePanel = (nextPanel: Exclude<DrawerPanel, null>) => {
+    setPlannedSubject('')
+    setPanel((current) => current === nextPanel ? null : nextPanel)
   }
 
   return (
@@ -162,20 +166,33 @@ export function SideDrawer({
             <nav className="member-nav learning-nav learning-curriculum-nav" aria-label={copy.learning}>
               <p className="drawer-section-label">{copy.learning}</p>
               <button
-                className={`curriculum-entry${curriculumOpen ? ' active' : ''}`}
+                className={`curriculum-entry${panel === 'curriculum' ? ' active' : ''}`}
                 type="button"
-                aria-expanded={curriculumOpen}
+                aria-expanded={panel === 'curriculum'}
                 aria-controls="curriculum-curtain"
-                onClick={() => {
-                  setCurriculumOpen((current) => !current)
-                  setPlannedSubject('')
-                }}
+                onClick={() => togglePanel('curriculum')}
               >
                 <span className="curriculum-entry-icon" aria-hidden="true">▦</span>
                 <span className="curriculum-entry-copy">
                   <strong>{copy.curriculum}</strong>
                   <small>{copy.learningHint}</small>
                   <em>{copy.learningSubHint}</em>
+                </span>
+                <span className="curriculum-entry-arrow" aria-hidden="true">›</span>
+              </button>
+
+              <button
+                className={`curriculum-entry practice-entry${panel === 'practice' ? ' active' : ''}`}
+                type="button"
+                aria-expanded={panel === 'practice'}
+                aria-controls="practice-curtain"
+                onClick={() => togglePanel('practice')}
+              >
+                <span className="curriculum-entry-icon practice-entry-icon" aria-hidden="true">◇</span>
+                <span className="curriculum-entry-copy">
+                  <strong>{copy.practice}</strong>
+                  <small>{copy.practiceHint}</small>
+                  <em>{copy.practiceSubHint}</em>
                 </span>
                 <span className="curriculum-entry-arrow" aria-hidden="true">›</span>
               </button>
@@ -189,7 +206,7 @@ export function SideDrawer({
         )}
 
         <button className="settings-button" type="button" onClick={() => {
-          setCurriculumOpen(false)
+          setPanel(null)
           onOpenSettings()
         }}>
           <span className="settings-icon" aria-hidden="true">⚙</span><span>{copy.settings}</span><span className="settings-arrow" aria-hidden="true">›</span>
@@ -199,11 +216,11 @@ export function SideDrawer({
       {loggedIn ? (
         <section
           id="curriculum-curtain"
-          className={`curriculum-curtain${open && curriculumOpen ? ' open' : ''}`}
-          aria-hidden={!(open && curriculumOpen)}
+          className={`curriculum-curtain${open && panel === 'curriculum' ? ' open' : ''}`}
+          aria-hidden={!(open && panel === 'curriculum')}
         >
           <header className="curriculum-curtain-head">
-            <button className="curriculum-back" type="button" onClick={() => setCurriculumOpen(false)}>‹ <span>{copy.back}</span></button>
+            <button className="curriculum-back" type="button" onClick={() => setPanel(null)}>‹ <span>{copy.back}</span></button>
             <div>
               <p className="eyebrow">LEARNING MAP</p>
               <h2>{copy.curriculum}</h2>
@@ -256,7 +273,7 @@ export function SideDrawer({
                 <button type="button" key={subject.id} onClick={() => chooseSubject(subject)}>
                   <span className={`subject-icon subject-${subject.id}`}>{subject.icon}</span>
                   <strong>{language === 'zh' ? subject.labelZh : subject.labelEn}</strong>
-                  <small>{subject.available ? copy.existingEnglish : copy.planned}</small>
+                  <small>{copy.planned}</small>
                   <i aria-hidden="true">›</i>
                 </button>
               ))}
@@ -269,6 +286,39 @@ export function SideDrawer({
               <div><strong>{plannedSubject}</strong><p>{copy.plannedHint}</p></div>
             </div>
           ) : null}
+        </section>
+      ) : null}
+
+      {loggedIn ? (
+        <section
+          id="practice-curtain"
+          className={`curriculum-curtain practice-curtain${open && panel === 'practice' ? ' open' : ''}`}
+          aria-hidden={!(open && panel === 'practice')}
+        >
+          <header className="curriculum-curtain-head practice-curtain-head">
+            <button className="curriculum-back" type="button" onClick={() => setPanel(null)}>‹ <span>{copy.back}</span></button>
+            <div>
+              <p className="eyebrow">PRACTICE LAB</p>
+              <h2>{copy.practiceTitle}</h2>
+              <span>{copy.practiceDescription}</span>
+            </div>
+          </header>
+
+          <section className="practice-tool-list">
+            <button className="practice-tool-card" type="button" onClick={() => openDesktopApp('english')}>
+              <span className="practice-tool-icon">EN</span>
+              <span className="practice-tool-copy">
+                <strong>{copy.englishPractice}</strong>
+                <small>{copy.englishPracticeHint}</small>
+              </span>
+              <span className="practice-tool-open">{copy.open} ›</span>
+            </button>
+          </section>
+
+          <div className="practice-coming-note">
+            <span>＋</span>
+            <p>{copy.coming}</p>
+          </div>
         </section>
       ) : null}
 

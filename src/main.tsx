@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './styles.css'
 import './learning-drawer.css'
+import './practice-drawer.css'
 import './auth.css'
 import './member-layout.css'
 import './todo-manager.css'
@@ -16,6 +17,7 @@ import './english-bilingual-library.css'
 import './english-assessment-reading.css'
 import './english-journey.css'
 import './english-journey-bridge.css'
+import './english-tool-curtain.css'
 
 const rootElement = document.getElementById('root')
 
