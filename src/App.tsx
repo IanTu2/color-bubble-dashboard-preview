@@ -8,6 +8,7 @@ import { PersistentMusicPlayer } from './components/PersistentMusicPlayer'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
+import type { CurriculumSubjectId } from './curriculum-plan'
 import { supabase } from './lib/supabase'
 import {
   APP_PREFERENCES_KEY,
@@ -96,6 +97,14 @@ function App() {
     setDesktopRequest({ id: Date.now() + Math.random(), kind })
   }
 
+  const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId) => {
+    setDesktopRequest({
+      id: Date.now() + Math.random(),
+      kind: 'course',
+      course: { grade, subject },
+    })
+  }
+
   const resetAllSettings = () => {
     setLanguage('zh')
     setFontScale(100)
@@ -132,6 +141,7 @@ function App() {
         }}
         onOpenAuth={openAuth}
         onOpenDesktopApp={requestDesktopApp}
+        onOpenCourse={requestCurriculumCourse}
       />
       <Topbar
         language={language}
