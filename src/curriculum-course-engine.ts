@@ -1,6 +1,16 @@
 import { getCurriculumTrack, type CurriculumDifficultyBand, type CurriculumSubjectId, type CurriculumUnitPlan } from './curriculum-plan'
 
 export type CurriculumLessonKind = 'launch' | 'concept' | 'example' | 'guided' | 'practice' | 'assessment'
+export type CurriculumResponseMode = 'choice' | 'short-answer' | 'worked-solution' | 'evidence' | 'oral' | 'writing' | 'data'
+
+export type CurriculumExerciseBlueprint = {
+  id: string
+  label: string
+  purpose: string
+  responseMode: CurriculumResponseMode
+  itemCount: number
+  difficultyBand: CurriculumDifficultyBand
+}
 
 export type CurriculumLessonPlan = {
   id: string
@@ -15,6 +25,8 @@ export type CurriculumLessonPlan = {
   estimatedMinutes: number
   difficultyBand: CurriculumDifficultyBand
   prerequisiteSkills: string[]
+  exerciseBlueprints: CurriculumExerciseBlueprint[]
+  supportPath: string[]
 }
 
 export type CurriculumUnitBundle = CurriculumUnitPlan & {
@@ -125,24 +137,82 @@ function taskFor(subject: CurriculumSubjectId, unit: CurriculumUnitPlan, kind: C
   return pedagogy.assessment
 }
 
+function responseModeFor(subject: CurriculumSubjectId, kind: CurriculumLessonKind): CurriculumResponseMode {
+  if (subject === 'math') return kind === 'launch' ? 'choice' : 'worked-solution'
+  if (subject === 'science') return kind === 'concept' ? 'short-answer' : 'data'
+  if (subject === 'social') return kind === 'launch' ? 'choice' : 'evidence'
+  if (subject === 'english') return kind === 'example' || kind === 'guided' ? 'oral' : 'short-answer'
+  return kind === 'assessment' || kind === 'practice' ? 'writing' : 'short-answer'
+}
+
+function exerciseBlueprintsFor(subject: CurriculumSubjectId, lessonId: string, kind: CurriculumLessonKind, difficultyBand: CurriculumDifficultyBand): CurriculumExerciseBlueprint[] {
+  const primaryMode = responseModeFor(subject, kind)
+  const mainCount = kind === 'launch' ? 2 : kind === 'concept' ? 3 : kind === 'example' ? 2 : kind === 'guided' ? 4 : kind === 'practice' ? 5 : 8
+  const mainPurpose = kind === 'assessment'
+    ? '跨題型確認本單元是否能獨立理解、應用與解釋。'
+    : kind === 'practice'
+      ? '把剛學會的方法轉用到新的題目、文本或情境。'
+      : '在短任務中確認本課核心概念是否真的理解。'
+
+  const blueprints: CurriculumExerciseBlueprint[] = [
+    {
+      id: `${lessonId}-core`,
+      label: kind === 'assessment' ? '單元核心檢核' : '核心小練習',
+      purpose: mainPurpose,
+      responseMode: primaryMode,
+      itemCount: mainCount,
+      difficultyBand,
+    },
+  ]
+
+  if (kind === 'practice' || kind === 'assessment') {
+    blueprints.push({
+      id: `${lessonId}-transfer`,
+      label: '情境轉用題',
+      purpose: '改變呈現方式或生活背景，檢查是否只記住原題而沒有理解。',
+      responseMode: subject === 'math' ? 'worked-solution' : subject === 'science' ? 'evidence' : subject === 'social' ? 'evidence' : subject === 'english' ? 'short-answer' : 'writing',
+      itemCount: kind === 'assessment' ? 3 : 2,
+      difficultyBand: kind === 'assessment' ? 'stretch' : difficultyBand,
+    })
+  }
+
+  return blueprints
+}
+
+function supportPathFor(unit: CurriculumUnitPlan) {
+  return [
+    `先回到本單元目標：${unit.focus}`,
+    unit.prerequisiteSkills.length > 0
+      ? `檢查先備能力：${unit.prerequisiteSkills.join('、')}`
+      : '先改用更具體的圖像、短文本、生活例子或一步一題的方式重新理解。',
+    '仍然卡住時，將任務降成「辨識 → 模仿 → 引導完成 → 獨立完成」四階段，再決定是否回到原難度。',
+  ]
+}
+
 export function buildUnitLessons(grade: number, subject: CurriculumSubjectId, unit: CurriculumUnitPlan): CurriculumLessonPlan[] {
   const pedagogy = SUBJECT_PEDAGOGY[subject]
-  return LESSON_KINDS.map((kind, index) => ({
-    id: `${unit.id}-l${index + 1}`,
-    unitId: unit.id,
-    order: index + 1,
-    kind,
-    title: `${LESSON_TITLES[kind]}｜${unit.title}`,
-    objective: objectiveFor(unit, kind),
-    teachingFocus: taskFor(subject, unit, kind),
-    learnerTask: kind === 'assessment'
-      ? '完成單元檢核後，標記最有把握與最需要再學一次的概念。'
-      : '完成本課的小任務，並用一句話說出你今天真正理解了什麼。',
-    successCriteria: pedagogy.criteria,
-    estimatedMinutes: estimatedMinutes(grade, kind),
-    difficultyBand: kind === 'launch' ? 'foundation' : kind === 'assessment' ? 'stretch' : unit.difficultyBand,
-    prerequisiteSkills: unit.prerequisiteSkills,
-  }))
+  return LESSON_KINDS.map((kind, index) => {
+    const difficultyBand = kind === 'launch' ? 'foundation' : kind === 'assessment' ? 'stretch' : unit.difficultyBand
+    const id = `${unit.id}-l${index + 1}`
+    return {
+      id,
+      unitId: unit.id,
+      order: index + 1,
+      kind,
+      title: `${LESSON_TITLES[kind]}｜${unit.title}`,
+      objective: objectiveFor(unit, kind),
+      teachingFocus: taskFor(subject, unit, kind),
+      learnerTask: kind === 'assessment'
+        ? '完成單元檢核後，標記最有把握與最需要再學一次的概念。'
+        : '完成本課的小任務，並用一句話說出你今天真正理解了什麼。',
+      successCriteria: pedagogy.criteria,
+      estimatedMinutes: estimatedMinutes(grade, kind),
+      difficultyBand,
+      prerequisiteSkills: unit.prerequisiteSkills,
+      exerciseBlueprints: exerciseBlueprintsFor(subject, id, kind, difficultyBand),
+      supportPath: supportPathFor(unit),
+    }
+  })
 }
 
 export function getCurriculumCourseBundle(grade: number, subject: CurriculumSubjectId): CurriculumCourseBundle | null {
