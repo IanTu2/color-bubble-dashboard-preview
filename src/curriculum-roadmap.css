@@ -139,6 +139,25 @@
   font-size: .55rem;
 }
 
+.curriculum-start-course {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #1c9c87, #4c72d8);
+  box-shadow: 0 12px 30px rgba(56, 141, 189, .2);
+  cursor: pointer;
+  font-size: .76rem;
+  font-weight: 900;
+}
+
+.curriculum-start-course:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 840px) {
   .curriculum-roadmap-curtain {
     width: auto;
