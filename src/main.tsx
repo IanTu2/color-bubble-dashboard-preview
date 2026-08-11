@@ -30,6 +30,7 @@ import './curriculum-paged-v4.css'
 import './curriculum-compact-v5.css'
 import './curriculum-compact-tight-v5.css'
 import './curriculum-visuals-dock-v6.css'
+import './curriculum-vetted-media-v7.css'
 
 const rootElement = document.getElementById('root')
 

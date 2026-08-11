@@ -1,4 +1,4 @@
 export {
   CurriculumCourseApp,
   type CurriculumCourseSelection,
-} from './CurriculumCourseAppV6'
+} from './CurriculumCourseAppV7'
