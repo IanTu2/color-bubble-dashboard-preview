@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { getCurriculumTrack, type CurriculumSemester, type CurriculumSubjectId } from '../curriculum-plan'
+import { getCurriculumTrack, type CurriculumSemester, type CurriculumSubjectId } from '../curriculum-plan-v5'
 import type { Language } from '../types'
 import type { DesktopAppKind } from './DesktopWorkspace'
 
