@@ -1,0 +1,173 @@
+/* v6: teaching visuals + mouse-edge dock */
+
+.curriculum-course-v6 {
+  height: 100%;
+  min-height: 0;
+}
+
+.curriculum-course-v6 .curriculum-page-card.has-teaching-visual {
+  position: relative;
+  width: min(100%, 1240px);
+  padding-right: clamp(330px, 31vw, 410px);
+}
+
+.curriculum-side-visual {
+  position: absolute;
+  top: 50%;
+  right: clamp(22px, 3vw, 42px);
+  width: clamp(270px, 26vw, 340px);
+  margin: 0;
+  padding: 15px 15px 14px;
+  border: 1px solid rgba(116, 226, 209, .14);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(94, 224, 202, .11), transparent 42%),
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(124,140,255,.045));
+  box-shadow: inset 0 1px rgba(255,255,255,.04);
+  transform: translateY(-50%);
+}
+
+.curriculum-side-visual-label {
+  display: inline-flex;
+  margin-bottom: 7px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #84e8d7;
+  background: rgba(91,215,195,.09);
+  font-size: .57rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.curriculum-side-visual-canvas {
+  display: grid;
+  min-height: 185px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 16px;
+  color: #83e6d5;
+  background: rgba(9, 17, 31, .2);
+}
+
+.curriculum-side-visual svg {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+}
+
+.curriculum-side-visual figcaption {
+  margin-top: 10px;
+  color: rgba(241,248,255,.62);
+  font-size: .68rem;
+  line-height: 1.62;
+}
+
+.curriculum-side-visual .v-line,
+.curriculum-side-visual .v-soft,
+.curriculum-side-visual .v-dash,
+.curriculum-side-visual .v-outline,
+.curriculum-side-visual .v-grid,
+.curriculum-side-visual .v-accent-line,
+.curriculum-side-visual .v-accent-2-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.curriculum-side-visual .v-line { stroke-width: 3; opacity: .78; }
+.curriculum-side-visual .v-soft { stroke-width: 2; opacity: .38; }
+.curriculum-side-visual .v-dash { stroke-width: 2; opacity: .52; stroke-dasharray: 6 7; }
+.curriculum-side-visual .v-outline { stroke-width: 2.5; opacity: .72; }
+.curriculum-side-visual .v-outline.strong { stroke-width: 3.4; }
+.curriculum-side-visual .v-grid { stroke-width: 1.2; opacity: .18; }
+.curriculum-side-visual .v-accent-line { stroke: #66dbc7; stroke-width: 3; opacity: .9; }
+.curriculum-side-visual .v-accent-2-line { stroke: #8a98ff; stroke-width: 3; opacity: .78; }
+.curriculum-side-visual .v-fill { fill: currentColor; opacity: .76; }
+.curriculum-side-visual .v-accent { fill: #65dbc7; }
+.curriculum-side-visual .v-accent-2 { fill: #8998ff; }
+.curriculum-side-visual .v-soft-fill { fill: currentColor; opacity: .18; }
+.curriculum-side-visual .v-muted-fill { fill: currentColor; opacity: .2; }
+.curriculum-side-visual .v-accent-soft { fill: #65dbc7; opacity: .28; }
+.curriculum-side-visual .v-accent2-soft { fill: #8998ff; opacity: .25; }
+.curriculum-side-visual .v-panel,
+.curriculum-side-visual .v-panel-fill { fill: currentColor; opacity: .09; stroke: currentColor; stroke-width: 1.5; stroke-opacity: .28; }
+.curriculum-side-visual .v-panel.accent,
+.curriculum-side-visual .v-panel-fill.accent { fill: #8998ff; stroke: #8998ff; opacity: .13; }
+.curriculum-side-visual .v-cell { fill: currentColor; fill-opacity: .07; stroke: currentColor; stroke-width: 3; stroke-opacity: .7; }
+.curriculum-side-visual .v-nucleus { fill: #8998ff; fill-opacity: .13; stroke: #8998ff; stroke-width: 2; stroke-opacity: .56; }
+.curriculum-side-visual .v-organelle { fill: #65dbc7; fill-opacity: .13; stroke: #65dbc7; stroke-width: 1.7; stroke-opacity: .58; }
+.curriculum-side-visual .v-map { fill: currentColor; fill-opacity: .055; stroke: currentColor; stroke-width: 2.4; stroke-opacity: .65; }
+.curriculum-side-visual .v-text { fill: currentColor; font-size: 14px; font-weight: 800; opacity: .78; }
+
+/* Question pages stay text-first. A future image-dependent question must provide its own question visual. */
+.curriculum-course-v6 .curriculum-page-question {
+  width: min(100%, 1080px);
+}
+
+html[data-theme='light'] .curriculum-side-visual {
+  border-color: rgba(43, 165, 146, .16);
+  background:
+    radial-gradient(circle at 30% 12%, rgba(43,169,149,.09), transparent 42%),
+    linear-gradient(145deg, rgba(255,255,255,.96), rgba(238,243,255,.9));
+}
+
+html[data-theme='light'] .curriculum-side-visual-canvas {
+  color: #2ea892;
+  background: rgba(49, 77, 94, .035);
+}
+
+html[data-theme='light'] .curriculum-side-visual figcaption { color: rgba(39,58,73,.66); }
+
+@media (max-width: 980px) {
+  .curriculum-course-v6 .curriculum-page-card.has-teaching-visual {
+    padding-right: clamp(22px, 4vw, 46px);
+  }
+
+  .curriculum-side-visual {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    max-width: 560px;
+    margin: 24px 0 0;
+    transform: none;
+  }
+
+  .curriculum-side-visual-canvas { min-height: 150px; }
+}
+
+/* Mouse / trackpad: dock stays out of the way until the pointer reaches the bottom edge. */
+@media (hover: hover) and (pointer: fine) {
+  .desktop-dock {
+    bottom: 0;
+    opacity: .42;
+    box-shadow: none;
+    transform: translate(-50%, calc(100% - 8px));
+    transition: transform .22s ease, opacity .18s ease, box-shadow .18s ease;
+  }
+
+  .desktop-dock::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    right: 0;
+    left: 0;
+    height: 15px;
+  }
+
+  .desktop-dock:hover,
+  .desktop-dock:focus-within {
+    opacity: 1;
+    box-shadow: 0 18px 52px rgba(5,4,18,.42);
+    transform: translate(-50%, -10px);
+  }
+}
+
+/* Touch screens have no reliable hover edge, so keep the dock directly usable. */
+@media (hover: none), (pointer: coarse) {
+  .desktop-dock {
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+}
