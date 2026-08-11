@@ -34,6 +34,13 @@ for (const target of activeModules) {
     '依圖表而異',
     '依文本而異',
     '答案依題目而異',
+    // v6 原則：在正式題目視覺資料 schema 上線前，任何「需要一張未附圖才能作答」的題幹都不能進 reviewed 題庫。
+    '根據下圖',
+    '依下圖',
+    '觀察下圖',
+    '請看下圖',
+    '如圖所示',
+    '依附圖',
   ]
   for (const phrase of banned) {
     if (text.includes(phrase)) failures.push(`${target.file}: banned missing-material fallback "${phrase}"`)
@@ -43,6 +50,10 @@ for (const target of activeModules) {
 const player = read('src/components/CurriculumCourseAppV5.tsx')
 if (player.includes("from '../curriculum-teaching-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy teaching-content fallback')
 if (player.includes("from '../curriculum-rich-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy rich-content fallback')
+
+const visualLayer = read('src/components/CurriculumCourseAppV6.tsx')
+if (!visualLayer.includes('enhanceTeachingPage')) failures.push('CurriculumCourseAppV6 teaching visual enhancer is missing')
+if (!visualLayer.includes('curriculum-page-question')) failures.push('CurriculumCourseAppV6 must explicitly keep ordinary question pages text-first')
 
 const aggregator = read('src/curriculum-reviewed-content.ts')
 if (!aggregator.includes('stableHash')) failures.push('reviewed choices must use stable per-question option shuffling')
