@@ -1,4 +1,4 @@
-import { getCurriculumTrack, type CurriculumDifficultyBand, type CurriculumSubjectId, type CurriculumUnitPlan } from './curriculum-plan'
+import { getCurriculumTrack, type CurriculumDifficultyBand, type CurriculumSubjectId, type CurriculumUnitPlan } from './curriculum-plan-v5'
 
 export type CurriculumLessonKind = 'launch' | 'concept' | 'example' | 'guided' | 'practice' | 'assessment'
 export type CurriculumResponseMode = 'choice' | 'short-answer' | 'worked-solution' | 'evidence' | 'oral' | 'writing' | 'data'
