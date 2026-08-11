@@ -1,52 +1,68 @@
 .curriculum-course-v5 .curriculum-compact-bar {
-  flex-basis: 46px;
-  min-height: 46px;
-  padding: 5px 10px;
-  gap: 10px;
+  flex-basis: 40px;
+  min-height: 40px;
+  padding: 4px 9px;
+  gap: 8px;
+  grid-template-columns: minmax(150px, 1fr) auto auto;
 }
 
-.curriculum-course-v5 .curriculum-compact-icon {
-  flex-basis: 28px;
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  font-size: .61rem;
-}
-
+.curriculum-course-v5 .curriculum-compact-icon,
 .curriculum-course-v5 .curriculum-compact-identity strong {
-  font-size: .74rem;
+  display: none;
+}
+
+.curriculum-course-v5 .curriculum-compact-identity {
+  gap: 0;
 }
 
 .curriculum-course-v5 .curriculum-compact-identity small {
-  max-width: min(34vw, 360px);
-  font-size: .56rem;
+  max-width: min(38vw, 430px);
+  margin: 0;
+  color: rgba(244,248,255,.72);
+  font-size: .68rem;
+  font-weight: 850;
 }
 
 .curriculum-course-v5 .curriculum-compact-meta > span,
 .curriculum-course-v5 .curriculum-compact-progress {
-  padding: 4px 7px;
-  font-size: .54rem;
+  padding: 3px 7px;
+  font-size: .52rem;
 }
 
 .curriculum-course-v5 .curriculum-compact-actions > button {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 9px;
   border-radius: 9px;
-  font-size: .63rem;
+  font-size: .61rem;
 }
 
 .curriculum-course-v5 .curriculum-paged-stage-v5 {
-  padding-top: 5px;
+  padding-top: 4px;
+}
+
+html[data-theme='light'] .curriculum-course-v5 .curriculum-compact-identity small {
+  color: rgba(35,55,70,.75);
+}
+
+@media (max-width: 900px) {
+  .curriculum-course-v5 .curriculum-compact-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 }
 
 @media (max-width: 640px) {
   .curriculum-course-v5 .curriculum-compact-bar {
-    flex-basis: 42px;
-    min-height: 42px;
-    padding: 4px 7px;
+    flex-basis: 38px;
+    min-height: 38px;
+    padding: 3px 7px;
   }
 
-  .curriculum-course-v5 .curriculum-compact-icon {
+  .curriculum-course-v5 .curriculum-compact-identity small {
+    max-width: 48vw;
+    font-size: .62rem;
+  }
+
+  .curriculum-course-v5 .curriculum-compact-progress {
     display: none;
   }
 }
