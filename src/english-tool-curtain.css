@@ -1,0 +1,246 @@
+.english-tool-shell {
+  position: relative;
+  min-height: 100%;
+}
+
+/* The global tool curtain replaces the always-visible English feature buttons. */
+.english-tool-shell .context-header-actions button {
+  display: none;
+}
+
+.english-tool-shell .context-main-header {
+  padding-right: 104px;
+}
+
+.english-tool-menu-trigger {
+  position: absolute;
+  z-index: 84;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 12px;
+  color: #f8f8ff;
+  background: rgba(12, 14, 24, .84);
+  box-shadow: 0 10px 28px rgba(5, 8, 18, .24);
+  backdrop-filter: blur(18px);
+  cursor: pointer;
+  font-size: .72rem;
+  font-weight: 850;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.english-tool-menu-trigger:hover,
+.english-tool-menu-trigger.active {
+  transform: translateY(-1px);
+  border-color: rgba(98, 229, 206, .45);
+  background: rgba(26, 37, 48, .94);
+}
+
+.english-tool-menu-trigger > span {
+  color: #8cebd9;
+  font-size: .9rem;
+}
+
+.english-tool-curtain-backdrop {
+  position: absolute;
+  z-index: 81;
+  inset: 0;
+  width: 100%;
+  min-height: 100%;
+  border: 0;
+  background: rgba(5, 7, 14, .38);
+  backdrop-filter: blur(2px);
+}
+
+.english-tool-curtain {
+  position: absolute;
+  z-index: 83;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: min(360px, 88%);
+  min-height: 100%;
+  padding: 18px;
+  flex-direction: column;
+  overflow-y: auto;
+  border-left: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 24px 0 0 24px;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(81, 223, 198, .12), transparent 30%),
+    linear-gradient(155deg, rgba(16, 19, 29, .985), rgba(10, 12, 21, .992));
+  box-shadow: -30px 0 80px rgba(3, 5, 14, .35);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(105%);
+  transition: opacity .2s ease, transform .34s cubic-bezier(.22, .85, .32, 1);
+}
+
+.english-tool-curtain.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.english-tool-curtain-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.english-tool-curtain-head p {
+  margin: 0 0 4px;
+  color: #84e7d5;
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.english-tool-curtain-head h2 {
+  margin: 0 0 5px;
+  font-size: 1.08rem;
+}
+
+.english-tool-curtain-head span {
+  display: block;
+  color: rgba(248, 248, 255, .55);
+  font-size: .67rem;
+  line-height: 1.55;
+}
+
+.english-tool-curtain-head > button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 11px;
+  color: #fff;
+  background: rgba(255, 255, 255, .04);
+  cursor: pointer;
+  font-size: 1.15rem;
+}
+
+.english-tool-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.english-tool-list > button,
+.english-retest-tool {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 62px;
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 14px;
+  color: #f8f8ff;
+  background: rgba(255, 255, 255, .035);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.english-tool-list > button:hover,
+.english-tool-list > button.active,
+.english-retest-tool:hover {
+  transform: translateX(2px);
+  border-color: rgba(94, 225, 203, .34);
+  background: rgba(94, 225, 203, .08);
+}
+
+.english-tool-list > button.active {
+  box-shadow: inset 3px 0 0 #75e4d1;
+}
+
+.english-tool-icon,
+.english-retest-tool > span:first-child {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 11px;
+  color: #d9fff8;
+  background: rgba(87, 226, 202, .11);
+  font-size: .76rem;
+  font-weight: 950;
+}
+
+.english-tool-list > button > span:nth-child(2),
+.english-retest-tool > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.english-tool-list strong,
+.english-retest-tool strong {
+  font-size: .76rem;
+}
+
+.english-tool-list small,
+.english-retest-tool small {
+  color: rgba(248, 248, 255, .46);
+  font-size: .59rem;
+  line-height: 1.4;
+}
+
+.english-tool-list i {
+  color: rgba(248, 248, 255, .38);
+  font-size: 1.2rem;
+  font-style: normal;
+}
+
+.english-retest-tool {
+  grid-template-columns: 38px minmax(0, 1fr);
+  margin-top: auto;
+  border-color: rgba(255, 201, 100, .14);
+  background: rgba(255, 201, 100, .045);
+}
+
+.english-retest-tool > span:first-child {
+  color: #ffe0a3;
+  background: rgba(255, 190, 84, .1);
+}
+
+.english-library-only-shell {
+  min-height: 100%;
+  padding-top: 54px;
+}
+
+/* V5 no longer needs the old fixed quick-action strip. */
+.english-context-quick-actions,
+.context-mode-bar,
+.journey-legacy-return {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .english-tool-shell .context-main-header {
+    padding-right: 14px;
+    padding-top: 52px;
+  }
+
+  .english-tool-menu-trigger {
+    top: 10px;
+    right: 10px;
+  }
+
+  .english-tool-curtain {
+    width: min(94%, 360px);
+    border-radius: 22px 0 0 22px;
+  }
+}
