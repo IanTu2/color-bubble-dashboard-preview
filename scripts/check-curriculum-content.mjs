@@ -20,8 +20,6 @@ const count = (text, pattern) => (text.match(pattern) ?? []).length
 for (const target of activeModules) {
   const text = read(target.file)
   const reviewedCount = count(text, /reviewStatus:\s*['"]reviewed['"]/g)
-  // 作者檔允許 QA 期間用強制型別標記；正式 player 會依 options/sampleAnswer 正規化題型。
-  // 這裡用 question id 數量確認題庫，不讓拼字型別標記掩蓋「其實少題」。
   const questionCount = count(text, /id:\s*['"][^'"]+-q\d+['"]/g)
   const workedExampleCount = count(text, /workedExamples\s*:/g)
 
@@ -34,7 +32,6 @@ for (const target of activeModules) {
     '依圖表而異',
     '依文本而異',
     '答案依題目而異',
-    // v6 原則：在正式題目視覺資料 schema 上線前，任何「需要一張未附圖才能作答」的題幹都不能進 reviewed 題庫。
     '根據下圖',
     '依下圖',
     '觀察下圖',
@@ -55,6 +52,17 @@ const visualLayer = read('src/components/CurriculumCourseAppV6.tsx')
 if (!visualLayer.includes('enhanceTeachingPage')) failures.push('CurriculumCourseAppV6 teaching visual enhancer is missing')
 if (!visualLayer.includes('curriculum-page-question')) failures.push('CurriculumCourseAppV6 must explicitly keep ordinary question pages text-first')
 
+const vettedPlayer = read('src/components/CurriculumCourseAppV7.tsx')
+const vettedMedia = read('src/curriculum-vetted-media.ts')
+if (!vettedPlayer.includes('findVettedCurriculumMedia')) failures.push('CurriculumCourseAppV7 must resolve concept-specific vetted media')
+if (!vettedPlayer.includes("subject === 'science' || subject === 'social'")) failures.push('science/social pages must suppress generic decorative SVG when no vetted media exists')
+for (const requiredAsset of ['Animal%20cell%20structure%20zhtw.svg', 'Plant%20cell%20structure%20svg%20zh-hant.svg', 'Reliefkarte%20Taiwan.png']) {
+  if (!vettedMedia.includes(requiredAsset)) failures.push(`vetted curriculum media missing required detailed asset: ${requiredAsset}`)
+}
+for (const requiredMetadata of ['sourcePage:', 'license:', 'attribution:', 'alt:']) {
+  if (!vettedMedia.includes(requiredMetadata)) failures.push(`vetted curriculum media missing metadata field: ${requiredMetadata}`)
+}
+
 const aggregator = read('src/curriculum-reviewed-content.ts')
 if (!aggregator.includes('stableHash')) failures.push('reviewed choices must use stable per-question option shuffling')
 if (!aggregator.includes('sanitizeReviewedUnit')) failures.push('reviewed content sanitizer is missing')
@@ -73,4 +81,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] reviewed content source checks passed')
+console.log('[curriculum-qa] reviewed content + vetted media source checks passed')
