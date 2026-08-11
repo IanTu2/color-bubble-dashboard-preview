@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   getCurriculumCourseBundle,
   readCurriculumProgress,
@@ -6,8 +6,12 @@ import {
   type CurriculumLessonPlan,
   type CurriculumUnitBundle,
 } from '../curriculum-course-engine'
-import { buildRichLessonPack, type RichLessonPack } from '../curriculum-rich-content'
-import { buildTeachingBlocks, type TeachingBlock } from '../curriculum-teaching-content'
+import { buildRichLessonPack } from '../curriculum-rich-content'
+import {
+  buildInteractiveLessonQuestions,
+  isPracticeSelfContained,
+  type InteractiveLessonQuestion,
+} from '../curriculum-interactive-questions'
 import type { CurriculumSemester, CurriculumSubjectId } from '../curriculum-plan'
 import type { Language } from '../types'
 
@@ -27,6 +31,21 @@ type ReportContext = {
   blockId: string
   blockTitle: string
 }
+
+type AnswerState = {
+  selectedIndex?: number
+  text?: string
+  checked?: boolean
+}
+
+type LessonPage =
+  | { id: string; kind: 'intro'; title: string }
+  | { id: string; kind: 'concept'; title: string; body: string; index: number }
+  | { id: string; kind: 'visual'; title: string }
+  | { id: string; kind: 'focus'; title: string; label: string; detail: string; index: number }
+  | { id: string; kind: 'model'; title: string; prompt: string; hint: string; answer: string; explanation: string }
+  | { id: string; kind: 'question'; title: string; question: InteractiveLessonQuestion; index: number }
+  | { id: string; kind: 'recap'; title: string }
 
 const SUBJECT_META: Record<CurriculumSubjectId, { zh: string; en: string; icon: string }> = {
   chinese: { zh: '國文', en: 'Chinese', icon: '文' },
@@ -70,139 +89,183 @@ function issueLabel(kind: IssueKind, language: Language) {
   return (language === 'zh' ? zh : en)[kind]
 }
 
-function TeachingSection({ block, language, onReport }: { block: TeachingBlock; language: Language; onReport: (block: TeachingBlock) => void }) {
+function buildLessonPages(
+  lesson: CurriculumLessonPlan,
+  pack: ReturnType<typeof buildRichLessonPack>,
+  questions: InteractiveLessonQuestion[],
+  language: Language,
+): LessonPage[] {
+  const pages: LessonPage[] = [{ id: `${lesson.id}-intro`, kind: 'intro', title: language === 'zh' ? '這堂課要做什麼' : 'Lesson goal' }]
+
+  pack.bridge.forEach((body, index) => {
+    pages.push({
+      id: `${lesson.id}-concept-${index}`,
+      kind: 'concept',
+      title: language === 'zh' ? `觀念 ${index + 1}` : `Concept ${index + 1}`,
+      body,
+      index,
+    })
+  })
+
+  pages.push({ id: `${lesson.id}-visual`, kind: 'visual', title: pack.visual.title })
+
+  pack.visual.items.slice(0, 5).forEach((item, index) => {
+    pages.push({
+      id: `${lesson.id}-focus-${index}`,
+      kind: 'focus',
+      title: language === 'zh' ? `重點拆解 ${index + 1}` : `Key idea ${index + 1}`,
+      label: item.label,
+      detail: item.detail,
+      index,
+    })
+  })
+
+  const worked = pack.practices.find(isPracticeSelfContained)
+  if (worked) {
+    pages.push({
+      id: `${lesson.id}-model`,
+      kind: 'model',
+      title: language === 'zh' ? '老師示範一題' : 'Worked example',
+      prompt: worked.question,
+      hint: worked.hint,
+      answer: worked.answer,
+      explanation: worked.explanation,
+    })
+  }
+
+  questions.forEach((question, index) => {
+    pages.push({
+      id: question.id,
+      kind: 'question',
+      title: language === 'zh' ? `練習 ${index + 1}` : `Practice ${index + 1}`,
+      question,
+      index,
+    })
+  })
+
+  pages.push({ id: `${lesson.id}-recap`, kind: 'recap', title: language === 'zh' ? '完成前再確認' : 'Final check' })
+  return pages
+}
+
+function VisualCanvas({ pack }: { pack: ReturnType<typeof buildRichLessonPack> }) {
   return (
-    <section className="curriculum-teaching-block">
-      <div className="curriculum-teaching-heading"><span>{block.eyebrow}</span><h3>{block.title}</h3></div>
-      <div className="curriculum-teaching-copy">
-        {block.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-      </div>
-      {block.bullets?.length ? (
-        <ul className="curriculum-teaching-bullets">{block.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}</ul>
-      ) : null}
-      {block.example ? (
-        <div className="curriculum-worked-example">
-          <div className="curriculum-example-prompt"><span>{language === 'zh' ? '例題' : 'Example'}</span><strong>{block.example.prompt}</strong></div>
-          <ol>{block.example.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-          <div className="curriculum-example-answer"><span>{language === 'zh' ? '答案' : 'Answer'}</span><strong>{block.example.answer}</strong></div>
-        </div>
-      ) : null}
-      <div className="curriculum-problem-link-row">
-        <span>{language === 'zh' ? '內容有問題？' : 'Something wrong with this content?'}</span>
-        <button type="button" onClick={() => onReport(block)}>{language === 'zh' ? '反映問題' : 'Report issue'}</button>
-      </div>
-    </section>
+    <div className={`curriculum-visual-canvas kind-${pack.visual.kind}`}>
+      {pack.visual.items.map((item, index) => (
+        <article className="curriculum-visual-node" key={`${item.label}-${index}`}>
+          <strong>{item.label}</strong>
+          <span>{item.detail}</span>
+        </article>
+      ))}
+    </div>
   )
 }
 
-function RichLessonSection({ pack, language, onReport }: { pack: RichLessonPack; language: Language; onReport: (blockId: string, blockTitle: string) => void }) {
-  const [hintIds, setHintIds] = useState<string[]>([])
-  const [answerIds, setAnswerIds] = useState<string[]>([])
-
-  const toggleHint = (id: string) => {
-    setHintIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
-  }
-
-  const toggleAnswer = (id: string) => {
-    setAnswerIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])
-  }
-
-  const speak = () => {
-    if (!pack.visual.audioText || typeof window === 'undefined' || !('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(pack.visual.audioText)
-    utterance.lang = 'en-US'
-    utterance.rate = 0.92
-    window.speechSynthesis.speak(utterance)
-  }
+function ChoiceQuestion({
+  question,
+  state,
+  language,
+  onChange,
+}: {
+  question: Extract<InteractiveLessonQuestion, { kind: 'choice' }>
+  state: AnswerState
+  language: Language
+  onChange: (next: AnswerState) => void
+}) {
+  const selected = state.selectedIndex
+  const checked = Boolean(state.checked)
+  const correct = checked && selected === question.correctIndex
 
   return (
-    <div className="curriculum-rich-pack">
-      <section className="curriculum-rich-bridge">
-        <p className="curriculum-rich-kicker">DEEP DIVE</p>
-        <h3>{language === 'zh' ? '再講清楚一點' : 'Go deeper'}</h3>
-        {pack.bridge.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-      </section>
-
-      <section className="curriculum-rich-visual">
-        <div className="curriculum-rich-visual-head">
-          <div>
-            <p className="curriculum-rich-kicker">VISUAL LEARNING</p>
-            <h3>{pack.visual.title}</h3>
-            <p>{pack.visual.caption}</p>
-          </div>
-          {pack.visual.audioText ? <button type="button" className="curriculum-audio-button" onClick={speak}>🔊 {language === 'zh' ? '朗讀教材' : 'Read aloud'}</button> : null}
+    <div className="curriculum-paged-question">
+      {question.context ? <div className="curriculum-question-context">{question.context}</div> : null}
+      <h3>{question.prompt}</h3>
+      <div className="curriculum-choice-grid">
+        {question.options.map((option, index) => {
+          const classes = [
+            selected === index ? 'selected' : '',
+            checked && index === question.correctIndex ? 'correct' : '',
+            checked && selected === index && index !== question.correctIndex ? 'wrong' : '',
+          ].filter(Boolean).join(' ')
+          return (
+            <button
+              type="button"
+              className={classes}
+              key={`${option}-${index}`}
+              onClick={() => onChange({ selectedIndex: index, checked: false })}
+            >
+              <span>{String.fromCharCode(65 + index)}</span>
+              <strong>{option}</strong>
+            </button>
+          )
+        })}
+      </div>
+      <button
+        type="button"
+        className="curriculum-check-answer"
+        disabled={selected === undefined}
+        onClick={() => onChange({ ...state, checked: true })}
+      >
+        {language === 'zh' ? '確認答案' : 'Check answer'}
+      </button>
+      {checked ? (
+        <div className={`curriculum-answer-feedback ${correct ? 'correct' : 'wrong'}`}>
+          <strong>{correct ? (language === 'zh' ? '✓ 答對了' : '✓ Correct') : (language === 'zh' ? '再看一次觀念' : 'Review the idea')}</strong>
+          <p>{question.explanation}</p>
         </div>
-        <div className={`curriculum-visual-canvas kind-${pack.visual.kind}`}>
-          {pack.visual.items.map((item, index) => (
-            <article className="curriculum-visual-node" key={`${item.label}-${index}`}>
-              <strong>{item.label}</strong>
-              <span>{item.detail}</span>
-            </article>
-          ))}
-        </div>
-        <div className="curriculum-rich-report-row"><button type="button" className="curriculum-rich-report" onClick={() => onReport('rich-visual', pack.visual.title)}>{language === 'zh' ? '內容有問題？反映問題' : 'Report this content'}</button></div>
-      </section>
+      ) : null}
+    </div>
+  )
+}
 
-      <section className="curriculum-rich-practice">
-        <p className="curriculum-rich-kicker">PRACTICE</p>
-        <h3>{language === 'zh' ? '換你練習｜先想再看解析' : 'Your turn · think before revealing'}</h3>
-        <div className="curriculum-rich-practice-list">
-          {pack.practices.map((item, index) => {
-            const hintOpen = hintIds.includes(item.id)
-            const answerOpen = answerIds.includes(item.id)
-            return (
-              <article className="curriculum-practice-card" key={item.id}>
-                <div className="curriculum-practice-top"><span className="curriculum-practice-level">{item.level}</span><span>{String(index + 1).padStart(2, '0')}</span></div>
-                <h4>{item.question}</h4>
-                <div className="curriculum-practice-actions">
-                  <button type="button" onClick={() => toggleHint(item.id)}>{hintOpen ? (language === 'zh' ? '收起提示' : 'Hide hint') : (language === 'zh' ? '看提示' : 'Hint')}</button>
-                  <button type="button" onClick={() => toggleAnswer(item.id)}>{answerOpen ? (language === 'zh' ? '收起解析' : 'Hide solution') : (language === 'zh' ? '看答案與解析' : 'Answer & explanation')}</button>
-                  <button type="button" onClick={() => onReport(item.id, `${language === 'zh' ? '練習題' : 'Practice'} ${index + 1}`)}>{language === 'zh' ? '反映問題' : 'Report'}</button>
-                </div>
-                {hintOpen ? <div className="curriculum-practice-hint">💡 {item.hint}</div> : null}
-                {answerOpen ? <div className="curriculum-practice-solution"><strong>{language === 'zh' ? `答案：${item.answer}` : `Answer: ${item.answer}`}</strong><span>{item.explanation}</span></div> : null}
-              </article>
-            )
-          })}
+function ResponseQuestion({
+  question,
+  state,
+  language,
+  onChange,
+}: {
+  question: Extract<InteractiveLessonQuestion, { kind: 'response' }>
+  state: AnswerState
+  language: Language
+  onChange: (next: AnswerState) => void
+}) {
+  return (
+    <div className="curriculum-paged-question">
+      {question.context ? <div className="curriculum-question-context">💡 {question.context}</div> : null}
+      <h3>{question.prompt}</h3>
+      <textarea
+        className="curriculum-response-input"
+        value={state.text ?? ''}
+        placeholder={language === 'zh' ? '先寫下你的想法，再對照參考答案。' : 'Write your answer before checking the model answer.'}
+        onChange={(event) => onChange({ text: event.target.value, checked: false })}
+      />
+      <button type="button" className="curriculum-check-answer" onClick={() => onChange({ ...state, checked: true })}>
+        {language === 'zh' ? '對照參考答案' : 'Show model answer'}
+      </button>
+      {state.checked ? (
+        <div className="curriculum-answer-feedback neutral">
+          <strong>{language === 'zh' ? `參考答案：${question.sampleAnswer}` : `Model answer: ${question.sampleAnswer}`}</strong>
+          <p>{question.explanation}</p>
         </div>
-      </section>
-
-      <section className="curriculum-rich-takeaway">
-        <strong>{language === 'zh' ? '這頁真正要記住' : 'Key takeaway'}</strong>
-        <p>{pack.takeaway}</p>
-      </section>
+      ) : null}
     </div>
   )
 }
 
 export function CurriculumCourseApp({ language, userId, grade, subject }: Props) {
-  const course = useMemo(() => getCurriculumCourseBundle(grade, subject), [grade, subject])
+  const course = getCurriculumCourseBundle(grade, subject)
   const [semester, setSemester] = useState<CurriculumSemester>(1)
   const [unitIndex, setUnitIndex] = useState(0)
   const [lessonIndex, setLessonIndex] = useState(0)
+  const [pageIndex, setPageIndex] = useState(0)
   const [directoryOpen, setDirectoryOpen] = useState(false)
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>(() => readCurriculumProgress(userId))
+  const [answerStates, setAnswerStates] = useState<Record<string, AnswerState>>({})
   const [reportContext, setReportContext] = useState<ReportContext | null>(null)
   const [issueKind, setIssueKind] = useState<IssueKind>('unclear')
   const [issueText, setIssueText] = useState('')
   const [reportSaved, setReportSaved] = useState(false)
 
-  const copy = language === 'zh'
-    ? {
-        directory: '課程目錄', semesterOne: '上學期', semesterTwo: '下學期', progress: '整體進度', lesson: '本課', objective: '這堂要學會什麼',
-        complete: '完成這一課', completed: '已完成', next: '下一課 →', previous: '← 上一課', minutes: '分鐘', source: '課程依據', unitProgress: '單元進度', close: '關閉', noCourse: '找不到這門課的課程藍圖。',
-        planVersion: '正式課程 v3', reportTitle: '內容有問題？反映問題', reportHint: '系統已自動帶入目前的年級、科目、單元、課次與內容區塊。之後串接課程 AI 時，AI 就從這個 context 回答，而不是讓你重新描述整題。',
-        reportDetail: '補充說明', reportPlaceholder: '例如：我不懂第二步為什麼要這樣算；或我覺得答案可能有問題……', submitReport: '送出問題', reportDone: '已記錄這個問題。這個入口就是之後課程 AI 的反應位置。',
-      }
-    : {
-        directory: 'Course directory', semesterOne: 'Semester 1', semesterTwo: 'Semester 2', progress: 'Overall progress', lesson: 'Lesson', objective: 'Learning goal',
-        complete: 'Complete lesson', completed: 'Completed', next: 'Next lesson →', previous: '← Previous', minutes: 'min', source: 'Curriculum basis', unitProgress: 'Unit progress', close: 'Close', noCourse: 'No curriculum roadmap was found.',
-        planVersion: 'Formal course v3', reportTitle: 'Report a content issue', reportHint: 'Grade, subject, unit, lesson, and content block are attached automatically. A future course AI can answer with this exact context.',
-        reportDetail: 'Details', reportPlaceholder: 'For example: I do not understand step 2, or I think the answer may be wrong…', submitReport: 'Submit issue', reportDone: 'Issue saved. This is the integration point for the future course AI.',
-      }
-
-  if (!course) return <div className="curriculum-course-empty">{copy.noCourse}</div>
+  if (!course) return <div className="curriculum-course-empty">找不到這門課的課程藍圖。</div>
 
   const subjectMeta = SUBJECT_META[subject]
   const semesterPlan = course.semesters.find((item) => item.semester === semester) ?? course.semesters[0]
@@ -210,31 +273,16 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
   const unit: CurriculumUnitBundle = semesterPlan.units[safeUnitIndex]
   const safeLessonIndex = Math.min(lessonIndex, Math.max(0, unit.lessons.length - 1))
   const lesson = unit.lessons[safeLessonIndex]
-  const teachingBlocks = buildTeachingBlocks(subject, grade, unit, lesson)
-  const richPack = buildRichLessonPack(subject, grade, unit, lesson)
+  const pack = buildRichLessonPack(subject, grade, unit, lesson)
+  const questions = buildInteractiveLessonQuestions(pack, lesson.id)
+  const pages = buildLessonPages(lesson, pack, questions, language)
+  const safePageIndex = Math.min(pageIndex, pages.length - 1)
+  const page = pages[safePageIndex]
+  const pageProgress = Math.round(((safePageIndex + 1) / pages.length) * 100)
+
   const allLessons = course.semesters.flatMap((item) => item.units.flatMap((entry) => entry.lessons))
   const completedInCourse = allLessons.filter((item) => completedLessonIds.includes(item.id)).length
   const overallProgress = allLessons.length ? Math.round((completedInCourse / allLessons.length) * 100) : 0
-  const unitCompleted = unit.lessons.filter((item) => completedLessonIds.includes(item.id)).length
-  const unitProgress = Math.round((unitCompleted / unit.lessons.length) * 100)
-
-  const selectSemester = (next: CurriculumSemester) => {
-    setSemester(next)
-    setUnitIndex(0)
-    setLessonIndex(0)
-  }
-
-  const selectUnit = (index: number) => {
-    setUnitIndex(index)
-    setLessonIndex(0)
-    setDirectoryOpen(false)
-  }
-
-  const selectLesson = (nextUnitIndex: number, nextLessonIndex: number) => {
-    setUnitIndex(nextUnitIndex)
-    setLessonIndex(nextLessonIndex)
-    setDirectoryOpen(false)
-  }
 
   const completeLesson = () => {
     const next = Array.from(new Set([...completedLessonIds, lesson.id]))
@@ -242,40 +290,77 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
     writeCurriculumProgress(userId, next)
   }
 
-  const goPrevious = () => {
-    if (safeLessonIndex > 0) {
-      setLessonIndex(safeLessonIndex - 1)
-      return
-    }
-    if (safeUnitIndex > 0) {
-      const previousUnit = semesterPlan.units[safeUnitIndex - 1]
-      setUnitIndex(safeUnitIndex - 1)
-      setLessonIndex(previousUnit.lessons.length - 1)
-    }
+  const selectSemester = (next: CurriculumSemester) => {
+    setSemester(next)
+    setUnitIndex(0)
+    setLessonIndex(0)
+    setPageIndex(0)
   }
 
-  const goNext = () => {
+  const selectLesson = (nextUnitIndex: number, nextLessonIndex: number) => {
+    setUnitIndex(nextUnitIndex)
+    setLessonIndex(nextLessonIndex)
+    setPageIndex(0)
+    setDirectoryOpen(false)
+  }
+
+  const goToNextLesson = () => {
     completeLesson()
     if (safeLessonIndex < unit.lessons.length - 1) {
       setLessonIndex(safeLessonIndex + 1)
+      setPageIndex(0)
       return
     }
     if (safeUnitIndex < semesterPlan.units.length - 1) {
       setUnitIndex(safeUnitIndex + 1)
       setLessonIndex(0)
+      setPageIndex(0)
       return
     }
-    if (semester === 1) selectSemester(2)
+    if (semester === 1) {
+      selectSemester(2)
+      return
+    }
+    setPageIndex(pages.length - 1)
   }
 
-  const openReport = (block: TeachingBlock) => {
-    setReportContext({ blockId: block.id, blockTitle: block.title })
-    setIssueKind('unclear')
-    setIssueText('')
-    setReportSaved(false)
+  const goNext = () => {
+    if (safePageIndex < pages.length - 1) {
+      setPageIndex(safePageIndex + 1)
+      return
+    }
+    goToNextLesson()
   }
 
-  const openRichReport = (blockId: string, blockTitle: string) => {
+  const goPrevious = () => {
+    if (safePageIndex > 0) {
+      setPageIndex(safePageIndex - 1)
+      return
+    }
+    if (safeLessonIndex > 0) {
+      const previousLessonIndex = safeLessonIndex - 1
+      const previousLesson = unit.lessons[previousLessonIndex]
+      const previousPack = buildRichLessonPack(subject, grade, unit, previousLesson)
+      const previousQuestions = buildInteractiveLessonQuestions(previousPack, previousLesson.id)
+      const previousPages = buildLessonPages(previousLesson, previousPack, previousQuestions, language)
+      setLessonIndex(previousLessonIndex)
+      setPageIndex(previousPages.length - 1)
+      return
+    }
+    if (safeUnitIndex > 0) {
+      const previousUnit = semesterPlan.units[safeUnitIndex - 1]
+      const previousLessonIndex = previousUnit.lessons.length - 1
+      const previousLesson = previousUnit.lessons[previousLessonIndex]
+      const previousPack = buildRichLessonPack(subject, grade, previousUnit, previousLesson)
+      const previousQuestions = buildInteractiveLessonQuestions(previousPack, previousLesson.id)
+      const previousPages = buildLessonPages(previousLesson, previousPack, previousQuestions, language)
+      setUnitIndex(safeUnitIndex - 1)
+      setLessonIndex(previousLessonIndex)
+      setPageIndex(previousPages.length - 1)
+    }
+  }
+
+  const openReport = (blockId: string, blockTitle: string) => {
     setReportContext({ blockId, blockTitle })
     setIssueKind('unclear')
     setIssueText('')
@@ -293,6 +378,8 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
       unitTitle: unit.title,
       lessonId: lesson.id,
       lessonTitle: lesson.title,
+      pageId: page.id,
+      pageIndex: safePageIndex,
       blockId: reportContext.blockId,
       blockTitle: reportContext.blockTitle,
       issueKind,
@@ -302,67 +389,174 @@ export function CurriculumCourseApp({ language, userId, grade, subject }: Props)
     setReportSaved(true)
   }
 
+  const updateAnswer = (questionId: string, next: AnswerState) => {
+    setAnswerStates((current) => ({ ...current, [questionId]: next }))
+  }
+
+  const renderPage = () => {
+    if (page.kind === 'intro') {
+      return (
+        <div className="curriculum-page-card curriculum-page-intro">
+          <span className="curriculum-page-kicker">START</span>
+          <h2>{lesson.title}</h2>
+          <p className="curriculum-page-lead">{lesson.objective}</p>
+          <div className="curriculum-success-grid">
+            {lesson.successCriteria.map((criterion, index) => <div key={criterion}><span>{index + 1}</span><strong>{criterion}</strong></div>)}
+          </div>
+        </div>
+      )
+    }
+
+    if (page.kind === 'concept') {
+      return (
+        <div className="curriculum-page-card curriculum-page-concept">
+          <span className="curriculum-page-kicker">CONCEPT {String(page.index + 1).padStart(2, '0')}</span>
+          <h2>{page.title}</h2>
+          <p className="curriculum-concept-statement">{page.body}</p>
+          <div className="curriculum-concept-callout">{pack.takeaway}</div>
+        </div>
+      )
+    }
+
+    if (page.kind === 'visual') {
+      return (
+        <div className="curriculum-page-card curriculum-page-visual">
+          <span className="curriculum-page-kicker">VISUAL LEARNING</span>
+          <h2>{pack.visual.title}</h2>
+          <p>{pack.visual.caption}</p>
+          <VisualCanvas pack={pack} />
+        </div>
+      )
+    }
+
+    if (page.kind === 'focus') {
+      return (
+        <div className="curriculum-page-card curriculum-page-focus">
+          <span className="curriculum-page-kicker">KEY IDEA {String(page.index + 1).padStart(2, '0')}</span>
+          <div className="curriculum-focus-symbol">{String(page.index + 1).padStart(2, '0')}</div>
+          <h2>{page.label}</h2>
+          <p>{page.detail}</p>
+        </div>
+      )
+    }
+
+    if (page.kind === 'model') {
+      return (
+        <div className="curriculum-page-card curriculum-page-model">
+          <span className="curriculum-page-kicker">WORKED EXAMPLE</span>
+          <h2>{page.title}</h2>
+          <div className="curriculum-model-prompt">{page.prompt}</div>
+          <div className="curriculum-model-flow">
+            <div><span>1</span><strong>先想</strong><p>{page.hint}</p></div>
+            <div><span>2</span><strong>答案</strong><p>{page.answer}</p></div>
+            <div><span>3</span><strong>為什麼</strong><p>{page.explanation}</p></div>
+          </div>
+        </div>
+      )
+    }
+
+    if (page.kind === 'question') {
+      const state = answerStates[page.question.id] ?? {}
+      return (
+        <div className="curriculum-page-card curriculum-page-question">
+          <div className="curriculum-question-heading">
+            <span className="curriculum-page-kicker">PRACTICE {String(page.index + 1).padStart(2, '0')}</span>
+            <span className="curriculum-question-level">{page.question.level}</span>
+          </div>
+          {page.question.kind === 'choice'
+            ? <ChoiceQuestion question={page.question} state={state} language={language} onChange={(next) => updateAnswer(page.question.id, next)} />
+            : <ResponseQuestion question={page.question} state={state} language={language} onChange={(next) => updateAnswer(page.question.id, next)} />}
+        </div>
+      )
+    }
+
+    return (
+      <div className="curriculum-page-card curriculum-page-recap">
+        <span className="curriculum-page-kicker">RECAP</span>
+        <h2>{language === 'zh' ? '這堂課真正要帶走的內容' : 'What to remember'}</h2>
+        <p className="curriculum-recap-main">{pack.takeaway}</p>
+        <div className="curriculum-success-grid compact">
+          {lesson.successCriteria.map((criterion, index) => <div key={criterion}><span>✓</span><strong>{criterion}</strong></div>)}
+        </div>
+        <button type="button" className="curriculum-complete-page" onClick={completeLesson}>
+          {completedLessonIds.includes(lesson.id) ? '✓ 已完成這一課' : '標記這一課完成'}
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className={`curriculum-course-app course-${subject}`}>
+    <div className={`curriculum-course-app curriculum-paged-course course-${subject}`}>
       <header className="curriculum-course-header">
-        <div className="curriculum-course-brand"><span className="curriculum-course-subject-icon">{subjectMeta.icon}</span><div><p>{copy.planVersion} · {gradeLabel(grade, language)}</p><h1>{language === 'zh' ? subjectMeta.zh : subjectMeta.en}</h1><span>{unit.title} · {lessonKindLabel(lesson, language)}</span></div></div>
-        <div className="curriculum-course-header-actions"><div className="curriculum-course-progress-chip"><span>{copy.progress}</span><strong>{overallProgress}%</strong></div><button type="button" className="curriculum-directory-button" onClick={() => setDirectoryOpen(true)}>☰ {copy.directory}</button></div>
+        <div className="curriculum-course-brand">
+          <span className="curriculum-course-subject-icon">{subjectMeta.icon}</span>
+          <div><p>正式課程 v4 · {gradeLabel(grade, language)}</p><h1>{language === 'zh' ? subjectMeta.zh : subjectMeta.en}</h1><span>{unit.title} · {lessonKindLabel(lesson, language)}</span></div>
+        </div>
+        <div className="curriculum-course-header-actions">
+          <div className="curriculum-course-progress-chip"><span>整體進度</span><strong>{overallProgress}%</strong></div>
+          <button type="button" className="curriculum-directory-button" onClick={() => setDirectoryOpen(true)}>☰ 課程目錄</button>
+        </div>
       </header>
-      <div className="curriculum-course-progress-track"><span style={{ width: `${overallProgress}%` }} /></div>
 
-      <main className="curriculum-lesson-stage">
-        <div className="curriculum-lesson-meta-row"><span>{semester === 1 ? copy.semesterOne : copy.semesterTwo}</span><span>{String(safeUnitIndex + 1).padStart(2, '0')} · {unit.title}</span><span>{copy.lesson} {safeLessonIndex + 1}/{unit.lessons.length}</span><span>約 {lesson.estimatedMinutes} {copy.minutes}</span></div>
-        <section className="curriculum-lesson-hero"><p>{lessonKindLabel(lesson, language).toUpperCase()}</p><h2>{lesson.title}</h2><div className="curriculum-lesson-objective"><span>{copy.objective}</span><strong>{lesson.objective}</strong></div></section>
-
-        <div className="curriculum-teaching-stack">
-          {teachingBlocks.map((block) => <TeachingSection key={block.id} block={block} language={language} onReport={openReport} />)}
+      <main className="curriculum-paged-stage">
+        <div className="curriculum-paged-meta">
+          <span>{semester === 1 ? '上學期' : '下學期'}</span>
+          <span>{String(safeUnitIndex + 1).padStart(2, '0')} · {unit.title}</span>
+          <span>Lesson {safeLessonIndex + 1}/{unit.lessons.length}</span>
+          <span>頁面 {safePageIndex + 1}/{pages.length}</span>
         </div>
 
-        <RichLessonSection key={lesson.id} pack={richPack} language={language} onReport={openRichReport} />
+        <div className="curriculum-page-progress"><span style={{ width: `${pageProgress}%` }} /></div>
 
-        <footer className="curriculum-lesson-footer">
-          <button type="button" className="curriculum-secondary-action" disabled={safeUnitIndex === 0 && safeLessonIndex === 0} onClick={goPrevious}>{copy.previous}</button>
-          <div className="curriculum-lesson-completion"><span>{copy.unitProgress} {unitProgress}%</span><button type="button" className={completedLessonIds.includes(lesson.id) ? 'completed' : ''} onClick={completeLesson}>{completedLessonIds.includes(lesson.id) ? `✓ ${copy.completed}` : copy.complete}</button></div>
-          <button type="button" className="curriculum-primary-action" onClick={goNext}>{copy.next}</button>
+        <section className="curriculum-single-page">
+          {renderPage()}
+          <div className="curriculum-page-report"><button type="button" onClick={() => openReport(page.id, page.title)}>內容有問題？反映問題</button></div>
+        </section>
+
+        <footer className="curriculum-paged-navigation">
+          <button type="button" className="curriculum-secondary-action" disabled={safeUnitIndex === 0 && safeLessonIndex === 0 && safePageIndex === 0} onClick={goPrevious}>← 上一頁</button>
+          <div className="curriculum-page-counter"><strong>{safePageIndex + 1}</strong><span>/ {pages.length}</span></div>
+          <button type="button" className="curriculum-primary-action" onClick={goNext}>{safePageIndex === pages.length - 1 ? '完成並前往下一課 →' : '下一頁 →'}</button>
         </footer>
       </main>
 
       <aside className={`curriculum-course-directory${directoryOpen ? ' open' : ''}`} aria-hidden={!directoryOpen}>
-        <header><div><p>COURSE MAP</p><h2>{gradeLabel(grade, language)} · {language === 'zh' ? subjectMeta.zh : subjectMeta.en}</h2></div><button type="button" aria-label={copy.close} onClick={() => setDirectoryOpen(false)}>×</button></header>
-        <div className="curriculum-directory-semesters"><button type="button" className={semester === 1 ? 'active' : ''} onClick={() => selectSemester(1)}>{copy.semesterOne}</button><button type="button" className={semester === 2 ? 'active' : ''} onClick={() => selectSemester(2)}>{copy.semesterTwo}</button></div>
+        <header><div><p>COURSE MAP</p><h2>{gradeLabel(grade, language)} · {language === 'zh' ? subjectMeta.zh : subjectMeta.en}</h2></div><button type="button" onClick={() => setDirectoryOpen(false)}>×</button></header>
+        <div className="curriculum-directory-semesters"><button type="button" className={semester === 1 ? 'active' : ''} onClick={() => selectSemester(1)}>上學期</button><button type="button" className={semester === 2 ? 'active' : ''} onClick={() => selectSemester(2)}>下學期</button></div>
         <div className="curriculum-directory-units">
-          {semesterPlan.units.map((directoryUnit, directoryUnitIndex) => {
-            const done = directoryUnit.lessons.filter((item) => completedLessonIds.includes(item.id)).length
-            return (
-              <section key={directoryUnit.id} className={directoryUnitIndex === safeUnitIndex ? 'active' : ''}>
-                <button className="curriculum-directory-unit-title" type="button" onClick={() => selectUnit(directoryUnitIndex)}><span>{String(directoryUnitIndex + 1).padStart(2, '0')}</span><div><strong>{directoryUnit.title}</strong><small>{done}/{directoryUnit.lessons.length} {copy.completed}</small></div></button>
-                <div className="curriculum-directory-lessons">
-                  {directoryUnit.lessons.map((directoryLesson, directoryLessonIndex) => (
-                    <button type="button" className={directoryUnitIndex === safeUnitIndex && directoryLessonIndex === safeLessonIndex ? 'active' : ''} key={directoryLesson.id} onClick={() => selectLesson(directoryUnitIndex, directoryLessonIndex)}><span>{completedLessonIds.includes(directoryLesson.id) ? '✓' : directoryLessonIndex + 1}</span><div><strong>{lessonKindLabel(directoryLesson, language)}</strong><small>{directoryLesson.estimatedMinutes} {copy.minutes}</small></div></button>
-                  ))}
-                </div>
-              </section>
-            )
-          })}
+          {semesterPlan.units.map((directoryUnit, directoryUnitIndex) => (
+            <section key={directoryUnit.id} className={directoryUnitIndex === safeUnitIndex ? 'active' : ''}>
+              <button className="curriculum-directory-unit-title" type="button" onClick={() => { setUnitIndex(directoryUnitIndex); setLessonIndex(0); setPageIndex(0); setDirectoryOpen(false) }}>
+                <span>{String(directoryUnitIndex + 1).padStart(2, '0')}</span><div><strong>{directoryUnit.title}</strong><small>{directoryUnit.lessons.filter((item) => completedLessonIds.includes(item.id)).length}/{directoryUnit.lessons.length} 已完成</small></div>
+              </button>
+              <div className="curriculum-directory-lessons">
+                {directoryUnit.lessons.map((directoryLesson, directoryLessonIndex) => (
+                  <button type="button" className={directoryUnitIndex === safeUnitIndex && directoryLessonIndex === safeLessonIndex ? 'active' : ''} key={directoryLesson.id} onClick={() => selectLesson(directoryUnitIndex, directoryLessonIndex)}>
+                    <span>{completedLessonIds.includes(directoryLesson.id) ? '✓' : directoryLessonIndex + 1}</span><div><strong>{lessonKindLabel(directoryLesson, language)}</strong><small>{directoryLesson.estimatedMinutes} 分鐘</small></div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
-        <footer><small>{copy.source}</small><p>{course.sourceBasis}</p>{course.note ? <p>{course.note}</p> : null}</footer>
+        <footer><small>課程依據</small><p>{course.sourceBasis}</p>{course.note ? <p>{course.note}</p> : null}</footer>
       </aside>
 
       <aside className={`curriculum-issue-curtain${reportContext ? ' open' : ''}`} aria-hidden={!reportContext}>
-        <header><div><p>CONTENT SUPPORT</p><h2>{copy.reportTitle}</h2></div><button type="button" onClick={() => setReportContext(null)}>×</button></header>
+        <header><div><p>CONTENT SUPPORT</p><h2>內容有問題？反映問題</h2></div><button type="button" onClick={() => setReportContext(null)}>×</button></header>
         {reportContext ? (
           <div className="curriculum-issue-body">
-            <div className="curriculum-report-context"><span>{gradeLabel(grade, language)} · {language === 'zh' ? subjectMeta.zh : subjectMeta.en}</span><strong>{unit.title}</strong><small>{lessonKindLabel(lesson, language)} · {reportContext.blockTitle}</small></div>
-            <p className="curriculum-report-hint">{copy.reportHint}</p>
+            <div className="curriculum-report-context"><span>{gradeLabel(grade, language)} · {language === 'zh' ? subjectMeta.zh : subjectMeta.en}</span><strong>{unit.title}</strong><small>{lesson.title} · 第 {safePageIndex + 1} 頁 · {reportContext.blockTitle}</small></div>
+            <p className="curriculum-report-hint">年級、科目、單元、Lesson 與目前頁面都會一起記錄，之後接課程 AI 時不需要重新描述你卡在哪裡。</p>
             <div className="curriculum-issue-types">{(['unclear', 'possible-error', 'answer', 'wording', 'other'] as IssueKind[]).map((kind) => <button type="button" className={issueKind === kind ? 'active' : ''} key={kind} onClick={() => { setIssueKind(kind); setReportSaved(false) }}>{issueLabel(kind, language)}</button>)}</div>
-            <label className="curriculum-report-text"><span>{copy.reportDetail}</span><textarea value={issueText} placeholder={copy.reportPlaceholder} onChange={(event) => { setIssueText(event.target.value); setReportSaved(false) }} /></label>
-            {reportSaved ? <div className="curriculum-report-saved">✓ {copy.reportDone}</div> : <button className="curriculum-report-submit" type="button" onClick={submitReport}>{copy.submitReport}</button>}
+            <label className="curriculum-report-text"><span>補充說明</span><textarea value={issueText} placeholder="例如：我不懂這個選項為什麼錯；或教材這裡好像少了一個條件……" onChange={(event) => { setIssueText(event.target.value); setReportSaved(false) }} /></label>
+            {reportSaved ? <div className="curriculum-report-saved">✓ 已記錄這個問題。</div> : <button className="curriculum-report-submit" type="button" onClick={submitReport}>送出問題</button>}
           </div>
         ) : null}
       </aside>
 
-      {directoryOpen ? <button type="button" className="curriculum-course-backdrop" aria-label={copy.close} onClick={() => setDirectoryOpen(false)} /> : null}
-      {reportContext ? <button type="button" className="curriculum-issue-backdrop" aria-label={copy.close} onClick={() => setReportContext(null)} /> : null}
+      {directoryOpen ? <button type="button" className="curriculum-course-backdrop" aria-label="關閉" onClick={() => setDirectoryOpen(false)} /> : null}
+      {reportContext ? <button type="button" className="curriculum-issue-backdrop" aria-label="關閉" onClick={() => setReportContext(null)} /> : null}
     </div>
   )
 }
