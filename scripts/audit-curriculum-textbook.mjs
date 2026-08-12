@@ -7,8 +7,11 @@ const failures = []
 const warnings = []
 
 const registry = read('src/curriculum-audit-registry.ts')
-const scope7 = read('src/curriculum-official-scope-math7.ts')
-const supplement7 = read('src/curriculum-textbook-supplement-math7.ts')
+const math7Scope = read('src/curriculum-official-scope-math7.ts')
+const math7Supplement = read('src/curriculum-textbook-supplement-math7.ts')
+const science7Scope = read('src/curriculum-official-scope-science7.ts')
+const science7Supplement = read('src/curriculum-textbook-supplement-science7.ts')
+const science7Source = read('src/curriculum-reviewed-science7.ts')
 const aggregator = read('src/curriculum-reviewed-content.ts')
 const foundation = read('src/curriculum-foundation-content.ts')
 const player = read('src/components/CurriculumCourseAppV5.tsx')
@@ -35,23 +38,45 @@ const requiredMath7Codes = [
   'D-7-1', 'D-7-2',
 ]
 for (const code of requiredMath7Codes) {
-  if (!scope7.includes(`'${code}'`)) failures.push(`grade 7 math official scope mapping missing ${code}`)
+  if (!math7Scope.includes(`'${code}'`)) failures.push(`grade 7 math official scope mapping missing ${code}`)
 }
 
-const math7UnitIds = [...scope7.matchAll(/unitId:\s*'([^']+)'/g)].map((match) => match[1])
+const math7UnitIds = [...math7Scope.matchAll(/unitId:\s*'([^']+)'/g)].map((match) => match[1])
 const uniqueMath7UnitIds = new Set(math7UnitIds)
 if (uniqueMath7UnitIds.size !== 9) failures.push(`grade 7 math official scope should map 9 units, found ${uniqueMath7UnitIds.size}`)
-
 for (const unitId of uniqueMath7UnitIds) {
-  if (!supplement7.includes(`unitId: '${unitId}'`)) failures.push(`grade 7 math textbook supplement missing ${unitId}`)
+  if (!math7Supplement.includes(`unitId: '${unitId}'`)) failures.push(`grade 7 math textbook supplement missing ${unitId}`)
 }
-const supplementalQuestionCount = (supplement7.match(/supp-q\d+/g) ?? []).length
-const supplementalExampleCount = (supplement7.match(/workedExamples:\s*\[/g) ?? []).length
-const misconceptionCount = (supplement7.match(/title:\s*'常見迷思/g) ?? []).length
-if (supplementalQuestionCount < 36) failures.push(`grade 7 math supplement questions ${supplementalQuestionCount} < 36`)
-if (supplementalExampleCount < 9) failures.push(`grade 7 math supplement worked examples ${supplementalExampleCount < 9 ? supplementalExampleCount : 9} < 9`)
-if (misconceptionCount < 18) failures.push(`grade 7 math misconception concepts ${misconceptionCount} < 18`)
+const math7QuestionCount = (math7Supplement.match(/supp-q\d+/g) ?? []).length
+const math7ExampleCount = (math7Supplement.match(/workedExamples:\s*\[/g) ?? []).length
+const math7MisconceptionCount = (math7Supplement.match(/title:\s*'常見迷思/g) ?? []).length
+if (math7QuestionCount < 36) failures.push(`grade 7 math supplement questions ${math7QuestionCount} < 36`)
+if (math7ExampleCount < 9) failures.push(`grade 7 math supplement worked examples ${math7ExampleCount} < 9`)
+if (math7MisconceptionCount < 18) failures.push(`grade 7 math misconception concepts ${math7MisconceptionCount} < 18`)
 if (!aggregator.includes('getMath7TextbookSupplement')) failures.push('grade 7 math textbook supplement is not wired into reviewed content')
+
+const science7UnitIds = [...science7Scope.matchAll(/unitId:\s*'([^']+)'/g)].map((match) => match[1])
+const uniqueScience7UnitIds = new Set(science7UnitIds)
+if (uniqueScience7UnitIds.size !== 6) failures.push(`grade 7 biology sequence should map 6 units to stage-IV scope, found ${uniqueScience7UnitIds.size}`)
+for (const unitId of uniqueScience7UnitIds) {
+  if (!science7Supplement.includes(`unitId: '${unitId}'`)) failures.push(`grade 7 science textbook supplement missing ${unitId}`)
+}
+for (const requiredScienceCode of ['Da-Ⅳ-1', 'Da-Ⅳ-4', 'Bc-Ⅳ-1', 'Bc-Ⅳ-4', 'Db-Ⅳ-1', 'Dc-Ⅳ-5', 'Ga-Ⅳ-6', 'Gb-Ⅳ-1', 'Gc-Ⅳ-4', 'Bd-Ⅳ-3', 'Lb-Ⅳ-3']) {
+  if (!science7Scope.includes(requiredScienceCode)) failures.push(`grade 7 science stage-IV mapping missing ${requiredScienceCode}`)
+}
+if (!science7Scope.includes('第四學習階段') || !science7Scope.includes('七～九年級')) {
+  failures.push('grade 7 science scope mapping must explicitly state that stage-IV codes cover grades 7-9 rather than a nationally fixed grade-7 semester sequence')
+}
+const science7QuestionCount = (science7Supplement.match(/supp-q\d+/g) ?? []).length
+const science7ExampleCount = (science7Supplement.match(/workedExamples:\s*\[/g) ?? []).length
+const science7MisconceptionCount = (science7Supplement.match(/title:\s*'常見迷思/g) ?? []).length
+if (science7QuestionCount < 24) failures.push(`grade 7 science supplement questions ${science7QuestionCount} < 24`)
+if (science7ExampleCount < 6) failures.push(`grade 7 science supplement worked examples ${science7ExampleCount} < 6`)
+if (science7MisconceptionCount < 15) failures.push(`grade 7 science misconception concepts ${science7MisconceptionCount} < 15`)
+if (!aggregator.includes('getScience7TextbookSupplement')) failures.push('grade 7 science textbook supplement is not wired into reviewed content')
+if (science7Source.includes('בלבד')) {
+  warnings.push('grade 7 science reviewed source still contains a legacy foreign-token artifact; runtime sanitizer removes it, but source cleanup is required before any science unit can become textbook-ready')
+}
 
 const genericQuestionSignals = [
   'applicationPrompt',
@@ -89,6 +114,7 @@ if (failures.length) {
 }
 
 console.log('[textbook-audit] structural and quality-label gates passed')
-console.log(`[textbook-audit] grade 7 math supplement: 9 units, ${supplementalQuestionCount} extra subject questions, ${misconceptionCount} misconception concepts`)
+console.log(`[textbook-audit] grade 7 math supplement: 9 units, ${math7QuestionCount} extra subject questions, ${math7MisconceptionCount} misconception concepts`)
+console.log(`[textbook-audit] grade 7 science supplement: 6 units, ${science7QuestionCount} extra subject questions, ${science7MisconceptionCount} misconception concepts`)
 for (const warning of warnings) console.log(`[textbook-audit] NOTE: ${warning}`)
 console.log('[textbook-audit] textbook-ready units: 0 (intentional until full per-unit promotion gates are met)')
