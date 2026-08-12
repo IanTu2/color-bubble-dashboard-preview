@@ -101,7 +101,7 @@ const transportCoordination: ReviewedUnitContent = {
   questions:[
     {id:'g7-science-s2-u1-q1',kind:'choice',level:'理解',prompt:'植物木質部主要運輸什麼？',options:['水與礦物質','只有糖','神經訊號','紅血球'],correctIndex:0,explanation:'木質部主要與根吸收的水及礦物質運輸有關。'},
     {id:'g7-science-s2-u1-q2',kind:'choice',level:'理解',prompt:'「動脈」最核心的定義是？',options:['把血液帶離心臟的血管','永遠含氧最多的血管','任何最粗的血管','只存在手臂的血管'],correctIndex:0,explanation:'動脈、靜脈依相對心臟的流向命名。'},
-    {id:'g7-science-s2-u1-q3',kind:'choice',level:'理解',prompt:'人體物質交換最主要發生在哪一類細小血管？',options:['微血管','主動脈 בלבד','所有靜脈瓣膜','骨骼'],correctIndex:0,explanation:'微血管壁薄、分布廣，適合血液與組織間進行物質交換。'},
+    {id:'g7-science-s2-u1-q3',kind:'choice',level:'理解',prompt:'人體物質交換最主要發生在哪一類細小血管？',options:['微血管','主動脈','所有靜脈瓣膜','骨骼'],correctIndex:0,explanation:'微血管壁薄、分布廣，適合血液與組織間進行物質交換。'},
     {id:'g7-science-s2-u1-q4',kind:'choice',level:'理解',prompt:'下列哪項較符合反射？',options:['手碰熱物迅速縮回','閱讀一篇文章後寫摘要','規劃明年旅行','背誦一首詩'],correctIndex:0,explanation:'反射是快速且較固定的神經反應，有保護作用。'},
     {id:'g7-science-s2-u1-q5',kind:'choice',level:'理解',prompt:'荷爾蒙通常如何到達目標細胞？',options:['進入血液循環並作用於有相應受器的細胞','沿木質部運送','只靠骨骼傳遞','直接變成神經元'],correctIndex:0,explanation:'內分泌腺分泌的荷爾蒙多經血液運輸。'},
     {id:'g7-science-s2-u1-q6',kind:'choice',level:'應用',prompt:'體溫升高後出汗增加，最符合哪個概念？',options:['負回饋調節','正數加法','質因數分解','遺傳突變'],correctIndex:0,explanation:'偏高體溫引發增加散熱的反應，使狀態往正常範圍移動。'},

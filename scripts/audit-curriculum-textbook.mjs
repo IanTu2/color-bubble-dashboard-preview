@@ -14,8 +14,10 @@ const science7Supplement = read('src/curriculum-textbook-supplement-science7.ts'
 const science7Source = read('src/curriculum-reviewed-science7.ts')
 const aggregator = read('src/curriculum-reviewed-content.ts')
 const foundation = read('src/curriculum-foundation-content.ts')
-const player = read('src/components/CurriculumCourseAppV5.tsx')
+const foundationV12 = read('src/curriculum-foundation-question-bank-v12.ts')
+const player = read('src/components/CurriculumCourseAppV12.tsx')
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
+const visualLayer = read('src/components/CurriculumCourseAppV8.tsx')
 
 for (const structure of [
   'integrated-life',
@@ -27,7 +29,7 @@ for (const structure of [
 }
 
 if (!registry.includes('TEXTBOOK_READY_UNITS = new Set<string>()')) {
-  failures.push('v10 must start with an explicit empty textbook-ready registry; units may only be promoted after full gates')
+  failures.push('textbook-ready registry must remain explicit; units may only be promoted after full gates')
 }
 
 const requiredMath7Codes = [
@@ -65,7 +67,7 @@ for (const requiredScienceCode of ['Da-Ⅳ-1', 'Da-Ⅳ-4', 'Bc-Ⅳ-1', 'Bc-Ⅳ-4
   if (!science7Scope.includes(requiredScienceCode)) failures.push(`grade 7 science stage-IV mapping missing ${requiredScienceCode}`)
 }
 if (!science7Scope.includes('第四學習階段') || !science7Scope.includes('七～九年級')) {
-  failures.push('grade 7 science scope mapping must explicitly state that stage-IV codes cover grades 7-9 rather than a nationally fixed grade-7 semester sequence')
+  failures.push('grade 7 science scope mapping must state that stage-IV codes cover grades 7-9 rather than a nationally fixed grade-7 semester sequence')
 }
 const science7QuestionCount = (science7Supplement.match(/supp-q\d+/g) ?? []).length
 const science7ExampleCount = (science7Supplement.match(/workedExamples:\s*\[/g) ?? []).length
@@ -75,36 +77,57 @@ if (science7ExampleCount < 6) failures.push(`grade 7 science supplement worked e
 if (science7MisconceptionCount < 15) failures.push(`grade 7 science misconception concepts ${science7MisconceptionCount} < 15`)
 if (!aggregator.includes('getScience7TextbookSupplement')) failures.push('grade 7 science textbook supplement is not wired into reviewed content')
 if (science7Source.includes('בלבד')) {
-  warnings.push('grade 7 science reviewed source still contains a legacy foreign-token artifact; runtime sanitizer removes it, but source cleanup is required before any science unit can become textbook-ready')
+  warnings.push('grade 7 science source still contains a legacy foreign-token artifact; sanitizer protects runtime, but source cleanup is required before textbook-ready promotion')
 }
 
-const genericQuestionSignals = [
-  'applicationPrompt',
-  'goodApplication',
-  'distractors',
-  '如果同學在',
-  '容易犯的錯',
-]
-for (const signal of genericQuestionSignals) {
-  if (!foundation.includes(signal)) failures.push(`foundation audit expectation changed: missing known metacognitive signal ${signal}`)
+for (const oldMetaSignal of ['applicationPrompt', 'goodApplication', 'distractors']) {
+  if (!foundation.includes(oldMetaSignal)) warnings.push(`legacy foundation generator signal not found: ${oldMetaSignal}`)
 }
-warnings.push('foundation question generator is intentionally classified as metacognitive/self-check content, not a textbook subject question bank')
-
-if (!player.includes('getUnitAuditSnapshot')) failures.push('active paged player must render v10 curriculum audit status directly')
-if (!player.includes('getCurriculumUnitContent')) failures.push('active paged player must distinguish available content from strict reviewed content')
-if (!player.includes('isReviewedUnit')) failures.push('active paged player must use strict human-review status')
-const explicitQuestionBankWarnings = [
-  '非正式題庫',
-  '非教科書級題庫',
-  '不能當作正式教科書題庫',
-  '不能計入正式教科書題庫',
-]
-if (!explicitQuestionBankWarnings.some((phrase) => player.includes(phrase))) {
-  failures.push('foundation content must visibly warn that generic checks are not a formal textbook question bank')
+if (!aggregator.includes('upgradeFoundationUnitV12')) failures.push('foundation content must be upgraded through the v12 subject-question layer before rendering')
+for (const subjectSignal of [
+  '3x+5=20',
+  '沉著',
+  'Mia goes to the library after school on Tuesday',
+  'science-animal-cell-zhtw',
+  'social-taiwan-relief',
+]) {
+  if (!foundationV12.includes(subjectSignal)) failures.push(`v12 foundation subject question evidence missing: ${subjectSignal}`)
 }
 
-if (!activeExport.includes("from './CurriculumCourseAppV8'")) failures.push('active export must use stable v8 visual layer directly; v9 DOM status observer should be retired after v10 status is rendered in V5')
-if (activeExport.includes('CurriculumCourseAppV9')) failures.push('active export must not route through the old v9 status MutationObserver')
+for (const disjointSignal of [
+  'splitQuestionBank',
+  'groups.guided',
+  'groups.practice',
+  'groups.assessment',
+]) {
+  if (!player.includes(disjointSignal)) failures.push(`V12 lesson question partition missing ${disjointSignal}`)
+}
+if (player.includes("lesson.kind === 'launch') return all.slice")) failures.push('launch must not reuse the same question pool as later lessons')
+if (player.includes("lesson.kind === 'example') return all.slice")) failures.push('worked-example lesson must not reuse the same question pool as later lessons')
+
+for (const readerLeak of [
+  'getUnitAuditSnapshot',
+  'getTrackPolicy',
+  'compactAuditLabel',
+  '課綱範圍已核對',
+  '教材初稿',
+  '教科書級 QA',
+  '品質層級',
+]) {
+  if (player.includes(readerLeak)) failures.push(`reader-facing V12 leaks internal audit detail: ${readerLeak}`)
+}
+if (!activeExport.includes("from './CurriculumCourseAppV8'")) failures.push('active export must use stable v8 visual layer')
+if (activeExport.includes('MutationObserver') || activeExport.includes('requestAnimationFrame')) failures.push('active export must not rewrite reader-facing DOM after render')
+if (!visualLayer.includes("from './CurriculumCourseAppV12'")) failures.push('stable visual layer must wrap V12 directly')
+
+for (const feature of ['optionFeedback', 'mediaAssetId', 'audioText', 'rubric']) {
+  if (!aggregator.includes(feature)) failures.push(`aggregator must preserve enhanced question field: ${feature}`)
+  if (!foundationV12.includes(feature)) failures.push(`foundation subject bank must be able to create enhanced field: ${feature}`)
+}
+if (!player.includes('QuestionMedia')) failures.push('reader player lacks question-bound media rendering')
+if (!player.includes('AudioPrompt')) failures.push('reader player lacks audio/TTS question rendering')
+if (!player.includes('curriculum-response-rubric')) failures.push('reader player lacks response rubric rendering')
+if (!player.includes('selectedFeedback')) failures.push('reader player lacks per-option diagnostic feedback')
 
 if (failures.length) {
   console.error('[textbook-audit] FAILED')
@@ -113,8 +136,8 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[textbook-audit] structural and quality-label gates passed')
+console.log('[textbook-audit] structural + scope + reader-separation + disjoint-question + enhanced-feedback gates passed')
 console.log(`[textbook-audit] grade 7 math supplement: 9 units, ${math7QuestionCount} extra subject questions, ${math7MisconceptionCount} misconception concepts`)
 console.log(`[textbook-audit] grade 7 science supplement: 6 units, ${science7QuestionCount} extra subject questions, ${science7MisconceptionCount} misconception concepts`)
 for (const warning of warnings) console.log(`[textbook-audit] NOTE: ${warning}`)
-console.log('[textbook-audit] textbook-ready units: 0 (intentional until full per-unit promotion gates are met)')
+console.log('[textbook-audit] textbook-ready units remain controlled by the internal promotion registry')

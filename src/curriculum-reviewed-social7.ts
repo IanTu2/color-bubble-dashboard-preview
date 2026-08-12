@@ -96,12 +96,12 @@ const civicsFamilyCommunity: ReviewedUnitContent = {
     {id:'g7-social-s1-u3-q1',kind:'choice',level:'理解',prompt:'哪個說法較符合「自我認同」？',options:['會受社會互動影響，也能經由反思逐步形成','出生後就完全固定不能改變','只由考試成績決定','只由朋友替自己決定'],correctIndex:0,explanation:'認同會在個人與社會互動中持續建構。'},
     {id:'g7-social-s1-u3-q2',kind:'choice',level:'理解',prompt:'「男生一定比較適合理工、女生一定比較適合照顧工作」主要問題是？',options:['把性別刻板印象當成個人能力判斷','太重視個人興趣','太重視職業能力','鼓勵多元選擇'],correctIndex:0,explanation:'性別不應被直接當作能力與職業適性的替代指標。'},
     {id:'g7-social-s1-u3-q3',kind:'choice',level:'理解',prompt:'下列哪個說法較符合家庭多樣性？',options:['家庭型態可能不同，但都可討論照顧、支持與責任','只有一種家庭才算家庭','家庭型態永遠不會改變','家庭只提供經濟功能'],correctIndex:0,explanation:'現代家庭有多樣形式與功能，不能以單一外型排除。'},
-    {id:'g7-social-s1-u3-q4',kind:'應用' as never,level:'應用',prompt:'社區居民發現校門口缺乏安全過街設施，哪個行動最像公共參與？',options:['蒐集資料、和學校及居民討論並向相關單位提出改善建議','只在私下抱怨但拒絕了解問題','散布未查證的事故數字','破壞道路設施'],correctIndex:0,explanation:'公共參與包含了解問題、溝通利害關係人與依法提出方案。'},
+    {id:'g7-social-s1-u3-q4',kind:'choice',level:'應用',prompt:'社區居民發現校門口缺乏安全過街設施，哪個行動最像公共參與？',options:['蒐集資料、和學校及居民討論並向相關單位提出改善建議','只在私下抱怨但拒絕了解問題','散布未查證的事故數字','破壞道路設施'],correctIndex:0,explanation:'公共參與包含了解問題、溝通利害關係人與依法提出方案。'},
     {id:'g7-social-s1-u3-q5',kind:'choice',level:'理解',prompt:'「終身學習」最適合怎麼理解？',options:['離開學校後仍持續因生活與工作需要學習','只有學生需要學習','成年後知識不再改變','只等於參加補習班'],correctIndex:0,explanation:'學習可貫穿人生不同階段，形式也不限於學校。'},
     {id:'g7-social-s1-u3-q6',kind:'choice',level:'應用',context:'社區要把一塊空地改成停車場或公園。',prompt:'哪個做法較有助公共討論？',options:['蒐集使用需求與影響，讓不同居民表達理由再比較方案','只讓最先發言的人決定','把不同意見視為敵人','完全不需要資料'],correctIndex:0,explanation:'公共議題需要資訊、理由與不同利害關係人的參與。'},
     {id:'g7-social-s1-u3-q7',kind:'choice',level:'檢核',prompt:'家庭功能會改變，最合理的原因之一是？',options:['就業型態、人口結構與公共服務都會變化','所有家庭都必須變成同一型態','法律禁止家庭提供支持','家庭完全不受社會影響'],correctIndex:0,explanation:'社會與制度變遷會改變家庭如何分工與獲得支持。'},
     {id:'g7-social-s1-u3-q8',kind:'response',level:'檢核',prompt:'請舉一個校園或社區公共議題，列出至少兩個可能受影響的群體，以及你會先蒐集什麼資料。',sampleAnswer:'例如校門口交通：學生與家長、附近居民與店家都受影響；可蒐集車流、人流、事故、違停時段與接送需求，再比較改善方案。',explanation:'公民參與從辨認問題、利害關係人與證據開始。'},
-  ] as any,
+  ],
   takeaway: ['自我認同在社會互動與反思中形成。','性別不應直接決定能力與角色。','家庭型態與功能具有多樣性。','教育與學習跨越人生階段。','社區公共事務也是公民參與。'],
 }
 
@@ -133,10 +133,10 @@ const geoTaiwanHuman: ReviewedUnitContent = {
     {id:'g7-social-s2-u1-q3',kind:'choice',level:'應用',context:'A 市 100 萬人、1000 km²；B 市 60 萬人、300 km²。',prompt:'哪個人口密度較高？',options:['B 市','A 市','一樣','無法計算'],correctIndex:0,explanation:'A=1000 人/km²；B=2000 人/km²。'},
     {id:'g7-social-s2-u1-q4',kind:'choice',level:'理解',prompt:'下列哪個屬第三級產業？',options:['零售服務','稻米種植','鋼鐵製造','採礦'],correctIndex:0,explanation:'服務業屬第三級產業。'},
     {id:'g7-social-s2-u1-q5',kind:'choice',level:'應用',prompt:'新捷運線開通後沿線住宅與商業快速增加，最適合用哪個概念解釋？',options:['交通可達性與都市發展互相影響','氣候完全決定房價','所有人都離開都市','交通和土地利用無關'],correctIndex:0,explanation:'交通改善會改變區位條件，土地利用也可能隨之變化。'},
-    {id:'g7-social-s2-u1-q6',kind:'理解' as never,level:'理解',prompt:'臺灣年雨量高卻仍可能缺水，哪個原因較合理？',options:['降雨時間分布不均且水不一定能全部儲存','雨水碰到地面就全部消失','年雨量數字一定錯','只要有颱風就永遠不缺水'],correctIndex:0,explanation:'水資源要看降雨季節、儲水、地形與需求。'},
+    {id:'g7-social-s2-u1-q6',kind:'choice',level:'理解',prompt:'臺灣年雨量高卻仍可能缺水，哪個原因較合理？',options:['降雨時間分布不均且水不一定能全部儲存','雨水碰到地面就全部消失','年雨量數字一定錯','只要有颱風就永遠不缺水'],correctIndex:0,explanation:'水資源要看降雨季節、儲水、地形與需求。'},
     {id:'g7-social-s2-u1-q7',kind:'choice',level:'檢核',prompt:'哪一項最可能促成人口向都市集中？',options:['就業與教育機會較多、交通與服務集中','所有都市土地都免費','都市完全沒有任何成本','農村不能居住'],correctIndex:0,explanation:'遷移通常由多種推拉因素共同作用。'},
     {id:'g7-social-s2-u1-q8',kind:'response',level:'檢核',prompt:'選一個臺灣區域，說明「自然條件、交通、產業」如何共同影響它的發展。',sampleAnswer:'例如西部都會區：平原較廣、交通網密集，製造與服務業集中，形成就業與人口吸引力；但仍要考慮各城市歷史與政策差異。',explanation:'區域分析要把多個條件連起來，而不是只列特色。'},
-  ] as any,
+  ],
   takeaway: ['天氣是短期，氣候是長期統計特徵。','水資源看時間分布、儲存與需求。','人口密度不等於總人口。','產業與交通會改變人口與都市分布。','區域內部也有差異。'],
 }
 
@@ -203,12 +203,12 @@ const civicsSociety: ReviewedUnitContent = {
     {id:'g7-social-s2-u3-q1',kind:'choice',level:'理解',prompt:'下列哪個最接近「社會規範」？',options:['影響群體成員行為期待的規則與標準','只有刑法才算規範','所有個人喜好都具有法律強制力','只有學校成績'],correctIndex:0,explanation:'社會規範包括多種來源，法律只是其中一類。'},
     {id:'g7-social-s2-u3-q2',kind:'choice',level:'理解',prompt:'「所有某族群的人都很會唱歌」最接近什麼？',options:['刻板印象','精確統計結論','法律條文','自然定律'],correctIndex:0,explanation:'把群體成員簡化成固定特質，是刻板印象。'},
     {id:'g7-social-s2-u3-q3',kind:'choice',level:'理解',prompt:'哪個最可能屬非物質文化？',options:['語言與價值觀','一棟建築物本身','一件陶器本身','一台手機硬體'],correctIndex:0,explanation:'語言、規範、價值與信仰屬文化的非物質面向。'},
-    {id:'g7-social-s2-u3-q4',kind:'應用' as never,level:'應用',context:'班級討論是否要禁止使用手機，有人贊成、有人反對。',prompt:'哪個做法最有助處理衝突？',options:['先釐清需求與影響，再共同討論可接受規則','要求反對者閉嘴','散布對方謠言','完全不需要規則'],correctIndex:0,explanation:'衝突可以透過資訊、溝通與規則形成較可接受安排。'},
+    {id:'g7-social-s2-u3-q4',kind:'choice',level:'應用',context:'班級討論是否要禁止使用手機，有人贊成、有人反對。',prompt:'哪個做法最有助處理衝突？',options:['先釐清需求與影響，再共同討論可接受規則','要求反對者閉嘴','散布對方謠言','完全不需要規則'],correctIndex:0,explanation:'衝突可以透過資訊、溝通與規則形成較可接受安排。'},
     {id:'g7-social-s2-u3-q5',kind:'choice',level:'理解',prompt:'下列哪個最可能造成社會變遷？',options:['科技、人口、經濟與制度變化都可能','只有天氣一個因素','社會永遠不變','只要個人想法改變整個社會立刻相同改變'],correctIndex:0,explanation:'社會變遷通常是多因素長期互動。'},
     {id:'g7-social-s2-u3-q6',kind:'choice',level:'應用',prompt:'社會保險最接近哪個概念？',options:['共同分擔疾病、老年或失業等風險','保證每個人永遠不生病','只讓最有錢的人使用','完全取代所有家庭與個人責任'],correctIndex:0,explanation:'社會保險以制度化方式分散人生風險。'},
     {id:'g7-social-s2-u3-q7',kind:'choice',level:'檢核',context:'公司只因求職者來自某族群就拒絕面試。',prompt:'這最接近哪個概念？',options:['歧視行為','單純文化差異','中立統計','自然現象'],correctIndex:0,explanation:'以群體身分作無關工作的不利處理，涉及歧視問題。'},
     {id:'g7-social-s2-u3-q8',kind:'response',level:'檢核',prompt:'請舉一個「形式上相同，但可能不公平」的例子，並說明為什麼。',sampleAnswer:'例如所有人都只能走樓梯看似規則相同，但對輪椅使用者形成無法進入的障礙；提供無障礙坡道能改善實質參與機會。',explanation:'這題檢查能否區分一律相同待遇與公平機會。'},
-  ] as any,
+  ],
   takeaway: ['社會互動包含合作與衝突。','規範有多種來源，法律不是全部。','文化差異不等於高低。','刻板印象、偏見與歧視要區分。','社會福利是共同分擔部分人生風險。'],
 }
 
