@@ -7,6 +7,7 @@ export type {
   ReviewedUnitContent,
 } from './curriculum-reviewed-social10'
 export type { FoundationUnitContent } from './curriculum-foundation-content'
+export type { CurriculumQuestionEnhancement } from './curriculum-foundation-question-bank-v12'
 
 import { getReviewedUnitContent as getSocial10UnitContent } from './curriculum-reviewed-social10'
 import { getReviewedMath7UnitContentV2 } from './curriculum-reviewed-math7-v2'
@@ -17,6 +18,10 @@ import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
 import { getFoundationUnitContent, type FoundationUnitContent } from './curriculum-foundation-content'
 import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import { getScience7TextbookSupplement } from './curriculum-textbook-supplement-science7'
+import {
+  upgradeFoundationUnitV12,
+  type CurriculumQuestionEnhancement,
+} from './curriculum-foundation-question-bank-v12'
 import type {
   ReviewedChoiceQuestion,
   ReviewedQuestion,
@@ -25,11 +30,17 @@ import type {
 } from './curriculum-reviewed-social10'
 
 export type CurriculumUnitContent = ReviewedUnitContent | FoundationUnitContent
+export type EnhancedCurriculumQuestion = ReviewedQuestion & CurriculumQuestionEnhancement
 
 function stableHash(value: string) {
   let hash = 0
   for (let index = 0; index < value.length; index += 1) hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0
   return Math.abs(hash)
+}
+
+function rotate<T>(items: T[], shift: number) {
+  if (!items.length) return items
+  return [...items.slice(shift), ...items.slice(0, shift)]
 }
 
 function normalizeChoiceQuestion(question: Record<string, unknown>): ReviewedChoiceQuestion | null {
@@ -42,22 +53,31 @@ function normalizeChoiceQuestion(question: Record<string, unknown>): ReviewedCho
   const rawCorrectIndex = Number(question.correctIndex ?? 0)
   const safeCorrectIndex = Number.isInteger(rawCorrectIndex) && rawCorrectIndex >= 0 && rawCorrectIndex < options.length ? rawCorrectIndex : 0
   const shift = stableHash(id) % options.length
+  const rawFeedback = Array.isArray(question.optionFeedback)
+    ? question.optionFeedback.map((item) => String(item))
+    : []
+  const optionFeedback = rawFeedback.length === options.length ? rotate(rawFeedback, shift) : undefined
 
-  return {
+  const normalized = {
     id,
     kind: 'choice',
     level: (question.level as ReviewedChoiceQuestion['level']) ?? '理解',
     context: typeof question.context === 'string' ? question.context : undefined,
     prompt: String(question.prompt ?? ''),
-    options: [...options.slice(shift), ...options.slice(0, shift)],
+    options: rotate(options, shift),
     correctIndex: (safeCorrectIndex - shift + options.length) % options.length,
     explanation: String(question.explanation ?? ''),
-  }
+    optionFeedback,
+    mediaAssetId: typeof question.mediaAssetId === 'string' ? question.mediaAssetId : undefined,
+    audioText: typeof question.audioText === 'string' ? question.audioText : undefined,
+  } as ReviewedChoiceQuestion & CurriculumQuestionEnhancement
+
+  return normalized
 }
 
 function normalizeResponseQuestion(question: Record<string, unknown>): ReviewedResponseQuestion | null {
   if (typeof question.sampleAnswer !== 'string') return null
-  return {
+  const normalized = {
     id: String(question.id ?? ''),
     kind: 'response',
     level: (question.level as ReviewedResponseQuestion['level']) ?? '理解',
@@ -65,7 +85,11 @@ function normalizeResponseQuestion(question: Record<string, unknown>): ReviewedR
     prompt: String(question.prompt ?? ''),
     sampleAnswer: question.sampleAnswer,
     explanation: String(question.explanation ?? ''),
-  }
+    mediaAssetId: typeof question.mediaAssetId === 'string' ? question.mediaAssetId : undefined,
+    audioText: typeof question.audioText === 'string' ? question.audioText : undefined,
+    rubric: Array.isArray(question.rubric) ? question.rubric.map((item) => String(item)) : undefined,
+  } as ReviewedResponseQuestion & CurriculumQuestionEnhancement
+  return normalized
 }
 
 function sanitizeQuestions<T extends CurriculumUnitContent>(unit: T | null): T | null {
@@ -139,10 +163,10 @@ export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitConten
 export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
   const reviewed = getStrictReviewedUnitContent(unitId)
   if (reviewed) return reviewed
-  return sanitizeQuestions(getFoundationUnitContent(unitId))
+  return sanitizeQuestions(upgradeFoundationUnitV12(getFoundationUnitContent(unitId)))
 }
 
-// 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與 v10 audit registry 判斷。
+// 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與內部 audit registry 判斷。
 export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   return getCurriculumUnitContent(unitId) as ReviewedUnitContent | null
 }
