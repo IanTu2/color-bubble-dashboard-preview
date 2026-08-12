@@ -6,6 +6,7 @@ export type {
   ReviewedWorkedExample,
   ReviewedUnitContent,
 } from './curriculum-reviewed-social10'
+export type { FoundationUnitContent } from './curriculum-foundation-content'
 
 import { getReviewedUnitContent as getSocial10UnitContent } from './curriculum-reviewed-social10'
 import { getReviewedMath7UnitContentV2 } from './curriculum-reviewed-math7-v2'
@@ -13,12 +14,15 @@ import { getReviewedScience7UnitContent } from './curriculum-reviewed-science7'
 import { getReviewedChinese7UnitContent } from './curriculum-reviewed-chinese7'
 import { getReviewedEnglish7UnitContent } from './curriculum-reviewed-english7'
 import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
+import { getFoundationUnitContent, type FoundationUnitContent } from './curriculum-foundation-content'
 import type {
   ReviewedChoiceQuestion,
   ReviewedQuestion,
   ReviewedResponseQuestion,
   ReviewedUnitContent,
 } from './curriculum-reviewed-social10'
+
+export type CurriculumUnitContent = ReviewedUnitContent | FoundationUnitContent
 
 function stableHash(value: string) {
   let hash = 0
@@ -62,37 +66,50 @@ function normalizeResponseQuestion(question: Record<string, unknown>): ReviewedR
   }
 }
 
-function sanitizeReviewedUnit(unit: ReviewedUnitContent | null): ReviewedUnitContent | null {
+function sanitizeQuestions<T extends CurriculumUnitContent>(unit: T | null): T | null {
   if (!unit) return null
   return {
     ...unit,
     questions: unit.questions.map((question): ReviewedQuestion => {
       const raw = question as unknown as Record<string, unknown>
-      // 以實際資料欄位決定題型，而不是完全相信作者檔的 kind 字串。
-      // 這可避免編輯時誤打 kind 讓有選項的題目被 UI 當成開放題。
       const normalizedChoice = normalizeChoiceQuestion(raw)
       if (normalizedChoice) return normalizedChoice
 
       const normalizedResponse = normalizeResponseQuestion(raw)
       if (normalizedResponse) return normalizedResponse
 
-      // Reviewed source 正常情況不會進到這裡；保留原題讓 TypeScript 與 QA
-      // 能繼續暴露資料缺欄，而不是偷偷造一個假的參考答案。
       return question
     }),
-  }
+  } as T
 }
 
-export function getReviewedUnitContent(unitId: string) {
+export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   const raw = getSocial10UnitContent(unitId)
     ?? getReviewedMath7UnitContentV2(unitId)
     ?? getReviewedScience7UnitContent(unitId)
     ?? getReviewedChinese7UnitContent(unitId)
     ?? getReviewedEnglish7UnitContent(unitId)
     ?? getReviewedSocial7UnitContent(unitId)
-  return sanitizeReviewedUnit(raw)
+  return sanitizeQuestions(raw)
+}
+
+export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
+  const reviewed = getStrictReviewedUnitContent(unitId)
+  if (reviewed) return reviewed
+  return sanitizeQuestions(getFoundationUnitContent(unitId))
+}
+
+// 舊 player 的 buildPages 型別仍接受 ReviewedUnitContent；v9 foundation 在執行期
+// 擁有完全相同的 concepts/workedExamples/questions/takeaway 結構，只把審閱狀態另外交給
+// isReviewedUnit / getCurriculumUnitContent 判斷，避免 UI 把「有內容」誤寫成「已審閱」。
+export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
+  return getCurriculumUnitContent(unitId) as ReviewedUnitContent | null
 }
 
 export function isReviewedUnit(unitId: string) {
-  return Boolean(getReviewedUnitContent(unitId))
+  return Boolean(getStrictReviewedUnitContent(unitId))
+}
+
+export function hasCurriculumUnitContent(unitId: string) {
+  return Boolean(getCurriculumUnitContent(unitId))
 }
