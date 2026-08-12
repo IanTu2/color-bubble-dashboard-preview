@@ -8,6 +8,8 @@ const warnings = []
 
 const registry = read('src/curriculum-audit-registry.ts')
 const scope7 = read('src/curriculum-official-scope-math7.ts')
+const supplement7 = read('src/curriculum-textbook-supplement-math7.ts')
+const aggregator = read('src/curriculum-reviewed-content.ts')
 const foundation = read('src/curriculum-foundation-content.ts')
 const player = read('src/components/CurriculumCourseAppV5.tsx')
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
@@ -37,7 +39,19 @@ for (const code of requiredMath7Codes) {
 }
 
 const math7UnitIds = [...scope7.matchAll(/unitId:\s*'([^']+)'/g)].map((match) => match[1])
-if (new Set(math7UnitIds).size !== 9) failures.push(`grade 7 math official scope should map 9 units, found ${new Set(math7UnitIds).size}`)
+const uniqueMath7UnitIds = new Set(math7UnitIds)
+if (uniqueMath7UnitIds.size !== 9) failures.push(`grade 7 math official scope should map 9 units, found ${uniqueMath7UnitIds.size}`)
+
+for (const unitId of uniqueMath7UnitIds) {
+  if (!supplement7.includes(`unitId: '${unitId}'`)) failures.push(`grade 7 math textbook supplement missing ${unitId}`)
+}
+const supplementalQuestionCount = (supplement7.match(/supp-q\d+/g) ?? []).length
+const supplementalExampleCount = (supplement7.match(/workedExamples:\s*\[/g) ?? []).length
+const misconceptionCount = (supplement7.match(/title:\s*'常見迷思/g) ?? []).length
+if (supplementalQuestionCount < 36) failures.push(`grade 7 math supplement questions ${supplementalQuestionCount} < 36`)
+if (supplementalExampleCount < 9) failures.push(`grade 7 math supplement worked examples ${supplementalExampleCount < 9 ? supplementalExampleCount : 9} < 9`)
+if (misconceptionCount < 18) failures.push(`grade 7 math misconception concepts ${misconceptionCount} < 18`)
+if (!aggregator.includes('getMath7TextbookSupplement')) failures.push('grade 7 math textbook supplement is not wired into reviewed content')
 
 const genericQuestionSignals = [
   'applicationPrompt',
@@ -67,5 +81,6 @@ if (failures.length) {
 }
 
 console.log('[textbook-audit] structural and quality-label gates passed')
+console.log(`[textbook-audit] grade 7 math supplement: 9 units, ${supplementalQuestionCount} extra subject questions, ${misconceptionCount} misconception concepts`)
 for (const warning of warnings) console.log(`[textbook-audit] NOTE: ${warning}`)
 console.log('[textbook-audit] textbook-ready units: 0 (intentional until full per-unit promotion gates are met)')
