@@ -1,7 +1,7 @@
 import {
-  CurriculumCourseApp as CurriculumCourseAppV13,
+  CurriculumCourseApp as CurriculumCourseAppV14,
   type CurriculumCourseSelection,
-} from './CurriculumCourseAppV13'
+} from './CurriculumCourseAppV14'
 import type { Language } from '../types'
 
 export type { CurriculumCourseSelection }
@@ -12,6 +12,6 @@ type Props = CurriculumCourseSelection & {
 }
 
 export function CurriculumCourseApp(props: Props) {
-  const routeKey = `${props.grade}-${props.subject}-${props.pathway ?? 'base'}`
-  return <CurriculumCourseAppV13 key={routeKey} {...props} />
+  const routeKey = `${props.grade}-${props.subject}-${props.pathway ?? 'base'}-textbook-v14`
+  return <CurriculumCourseAppV14 key={routeKey} {...props} />
 }
