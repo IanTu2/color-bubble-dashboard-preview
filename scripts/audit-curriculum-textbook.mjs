@@ -102,8 +102,8 @@ for (const disjointSignal of [
 ]) {
   if (!player.includes(disjointSignal)) failures.push(`V12 lesson question partition missing ${disjointSignal}`)
 }
-if (player.includes("lesson.kind === 'launch') return all.slice") failures.push('launch must not reuse the same question pool as later lessons')
-if (player.includes("lesson.kind === 'example') return all.slice") failures.push('worked-example lesson must not reuse the same question pool as later lessons')
+if (player.includes("lesson.kind === 'launch') return all.slice")) failures.push('launch must not reuse the same question pool as later lessons')
+if (player.includes("lesson.kind === 'example') return all.slice")) failures.push('worked-example lesson must not reuse the same question pool as later lessons')
 
 for (const readerLeak of [
   'getUnitAuditSnapshot',
