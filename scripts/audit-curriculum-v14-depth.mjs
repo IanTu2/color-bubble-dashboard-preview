@@ -6,6 +6,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
 const failures = []
 
 const depth = read('src/curriculum-textbook-depth-v14.ts')
+const lifeDepth = read('src/curriculum-life-depth-v14.ts')
 const aggregator = read('src/curriculum-reviewed-content.ts')
 const inventory = read('scripts/report-curriculum-audit.mjs')
 const registry = read('src/curriculum-audit-registry.ts')
@@ -42,9 +43,23 @@ for (const subjectBranch of [
   if (!depth.includes(subjectBranch)) failures.push(`V14 depth engine missing subject-specific branch: ${subjectBranch}`)
 }
 
+for (const token of [
+  'specializeLifeDepthV14',
+  '常見迷思：我覺得就是我觀察到的事實',
+  '常見迷思：合作就是大家一起做，不需要分工和比較',
+  '錯誤診斷：把「我覺得」改成可以比較的觀察',
+  '轉移示範：把探究方法帶到新的生活問題',
+  '生活課程課程綱要',
+]) {
+  if (!lifeDepth.includes(token)) failures.push(`V14 Life specialization missing: ${token}`)
+}
+
 if (!aggregator.includes('enrichFoundationUnitV14')) failures.push('content aggregator does not import V14 depth enrichment')
-if (!aggregator.includes('sanitizeQuestions(enrichFoundationUnitV14(withLifeQuestions))')) failures.push('V14 depth enrichment must run after V12/Life question construction and before sanitization')
-if (!aggregator.includes("unitId.includes('-life-')")) failures.push('Life Curriculum override must remain before V14 depth enrichment')
+if (!aggregator.includes('specializeLifeDepthV14')) failures.push('content aggregator does not import Life V14 specialization')
+if (!aggregator.includes('const deepened = enrichFoundationUnitV14(withLifeQuestions)')) failures.push('V14 depth enrichment must run after V12/Life question construction')
+if (!aggregator.includes("const specialized = unitId.includes('-life-') ? specializeLifeDepthV14(deepened) : deepened")) failures.push('Life specialization must run after generic V14 enrichment')
+if (!aggregator.includes('return sanitizeQuestions(specialized)')) failures.push('sanitization must run after V14/Life enrichment')
+if (!aggregator.includes("unitId.includes('-life-')")) failures.push('Life Curriculum override must remain in aggregator')
 
 for (const token of ['foundationDepthReadyUnits !== 420','foundationDraftUnits = 0','version: \'v14-textbook-depth\'']) {
   if (!inventory.includes(token)) failures.push(`V14 inventory missing assertion: ${token}`)
@@ -66,7 +81,7 @@ if (!life.includes('buildLifeCurriculumQuestionsV13')) failures.push('Life Curri
 
 // Content-quality hygiene: no missing-material placeholders or fake references.
 for (const phrase of ['看到一張統計圖後','依圖表而異','依文本而異','答案依題目而異','根據下圖','依下圖','觀察下圖','請看下圖','如圖所示','依附圖']) {
-  if (depth.includes(phrase)) failures.push(`V14 depth engine contains missing-material wording: ${phrase}`)
+  if (depth.includes(phrase) || lifeDepth.includes(phrase)) failures.push(`V14 depth content contains missing-material wording: ${phrase}`)
 }
 
 if (failures.length) {
@@ -75,6 +90,6 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-v14-depth] all Foundation units receive textbook-depth enrichment contract')
+console.log('[curriculum-v14-depth] Foundation textbook-depth + Life specialization contracts passed')
 console.log('[curriculum-v14-depth] gate: concepts>=6 misconceptions>=2 workedExamples>=3 questions>=12 choice>=6 response>=2 rubric>=1 + diagnosis + transfer')
 console.log('[curriculum-v14-depth] certification remains separate: depth-ready does not equal textbook-ready')
