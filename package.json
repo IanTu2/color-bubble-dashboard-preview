@@ -7,7 +7,8 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-curriculum-textbook.mjs",
+    "curriculum:inventory": "node scripts/report-curriculum-audit.mjs",
+    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-curriculum-textbook.mjs && npm run curriculum:inventory",
     "predev": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "dev": "vite",
     "prebuild": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
