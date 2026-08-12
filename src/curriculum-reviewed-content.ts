@@ -17,6 +17,9 @@ import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
 import { getFoundationUnitContent, type FoundationUnitContent } from './curriculum-foundation-content'
 import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import { getScience7TextbookSupplement } from './curriculum-textbook-supplement-science7'
+import { getChinese7TextbookSupplement } from './curriculum-textbook-supplement-chinese7'
+import { getEnglish7TextbookSupplement } from './curriculum-textbook-supplement-english7'
+import { getSocial7TextbookSupplement } from './curriculum-textbook-supplement-social7'
 import type {
   ReviewedChoiceQuestion,
   ReviewedQuestion,
@@ -85,42 +88,61 @@ function sanitizeQuestions<T extends CurriculumUnitContent>(unit: T | null): T |
   } as T
 }
 
+function mergeSupplement(unit: ReviewedUnitContent, supplement: {
+  misconceptionConcepts: ReviewedUnitContent['concepts']
+  workedExamples: ReviewedUnitContent['workedExamples']
+  questions: ReviewedUnitContent['questions']
+}, researchNote: string, takeaway: string): ReviewedUnitContent {
+  return {
+    ...unit,
+    researchBasis: Array.from(new Set([...unit.researchBasis, researchNote])),
+    concepts: [...unit.concepts, ...supplement.misconceptionConcepts],
+    workedExamples: [...unit.workedExamples, ...supplement.workedExamples],
+    questions: [...unit.questions, ...supplement.questions],
+    takeaway: Array.from(new Set([...unit.takeaway, takeaway])),
+  }
+}
+
 function enrichStrictReviewedUnit(unit: ReviewedUnitContent, unitId: string): ReviewedUnitContent {
   const math7Supplement = getMath7TextbookSupplement(unitId)
-  if (math7Supplement) {
-    return {
-      ...unit,
-      researchBasis: Array.from(new Set([
-        ...unit.researchBasis,
-        'Bubble Space v10：國教院七年級數學學習內容代碼逐章核對＋教科書深度補強',
-      ])),
-      concepts: [...unit.concepts, ...math7Supplement.misconceptionConcepts],
-      workedExamples: [...unit.workedExamples, ...math7Supplement.workedExamples],
-      questions: [...unit.questions, ...math7Supplement.questions],
-      takeaway: Array.from(new Set([
-        ...unit.takeaway,
-        '除了會算，也要能辨認常見迷思、解釋方法理由，並把方法轉用到新的題型。',
-      ])),
-    }
-  }
+  if (math7Supplement) return mergeSupplement(
+    unit,
+    math7Supplement,
+    'Bubble Space v10：國教院七年級數學學習內容代碼逐章核對＋教科書深度補強',
+    '除了會算，也要能辨認常見迷思、解釋方法理由，並把方法轉用到新的題型。',
+  )
 
   const science7Supplement = getScience7TextbookSupplement(unitId)
-  if (science7Supplement) {
-    return {
-      ...unit,
-      researchBasis: Array.from(new Set([
-        ...unit.researchBasis,
-        'Bubble Space v10：國教院國中自然科學第四學習階段生物內容對照＋常見迷思與探究題補強',
-      ])),
-      concepts: [...unit.concepts, ...science7Supplement.misconceptionConcepts],
-      workedExamples: [...unit.workedExamples, ...science7Supplement.workedExamples],
-      questions: [...unit.questions, ...science7Supplement.questions],
-      takeaway: Array.from(new Set([
-        ...unit.takeaway,
-        '科學結論要區分觀察、推論與證據範圍；能說明常見錯誤為什麼錯，才算真正理解。',
-      ])),
-    }
-  }
+  if (science7Supplement) return mergeSupplement(
+    unit,
+    science7Supplement,
+    'Bubble Space v10：國教院國中自然科學第四學習階段生物內容對照＋常見迷思與探究題補強',
+    '科學結論要區分觀察、推論與證據範圍；能說明常見錯誤為什麼錯，才算真正理解。',
+  )
+
+  const chinese7Supplement = getChinese7TextbookSupplement(unitId)
+  if (chinese7Supplement) return mergeSupplement(
+    unit,
+    chinese7Supplement,
+    'Bubble Space v11：國教院國語文第四學習階段閱讀／篇章／文言／寫作內容對照＋自寫文本題補強',
+    '國文理解要回到完整文本與可指出的語詞／篇章證據；寫作則要讓選材、結構與修訂服務表達目的。',
+  )
+
+  const english7Supplement = getEnglish7TextbookSupplement(unitId)
+  if (english7Supplement) return mergeSupplement(
+    unit,
+    english7Supplement,
+    'Bubble Space v11：國教院英語文第四學習階段聽說讀寫／綜合應用方向對照＋生活溝通題補強',
+    '英文文法要放進訊息、對話、短文、表格與實際回應；只會選形式不等於能溝通。',
+  )
+
+  const social7Supplement = getSocial7TextbookSupplement(unitId)
+  if (social7Supplement) return mergeSupplement(
+    unit,
+    social7Supplement,
+    'Bubble Space v11：國教院社會領域國中臺灣地理／臺灣史／公民社會生活內容對照＋資料／史料／公共議題題補強',
+    '社會科要能辨識資料來源、時間／空間尺度與制度脈絡，並用證據支持判斷。',
+  )
 
   return unit
 }
@@ -142,7 +164,7 @@ export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent 
   return sanitizeQuestions(getFoundationUnitContent(unitId))
 }
 
-// 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與 v10 audit registry 判斷。
+// 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與 audit registry 判斷。
 export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   return getCurriculumUnitContent(unitId) as ReviewedUnitContent | null
 }
