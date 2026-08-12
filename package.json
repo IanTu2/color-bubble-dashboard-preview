@@ -8,7 +8,8 @@
   },
   "scripts": {
     "curriculum:inventory": "node scripts/report-curriculum-audit.mjs",
-    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-curriculum-textbook.mjs && npm run curriculum:inventory",
+    "curriculum:source-audit": "node scripts/audit-curriculum-source.mjs",
+    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-curriculum-textbook.mjs && node scripts/audit-grade7-v11.mjs && npm run curriculum:source-audit && npm run curriculum:inventory",
     "predev": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "dev": "vite",
     "prebuild": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",

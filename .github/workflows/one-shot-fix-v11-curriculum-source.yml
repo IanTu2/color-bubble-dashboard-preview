@@ -1,0 +1,73 @@
+name: One-shot v11 curriculum source cleanup
+
+on:
+  push:
+    branches:
+      - feat/curriculum-audit-grade7-languages-social-v11
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/curriculum-audit-grade7-languages-social-v11
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Repair exact legacy source defects
+        shell: python
+        run: |
+          from pathlib import Path
+
+          math = Path('src/curriculum-reviewed-math7-v2.ts')
+          science = Path('src/curriculum-reviewed-science7.ts')
+
+          math_text = math.read_text(encoding='utf-8')
+          science_text = science.read_text(encoding='utf-8')
+
+          expected = {
+              "math-understanding": math_text.count("kind: '理解'"),
+              "math-application": math_text.count("kind: '應用'"),
+              "science-understanding": science_text.count("kind: '理解'"),
+              "science-foreign-token": science_text.count('בלבד'),
+          }
+          if expected != {
+              'math-understanding': 1,
+              'math-application': 1,
+              'science-understanding': 1,
+              'science-foreign-token': 1,
+          }:
+              raise SystemExit(f'Unexpected legacy defect fingerprint: {expected}')
+
+          math_text = math_text.replace("kind: '理解'", "kind: 'choice', level: '理解'", 1)
+          math_text = math_text.replace("kind: '應用'", "kind: 'choice', level: '應用'", 1)
+          science_text = science_text.replace("kind: '理解'", "kind: 'choice', level: '理解'", 1)
+          science_text = science_text.replace('בלבד', '', 1)
+
+          math.write_text(math_text, encoding='utf-8')
+          science.write_text(science_text, encoding='utf-8')
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Verify source audit after cleanup
+        run: npm run curriculum:source-audit
+
+      - name: Remove this one-shot workflow
+        run: git rm .github/workflows/one-shot-fix-v11-curriculum-source.yml
+
+      - name: Commit repaired source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/curriculum-reviewed-math7-v2.ts src/curriculum-reviewed-science7.ts
+          git commit -m "fix: clean legacy curriculum question source"
+          git push origin HEAD:feat/curriculum-audit-grade7-languages-social-v11

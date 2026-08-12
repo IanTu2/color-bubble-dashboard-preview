@@ -16,15 +16,13 @@ const structuralBlockers = {
 }
 const structuralBlockerUnits = Object.values(structuralBlockers).reduce((sum, value) => sum + value, 0)
 
-// 已逐單元對照正式範圍的 checkpoint：
-// 七年級數學 9 章 + 七年級生物平台序列 6 單元。
-const scopeVerifiedUnits = 9 + 6
+// v11 checkpoint：七年級五科都已完成正式範圍／學習階段對照。
+// 數學 9 章；國文、英文、自然、社會各 6 單元，共 33。
+const scopeVerifiedUnits = 9 + 6 + 6 + 6 + 6
 
-// 仍屬舊人工 reviewed、但尚未完成 v10 官方 scope mapping：
-// 七年級國文、英文、社會各 6 單元。
-// 高一社會 6 單元雖為人工內容，但優先被「高中社會需分科」結構 gate 擋住，
-// 因此不在這裡重複計數。
-const legacyReviewedUnits = 6 + 6 + 6
+// 七年級原本的 legacy-reviewed 已全部在 v11 完成正式 scope mapping。
+// 高一社會雖有人工作者內容，但優先被「高中社會需分科」結構 gate 歸類，避免重複計數。
+const legacyReviewedUnits = 0
 
 const textbookReadyUnits = 0
 const foundationDraftUnits = totalUnits
@@ -55,7 +53,12 @@ if (totalUnits !== 363) {
   process.exit(1)
 }
 
-console.log('[curriculum-inventory] current v10 audit snapshot')
+if (scopeVerifiedUnits !== 33 || legacyReviewedUnits !== 0 || foundationDraftUnits !== 258 || structuralBlockerUnits !== 72) {
+  console.error('[curriculum-inventory] FAILED: v11 quality-tier counts drifted from the reviewed baseline')
+  process.exit(1)
+}
+
+console.log('[curriculum-inventory] current v11 audit snapshot')
 console.log(JSON.stringify(inventory, null, 2))
 console.log(`[curriculum-inventory] textbook-ready: ${textbookReadyUnits}/${totalUnits}`)
 console.log(`[curriculum-inventory] scope-verified: ${scopeVerifiedUnits}/${totalUnits}`)
