@@ -68,7 +68,15 @@ warnings.push('foundation question generator is intentionally classified as meta
 if (!player.includes('getUnitAuditSnapshot')) failures.push('active paged player must render v10 curriculum audit status directly')
 if (!player.includes('getCurriculumUnitContent')) failures.push('active paged player must distinguish available content from strict reviewed content')
 if (!player.includes('isReviewedUnit')) failures.push('active paged player must use strict human-review status')
-if (!player.includes('非正式題庫') && !player.includes('非教科書級題庫')) failures.push('foundation content must visibly warn that generic checks are not a formal textbook question bank')
+const explicitQuestionBankWarnings = [
+  '非正式題庫',
+  '非教科書級題庫',
+  '不能當作正式教科書題庫',
+  '不能計入正式教科書題庫',
+]
+if (!explicitQuestionBankWarnings.some((phrase) => player.includes(phrase))) {
+  failures.push('foundation content must visibly warn that generic checks are not a formal textbook question bank')
+}
 
 if (!activeExport.includes("from './CurriculumCourseAppV8'")) failures.push('active export must use stable v8 visual layer directly; v9 DOM status observer should be retired after v10 status is rendered in V5')
 if (activeExport.includes('CurriculumCourseAppV9')) failures.push('active export must not route through the old v9 status MutationObserver')
