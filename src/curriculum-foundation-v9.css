@@ -1,0 +1,23 @@
+.curriculum-course-v9 .curriculum-compact-meta .foundation {
+  border: 1px solid rgba(120, 168, 220, .28);
+  background: rgba(82, 134, 192, .12);
+  color: #a9cef5;
+}
+
+.curriculum-course-v9 .curriculum-review-badge.foundation {
+  border-color: rgba(103, 157, 212, .24);
+  background: rgba(75, 126, 180, .09);
+  color: rgba(219, 236, 255, .82);
+}
+
+html[data-theme='light'] .curriculum-course-v9 .curriculum-compact-meta .foundation {
+  border-color: rgba(46, 105, 161, .18);
+  background: rgba(63, 125, 183, .08);
+  color: #2b679d;
+}
+
+html[data-theme='light'] .curriculum-course-v9 .curriculum-review-badge.foundation {
+  border-color: rgba(46, 105, 161, .16);
+  background: rgba(83, 145, 199, .08);
+  color: #315f88;
+}
