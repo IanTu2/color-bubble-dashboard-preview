@@ -135,8 +135,7 @@ for (const file of sourceFiles) {
     if (relative === 'src/curriculum-reviewed-science7.ts') warnings.push(`${relative}: legacy foreign-token artifact remains in source and blocks textbook-ready promotion until cleaned`)
     else failures.push(`${relative}: unexpected foreign-token artifact בלבד`)
   }
-  const scriptKind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-  const sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKind)
+  const sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
   const visit = (node) => {
     visitObject(sourceFile, node)
     ts.forEachChild(node, visit)
