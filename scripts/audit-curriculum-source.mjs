@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import * as ts from 'typescript'
+import typescriptModule from 'typescript'
 
+const ts = typescriptModule.default ?? typescriptModule
 const root = process.cwd()
 const srcRoot = path.join(root, 'src')
 const failures = []
