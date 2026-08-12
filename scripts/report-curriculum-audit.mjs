@@ -1,40 +1,49 @@
-const SUBJECTS = ['chinese', 'english', 'math', 'science', 'social']
-const GRADES = Array.from({ length: 12 }, (_, index) => index + 1)
+// v13 active student-facing inventory.
+// Count only routes that a learner can actually open from getCurriculumRouteOptions;
+// legacy merged/ambiguous base roadmaps remain source compatibility data and are not counted as active courses.
 
-// 目前 base roadmap 每個年級／科目都是每學期 3 單元，共 6；
-// 七年級數學 v5 已改成 9 章，因此總量比 base 多 3。
-const baseTracks = SUBJECTS.length * GRADES.length
-const baseUnits = baseTracks * 6
-const grade7MathOverrideDelta = 3
-const totalUnits = baseUnits + grade7MathOverrideDelta
-
-const structuralBlockers = {
-  'grade1-2-science-social-life-course': 2 * 2 * 6,
-  'grade11-12-math-path-split': 2 * 6,
-  'grade10-12-science-discipline-split': 3 * 6,
-  'grade10-12-social-discipline-split': 3 * 6,
+const activeTracksByGrade = {
+  1: 4, // 國文、英文延伸、數學、生活課程
+  2: 4,
+  3: 5,
+  4: 5,
+  5: 5,
+  6: 5,
+  7: 5,
+  8: 5,
+  9: 5,
+  10: 10, // 國英數 + 自然四分科 + 社會三分科
+  11: 11, // 國英 + 數 A/B + 自然四分科 + 社會三分科
+  12: 11, // 國英 + 數甲/乙 + 自然四分科 + 社會三分科
 }
-const structuralBlockerUnits = Object.values(structuralBlockers).reduce((sum, value) => sum + value, 0)
 
-// 已逐單元對照正式範圍的 checkpoint：
-// 七年級數學 9 章 + 七年級生物平台序列 6 單元。
+const activeTracks = Object.values(activeTracksByGrade).reduce((sum, value) => sum + value, 0)
+const standardSixUnitTracks = activeTracks
+const grade7MathOverrideDelta = 3 // 七年級數學 9 章，其餘 active route 為每學年 6 單元
+const totalUnits = standardSixUnitTracks * 6 + grade7MathOverrideDelta
+
+// v13 student-facing routes no longer expose any known structural blocker:
+// - G1/2 uses integrated Life Curriculum rather than fake science/social separation.
+// - HS science/social are discipline paths.
+// - G11 math selects A/B; G12 selects Math 甲/乙.
+// Ambiguous legacy base routes are rejected by getCurriculumTrack and validCourse.
+const structuralBlockers = {}
+const structuralBlockerUnits = 0
+
+// Deep checkpoint unchanged by this structural migration:
+// Grade 7 math 9 units + Grade 7 science platform sequence 6 units.
 const scopeVerifiedUnits = 9 + 6
 
-// 仍屬舊人工 reviewed、但尚未完成 v10 官方 scope mapping：
-// 七年級國文、英文、社會各 6 單元。
-// 高一社會 6 單元雖為人工內容，但優先被「高中社會需分科」結構 gate 擋住，
-// 因此不在這裡重複計數。
+// Human-authored reviewed but not yet promoted through full textbook-ready gates:
+// Grade 7 Chinese, English, Social = 18 active units.
 const legacyReviewedUnits = 6 + 6 + 6
-
 const textbookReadyUnits = 0
-const foundationDraftUnits = totalUnits
-  - structuralBlockerUnits
-  - scopeVerifiedUnits
-  - legacyReviewedUnits
-  - textbookReadyUnits
+const foundationDraftUnits = totalUnits - scopeVerifiedUnits - legacyReviewedUnits - textbookReadyUnits
 
 const inventory = {
-  tracks: baseTracks,
+  version: 'v13-active-routes',
+  activeTracks,
+  activeTracksByGrade,
   totalUnits,
   textbookReadyUnits,
   scopeVerifiedUnits,
@@ -46,19 +55,29 @@ const inventory = {
 
 const classifiedTotal = textbookReadyUnits + scopeVerifiedUnits + legacyReviewedUnits + foundationDraftUnits + structuralBlockerUnits
 if (classifiedTotal !== totalUnits) {
-  console.error(`[curriculum-inventory] FAILED: classified ${classifiedTotal} units but roadmap contains ${totalUnits}`)
+  console.error(`[curriculum-inventory] FAILED: classified ${classifiedTotal} units but active routes contain ${totalUnits}`)
   process.exit(1)
 }
 
-if (totalUnits !== 363) {
-  console.error(`[curriculum-inventory] FAILED: expected current roadmap total 363, got ${totalUnits}`)
+if (activeTracks !== 75) {
+  console.error(`[curriculum-inventory] FAILED: expected 75 active v13 route tracks, got ${activeTracks}`)
   process.exit(1)
 }
 
-console.log('[curriculum-inventory] current v10 audit snapshot')
+if (totalUnits !== 453) {
+  console.error(`[curriculum-inventory] FAILED: expected active v13 total 453, got ${totalUnits}`)
+  process.exit(1)
+}
+
+if (structuralBlockerUnits !== 0) {
+  console.error(`[curriculum-inventory] FAILED: active v13 student routes still contain ${structuralBlockerUnits} structural blocker units`)
+  process.exit(1)
+}
+
+console.log('[curriculum-inventory] active v13 audit snapshot')
 console.log(JSON.stringify(inventory, null, 2))
 console.log(`[curriculum-inventory] textbook-ready: ${textbookReadyUnits}/${totalUnits}`)
 console.log(`[curriculum-inventory] scope-verified: ${scopeVerifiedUnits}/${totalUnits}`)
 console.log(`[curriculum-inventory] legacy-reviewed: ${legacyReviewedUnits}/${totalUnits}`)
 console.log(`[curriculum-inventory] foundation-draft: ${foundationDraftUnits}/${totalUnits}`)
-console.log(`[curriculum-inventory] structural-blocker: ${structuralBlockerUnits}/${totalUnits}`)
+console.log(`[curriculum-inventory] active structural-blocker: ${structuralBlockerUnits}/${totalUnits}`)

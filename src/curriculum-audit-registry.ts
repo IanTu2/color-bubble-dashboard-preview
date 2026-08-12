@@ -1,4 +1,5 @@
 import type { CurriculumSubjectId } from './curriculum-plan'
+import type { CurriculumPathwayId } from './curriculum-plan-v5'
 import { GRADE7_MATH_OFFICIAL_SCOPE } from './curriculum-official-scope-math7'
 import { SCIENCE7_STAGE_IV_SCOPE } from './curriculum-official-scope-science7'
 
@@ -13,6 +14,8 @@ export type CurriculumTrackStructure =
   | 'official-subject'
   | 'integrated-life'
   | 'platform-extension'
+  | 'discipline-split'
+  | 'path-selected'
   | 'discipline-split-required'
   | 'path-selection-required'
 
@@ -47,16 +50,37 @@ export const CURRICULUM_OFFICIAL_SOURCES = {
 const GRADE7_MATH_SCOPE_VERIFIED = new Set(GRADE7_MATH_OFFICIAL_SCOPE.map((item) => item.unitId))
 const SCIENCE7_STAGE_IV_SCOPE_VERIFIED = new Set(SCIENCE7_STAGE_IV_SCOPE.map((item) => item.unitId))
 
-// v10 起 textbook-ready 必須通過課綱範圍、內容、題庫、媒體與整體教學流程五道 gate。
-// 現階段刻意保持空集合：舊的 reviewed 不自動等於教科書級。
+// textbook-ready 必須通過課綱範圍、內容、題庫、媒體與整體教學流程五道 gate。
+// v13 修正的是「學生可進入的課程結構」，不因此自動升級任何單元的教材成熟度。
 const TEXTBOOK_READY_UNITS = new Set<string>()
 
-export function getTrackPolicy(grade: number, subject: CurriculumSubjectId): CurriculumTrackPolicy {
-  if (grade <= 2 && (subject === 'science' || subject === 'social')) {
+function isSciencePath(pathway?: CurriculumPathwayId) {
+  return pathway === 'physics' || pathway === 'chemistry' || pathway === 'biology' || pathway === 'earth-science'
+}
+
+function isSocialPath(pathway?: CurriculumPathwayId) {
+  return pathway === 'geography' || pathway === 'history' || pathway === 'civics'
+}
+
+function isMathPath(pathway?: CurriculumPathwayId) {
+  return pathway === 'math-a' || pathway === 'math-b' || pathway === 'math-alpha' || pathway === 'math-beta'
+}
+
+export function getTrackPolicy(grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId): CurriculumTrackPolicy {
+  if (grade <= 2 && pathway === 'life') {
     return {
       structure: 'integrated-life',
-      label: '生活課程映射',
-      note: '國小一、二年級正式課程以「生活課程」統整自然科學、社會、藝術與綜合活動；平台目前為了維持五科入口而做導航映射，不能視為獨立的正式自然／社會課本。',
+      label: '生活課程正式入口',
+      note: '國小一、二年級以生活課程統整生活探究、自然觀察與社會互動；v13 已改為單一生活課程路線，不再把自然與社會偽裝成兩門正式分科。',
+      textbookBlocked: false,
+    }
+  }
+
+  if (grade <= 2 && (subject === 'science' || subject === 'social')) {
+    return {
+      structure: 'path-selection-required',
+      label: '請改用生活課程',
+      note: '低年級自然／社會的舊合成入口已停用；學生端必須改走生活課程 pathway。',
       textbookBlocked: true,
     }
   }
@@ -65,44 +89,46 @@ export function getTrackPolicy(grade: number, subject: CurriculumSubjectId): Cur
     return {
       structure: 'platform-extension',
       label: '平台延伸課程',
-      note: '英語文正式學習表現主要自第二學習階段（國小三、四年級）展開；一、二年級內容應明確標示為英語啟蒙延伸，不冒充全國一致的國定年級進度。',
+      note: '一、二年級英語明確標示為校本／平台啟蒙延伸，不冒充全國一致的國定年級進度。',
       textbookBlocked: false,
     }
   }
 
   if (subject === 'math' && grade >= 11) {
+    if (isMathPath(pathway)) {
+      return {
+        structure: 'path-selected',
+        label: '數學分流已選定',
+        note: grade === 11 ? '已進入數學 A／數學 B 的其中一條獨立路線。' : '已進入高三數學甲／數學乙其中一條加深加廣路線。',
+        textbookBlocked: false,
+      }
+    }
     return {
       structure: 'path-selection-required',
       label: '數學路線需分流',
-      note: grade === 11
-        ? '十一年級正式數學必須區分數學 A／數學 B，不能再用單一路線涵蓋所有學生。'
-        : '十二年級加深加廣數學需依甲／乙等路線與學生需求呈現，不能以單一共同課程假裝完整。',
+      note: grade === 11 ? '十一年級需先選數學 A 或數學 B。' : '十二年級需先選數學甲或數學乙等加深加廣路線。',
       textbookBlocked: true,
     }
   }
 
   if (grade >= 10 && subject === 'science') {
-    return {
-      structure: 'discipline-split-required',
-      label: '高中自然需分科',
-      note: '普通型高中自然科學領域以物理、化學、生物、地球科學等科目配置必修與選修；「自然」只能當入口，教科書級內容必須進一步分科。',
-      textbookBlocked: true,
+    if (isSciencePath(pathway)) {
+      return { structure: 'discipline-split', label: '高中自然分科已選定', note: '已進入物理、化學、生物或地球科學的獨立課程路線。', textbookBlocked: false }
     }
+    return { structure: 'discipline-split-required', label: '高中自然需分科', note: '高中自然總入口不可直接當成一門合併教材，請先選物理、化學、生物或地球科學。', textbookBlocked: true }
   }
 
   if (grade >= 10 && subject === 'social') {
-    return {
-      structure: 'discipline-split-required',
-      label: '高中社會需分科',
-      note: '普通型高中社會領域以歷史、地理、公民與社會分科教學為原則；「社會」只能當入口，教科書級內容必須進一步分科。',
-      textbookBlocked: true,
+    if (isSocialPath(pathway)) {
+      return { structure: 'discipline-split', label: '高中社會分科已選定', note: '已進入地理、歷史或公民與社會的獨立課程路線。', textbookBlocked: false }
     }
+    return { structure: 'discipline-split-required', label: '高中社會需分科', note: '高中社會總入口不可直接當成一門合併教材，請先選地理、歷史或公民與社會。', textbookBlocked: true }
   }
 
   return {
     structure: 'official-subject',
     label: '正式領域／科目',
-    note: '目前入口可直接依該領域／科目的課綱與學習階段繼續做逐單元內容審核。',
+    note: '目前入口可依該領域／科目的課綱與學習階段繼續做逐單元內容審核。',
     textbookBlocked: false,
   }
 }
@@ -110,45 +136,28 @@ export function getTrackPolicy(grade: number, subject: CurriculumSubjectId): Cur
 export function getUnitAuditSnapshot(args: {
   grade: number
   subject: CurriculumSubjectId
+  pathway?: CurriculumPathwayId
   unitId: string
   strictReviewed: boolean
 }): CurriculumAuditSnapshot {
-  const policy = getTrackPolicy(args.grade, args.subject)
+  const policy = getTrackPolicy(args.grade, args.subject, args.pathway)
   const textbookReady = TEXTBOOK_READY_UNITS.has(args.unitId)
   const mathScopeChecked = GRADE7_MATH_SCOPE_VERIFIED.has(args.unitId)
   const scienceStageScopeChecked = SCIENCE7_STAGE_IV_SCOPE_VERIFIED.has(args.unitId)
   const scopeChecked = mathScopeChecked || scienceStageScopeChecked
 
   if (textbookReady) {
-    return {
-      tier: 'textbook-ready',
-      label: '✓ 教科書級 QA 通過',
-      scopeChecked: true,
-      contentChecked: true,
-      questionsChecked: true,
-      textbookReady: true,
-      warnings: [],
-    }
+    return { tier: 'textbook-ready', label: '✓ 教科書級 QA 通過', scopeChecked: true, contentChecked: true, questionsChecked: true, textbookReady: true, warnings: [] }
   }
 
   if (policy.textbookBlocked) {
-    return {
-      tier: 'structural-blocker',
-      label: policy.label,
-      scopeChecked: false,
-      contentChecked: args.strictReviewed,
-      questionsChecked: args.strictReviewed,
-      textbookReady: false,
-      warnings: [policy.note],
-    }
+    return { tier: 'structural-blocker', label: policy.label, scopeChecked: false, contentChecked: args.strictReviewed, questionsChecked: args.strictReviewed, textbookReady: false, warnings: [policy.note] }
   }
 
   if (scopeChecked && args.strictReviewed) {
     return {
       tier: 'scope-verified',
-      label: scienceStageScopeChecked
-        ? '第四學習階段範圍已核對 · 平台七年級序列待持續加厚'
-        : '課綱範圍已核對 · 內容待教科書級加厚',
+      label: scienceStageScopeChecked ? '第四學習階段範圍已核對 · 平台七年級序列待持續加厚' : '課綱範圍已核對 · 內容待教科書級加厚',
       scopeChecked: true,
       contentChecked: true,
       questionsChecked: true,
@@ -160,24 +169,8 @@ export function getUnitAuditSnapshot(args: {
   }
 
   if (args.strictReviewed) {
-    return {
-      tier: 'legacy-reviewed',
-      label: '人工內容 · 待 v10 課綱複核',
-      scopeChecked: false,
-      contentChecked: true,
-      questionsChecked: true,
-      textbookReady: false,
-      warnings: ['舊版「已審閱」只代表人工內容與題幹檢查，不代表已完成 v10 的官方課綱對照與教科書級 QA。'],
-    }
+    return { tier: 'legacy-reviewed', label: '人工內容 · 待課綱複核', scopeChecked: false, contentChecked: true, questionsChecked: true, textbookReady: false, warnings: ['舊版「已審閱」只代表人工內容與題幹檢查，不代表已完成官方課綱對照與教科書級 QA。'] }
   }
 
-  return {
-    tier: 'foundation-draft',
-    label: '教材初稿 · 非教科書級題庫',
-    scopeChecked: false,
-    contentChecked: false,
-    questionsChecked: false,
-    textbookReady: false,
-    warnings: ['目前內容由 roadmap 與科目規則產生，可作預習骨架；泛用自我檢核題不能計入正式題庫，必須逐單元重寫。'],
-  }
+  return { tier: 'foundation-draft', label: '教材初稿 · 非教科書級題庫', scopeChecked: false, contentChecked: false, questionsChecked: false, textbookReady: false, warnings: ['目前已有正確課程路線與基礎內容，但仍需逐單元人工研究、重寫與媒體配置後才能升級。'] }
 }

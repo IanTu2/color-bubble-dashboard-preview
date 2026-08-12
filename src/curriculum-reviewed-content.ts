@@ -16,6 +16,8 @@ import { getReviewedChinese7UnitContent } from './curriculum-reviewed-chinese7'
 import { getReviewedEnglish7UnitContent } from './curriculum-reviewed-english7'
 import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
 import { getFoundationUnitContent, type FoundationUnitContent } from './curriculum-foundation-content'
+import { getPathwayFoundationUnitContent } from './curriculum-pathway-foundation-v13'
+import { buildLifeCurriculumQuestionsV13 } from './curriculum-life-question-bank-v13'
 import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import { getScience7TextbookSupplement } from './curriculum-textbook-supplement-science7'
 import {
@@ -163,7 +165,12 @@ export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitConten
 export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
   const reviewed = getStrictReviewedUnitContent(unitId)
   if (reviewed) return reviewed
-  return sanitizeQuestions(upgradeFoundationUnitV12(getFoundationUnitContent(unitId)))
+  const foundation = getFoundationUnitContent(unitId) ?? getPathwayFoundationUnitContent(unitId)
+  const upgraded = upgradeFoundationUnitV12(foundation)
+  if (upgraded && unitId.includes('-life-')) {
+    return sanitizeQuestions({ ...upgraded, questions: buildLifeCurriculumQuestionsV13(upgraded) })
+  }
+  return sanitizeQuestions(upgraded)
 }
 
 // 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與內部 audit registry 判斷。

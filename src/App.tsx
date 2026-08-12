@@ -8,7 +8,7 @@ import { PersistentMusicPlayer } from './components/PersistentMusicPlayer'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
-import type { CurriculumSubjectId } from './curriculum-plan'
+import type { CurriculumPathwayId, CurriculumSubjectId } from './curriculum-plan-v5'
 import { supabase } from './lib/supabase'
 import {
   APP_PREFERENCES_KEY,
@@ -113,8 +113,8 @@ function App() {
     setDesktopRequest({ id: Date.now() + Math.random(), kind })
   }
 
-  const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId) => {
-    setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject } })
+  const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => {
+    setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject, pathway } })
   }
 
   const resetAllSettings = () => {

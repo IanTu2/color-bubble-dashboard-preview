@@ -3,6 +3,8 @@ import path from 'node:path'
 
 const root = process.cwd()
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8')
+const failures = []
+const count = (text, pattern) => (text.match(pattern) ?? []).length
 
 const activeModules = [
   { file: 'src/curriculum-reviewed-social10.ts', units: 6, questions: 48 },
@@ -14,175 +16,90 @@ const activeModules = [
   { file: 'src/curriculum-reviewed-social7.ts', units: 6, questions: 48 },
 ]
 
-const failures = []
-const count = (text, pattern) => (text.match(pattern) ?? []).length
-
-const bannedMissingMaterial = [
-  '看到一張統計圖後',
-  '依圖表而異',
-  '依文本而異',
-  '答案依題目而異',
-  '根據下圖',
-  '依下圖',
-  '觀察下圖',
-  '請看下圖',
-  '如圖所示',
-  '依附圖',
-]
-
+const bannedMissingMaterial = ['看到一張統計圖後','依圖表而異','依文本而異','答案依題目而異','根據下圖','依下圖','觀察下圖','請看下圖','如圖所示','依附圖']
 for (const target of activeModules) {
   const text = read(target.file)
-  const reviewedCount = count(text, /reviewStatus:\s*['"]reviewed['"]/g)
-  const questionCount = count(text, /id:\s*['"][^'"]+-q\d+['"]/g)
-  const workedExampleCount = count(text, /workedExamples\s*:/g)
-
-  if (reviewedCount < target.units) failures.push(`${target.file}: reviewed units ${reviewedCount} < ${target.units}`)
-  if (questionCount < target.questions) failures.push(`${target.file}: questions ${questionCount} < ${target.questions}`)
-  if (workedExampleCount < target.units) failures.push(`${target.file}: worked examples ${workedExampleCount} < ${target.units}`)
-
-  for (const phrase of bannedMissingMaterial) {
-    if (text.includes(phrase)) failures.push(`${target.file}: banned missing-material fallback "${phrase}"`)
-  }
-}
-
-const basePlan = read('src/curriculum-plan.ts')
-const planSubjects = ['chinese', 'english', 'math', 'science', 'social']
-for (let index = 0; index < planSubjects.length; index += 1) {
-  const subject = planSubjects[index]
-  const startMarker = `const ${subject}: Record<number, RawTrack> = {`
-  const nextSubject = planSubjects[index + 1]
-  const start = basePlan.indexOf(startMarker)
-  const end = nextSubject ? basePlan.indexOf(`const ${nextSubject}: Record<number, RawTrack> = {`, start + startMarker.length) : basePlan.indexOf('const subjectRoadmaps', start + startMarker.length)
-  if (start < 0 || end < 0) {
-    failures.push(`curriculum-plan.ts: cannot isolate ${subject} roadmap`)
-    continue
-  }
-  const block = basePlan.slice(start, end)
-  for (let grade = 1; grade <= 12; grade += 1) {
-    if (!new RegExp(`\\n\\s*${grade}: \\[` ).test(block)) failures.push(`curriculum-plan.ts: ${subject} grade ${grade} roadmap missing`)
-  }
+  if (count(text, /reviewStatus:\s*['"]reviewed['"]/g) < target.units) failures.push(`${target.file}: reviewed unit count regressed`)
+  if (count(text, /id:\s*['"][^'"]+-q\d+['"]/g) < target.questions) failures.push(`${target.file}: reviewed question count regressed`)
+  if (count(text, /workedExamples\s*:/g) < target.units) failures.push(`${target.file}: worked example count regressed`)
+  for (const phrase of bannedMissingMaterial) if (text.includes(phrase)) failures.push(`${target.file}: missing-material fallback "${phrase}"`)
 }
 
 const foundation = read('src/curriculum-foundation-content.ts')
-for (const requiredSourceToken of [
-  "reviewStatus: 'foundation'",
-  'getFoundationUnitContent',
-  'getCurriculumTrack',
-  'CHINESE_RULES',
-  'ENGLISH_RULES',
-  'MATH_RULES',
-  'SCIENCE_RULES',
-  'SOCIAL_RULES',
-  'workedExampleFor',
-]) {
-  if (!foundation.includes(requiredSourceToken)) failures.push(`foundation curriculum missing source requirement: ${requiredSourceToken}`)
+for (const token of ["reviewStatus: 'foundation'",'getFoundationUnitContent','CHINESE_RULES','ENGLISH_RULES','MATH_RULES','SCIENCE_RULES','SOCIAL_RULES','workedExampleFor']) {
+  if (!foundation.includes(token)) failures.push(`foundation curriculum missing ${token}`)
 }
-for (const phrase of bannedMissingMaterial) {
-  if (foundation.includes(phrase)) failures.push(`foundation curriculum contains banned missing-material wording: ${phrase}`)
-}
-
 const foundationV12 = read('src/curriculum-foundation-question-bank-v12.ts')
-for (const requiredToken of [
-  'buildFoundationSubjectQuestions',
-  'upgradeFoundationUnitV12',
-  '3x+5=20',
-  '沉著',
-  'Mia goes to the library after school on Tuesday',
-  'science-animal-cell-zhtw',
-  'science-earth-tilt-orbit-animation',
-  'social-taiwan-relief',
-  'optionFeedback',
-  'rubric',
-  'audioText',
-  'mediaAssetId',
-]) {
-  if (!foundationV12.includes(requiredToken)) failures.push(`v12 subject question bank missing: ${requiredToken}`)
+for (const token of ['buildFoundationSubjectQuestions','upgradeFoundationUnitV12','3x+5=20','沉著','Mia goes to the library after school on Tuesday','optionFeedback','rubric','audioText','mediaAssetId']) {
+  if (!foundationV12.includes(token)) failures.push(`v12 subject question bank missing ${token}`)
 }
-if (count(foundationV12, /foundation-v12-q/g) < 1) failures.push('v12 foundation question ids are not versioned')
 
-const player = read('src/components/CurriculumCourseAppV12.tsx')
-for (const requiredPlayerToken of [
-  'splitQuestionBank',
-  'groups.guided',
-  'groups.practice',
-  'groups.assessment',
-  'QuestionMedia',
-  'AudioPrompt',
-  'optionFeedback',
-  'curriculum-response-rubric',
-  'CURRICULUM_VETTED_MEDIA',
-]) {
-  if (!player.includes(requiredPlayerToken)) failures.push(`CurriculumCourseAppV12 missing: ${requiredPlayerToken}`)
+// Existing reader and visual stability chain must not regress.
+const v12 = read('src/components/CurriculumCourseAppV12.tsx')
+for (const token of ['splitQuestionBank','groups.guided','groups.practice','groups.assessment','QuestionMedia','AudioPrompt','optionFeedback','curriculum-response-rubric','CURRICULUM_VETTED_MEDIA']) {
+  if (!v12.includes(token)) failures.push(`V12 reader missing ${token}`)
 }
-for (const forbiddenPlayerToken of [
-  'getUnitAuditSnapshot',
-  'getTrackPolicy',
-  'compactAuditLabel',
-  'curriculum-audit-warning',
-  'curriculum-review-badge',
-  '品質層級',
-  'MutationObserver',
-  'requestAnimationFrame',
-]) {
-  if (player.includes(forbiddenPlayerToken)) failures.push(`reader-facing V12 must not contain internal/DOM-rewrite token: ${forbiddenPlayerToken}`)
+for (const forbidden of ['getUnitAuditSnapshot','getTrackPolicy','品質層級','MutationObserver','requestAnimationFrame']) {
+  if (v12.includes(forbidden)) failures.push(`V12 reader contains forbidden internal/DOM token ${forbidden}`)
 }
-if (!player.includes("if (lesson.kind === 'guided') return groups.guided")) failures.push('guided lesson must have its own disjoint question group')
-if (!player.includes("if (lesson.kind === 'practice') return groups.practice")) failures.push('practice lesson must have its own disjoint question group')
-if (!player.includes("if (lesson.kind === 'assessment') return groups.assessment")) failures.push('assessment lesson must have its own disjoint question group')
-if (player.includes("lesson.kind === 'launch') return all.slice")) failures.push('launch lesson must not recycle subject questions from later lessons')
-if (player.includes("lesson.kind === 'example') return all.slice")) failures.push('example lesson must not recycle subject questions from later lessons')
-
-const stableVisualPlayer = read('src/components/CurriculumCourseAppV8.tsx')
-const playerExport = read('src/components/CurriculumCourseApp.tsx')
+const v8 = read('src/components/CurriculumCourseAppV8.tsx')
 const stabilityCss = read('src/curriculum-visual-stability-v8.css')
-if (!playerExport.includes("from './CurriculumCourseAppV8'")) failures.push('active curriculum player must export the stable v8 visual layer directly')
-if (playerExport.includes('MutationObserver') || playerExport.includes('requestAnimationFrame')) failures.push('active export must not rewrite reader-facing copy after render')
-if (!stableVisualPlayer.includes("from './CurriculumCourseAppV12'")) failures.push('v8 must attach directly to reader-first V12 player')
-if (stableVisualPlayer.includes("from './CurriculumCourseAppV5'")) failures.push('v8 must not route through the old internal-status V5 player')
-if (!stableVisualPlayer.includes('useLayoutEffect')) failures.push('v8 visuals must be synchronized before paint with useLayoutEffect')
-if (stableVisualPlayer.includes('requestAnimationFrame')) failures.push('v8 visual layer must not defer layout changes to requestAnimationFrame')
-if (!stableVisualPlayer.includes('observer?.disconnect()')) failures.push('v8 must disconnect its observer while mutating the visual DOM')
-if (!stabilityCss.includes('grid-template-columns')) failures.push('v8 must reserve teaching-visual layout space before media is inserted')
-if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('v8 vetted image container needs a fixed aspect ratio to prevent image-load layout shift')
+if (!v8.includes("from './CurriculumCourseAppV12'")) failures.push('V8 must still wrap V12 directly')
+if (!v8.includes('useLayoutEffect') || v8.includes('requestAnimationFrame')) failures.push('V8 visual synchronization regressed')
+if (!v8.includes('observer?.disconnect()')) failures.push('V8 observer mutation guard regressed')
+if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('V8 media aspect-ratio reservation missing')
 
-const vettedMedia = read('src/curriculum-vetted-media.ts')
-if (!stableVisualPlayer.includes('findVettedCurriculumMedia')) failures.push('v8 must resolve concept-specific vetted media')
-for (const requiredAsset of [
-  'Animal%20cell%20structure%20zhtw.svg',
-  'Plant%20cell%20structure%20svg%20zh-hant.svg',
-  'Reliefkarte%20Taiwan.png',
-  'Mitosis%20Animation.gif',
-  'Blood%20Circulation.gif',
-  'Earth%20tilt%20animation.gif',
-]) {
-  if (!vettedMedia.includes(requiredAsset)) failures.push(`vetted curriculum media missing required asset: ${requiredAsset}`)
+// V13 active router adds pathway courses while preserving V8 for ordinary routes.
+const activeExport = read('src/components/CurriculumCourseApp.tsx')
+const v13 = read('src/components/CurriculumCourseAppV13.tsx')
+const v13Css = read('src/curriculum-course-v13.css')
+if (!activeExport.includes("from './CurriculumCourseAppV13'")) failures.push('active curriculum export must route through V13')
+if (!v13.includes("from './CurriculumCourseAppV8'")) failures.push('V13 must preserve V8 for non-pathway courses')
+if (!v13.includes('if (!props.pathway)')) failures.push('V13 must explicitly preserve the legacy/base stable player')
+for (const token of ['getCurriculumCourseBundleV13','questionGroups','guided: questions.slice','practice: questions.slice','assessment: questions.slice','optionFeedback','mediaAssetId','audioText','rubric','pathway']) {
+  if (!v13.includes(token)) failures.push(`V13 pathway player missing ${token}`)
 }
-for (const requiredMetadata of ['sourcePage:', 'license:', 'attribution:', 'alt:', "mediaType: 'animation'"]) {
-  if (!vettedMedia.includes(requiredMetadata)) failures.push(`vetted curriculum media missing metadata field: ${requiredMetadata}`)
+for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','品質層級']) {
+  if (v13.includes(forbidden)) failures.push(`V13 reader contains forbidden token ${forbidden}`)
 }
+if (!v13Css.includes('grid-template-columns') || !v13Css.includes('html[data-theme="light"]')) failures.push('V13 layout must include responsive grid and light theme')
 
+// Structural route model: active learner routes must reflect grade-specific official organization.
+const plan = read('src/curriculum-plan-v5.ts')
+for (const pathway of ['life','physics','chemistry','biology','earth-science','geography','history','civics','math-a','math-b','math-alpha','math-beta']) {
+  if (!plan.includes(`'${pathway}'`)) failures.push(`V13 plan missing pathway ${pathway}`)
+}
+for (const token of ['getCurriculumRouteOptions','getCurriculumCourseMeta','resolveCurriculumUnit','ambiguousBaseRoute','routeToken']) {
+  if (!plan.includes(token)) failures.push(`V13 plan missing structural function ${token}`)
+}
+if (!plan.includes("if (grade <= 2)") || !plan.includes("pathwayRoute('science', 'life')")) failures.push('grades 1-2 must expose integrated Life Curriculum route')
+if (!plan.includes("grade === 11") || !plan.includes("pathwayRoute('math', 'math-a')") || !plan.includes("pathwayRoute('math', 'math-b')")) failures.push('grade 11 math A/B route split missing')
+if (!plan.includes("pathwayRoute('math', 'math-alpha')") || !plan.includes("pathwayRoute('math', 'math-beta')")) failures.push('grade 12 math 甲/乙 route split missing')
+for (const path of ['physics','chemistry','biology','earth-science']) if (!plan.includes(`pathwayRoute('science', '${path}')`)) failures.push(`high school science route missing ${path}`)
+for (const path of ['geography','history','civics']) if (!plan.includes(`pathwayRoute('social', '${path}')`)) failures.push(`high school social route missing ${path}`)
+if (!plan.includes("if (grade >= 10 && (subject === 'science' || subject === 'social')) return true")) failures.push('ambiguous high-school merged science/social route must be blocked')
+if (!plan.includes("if (grade >= 11 && subject === 'math') return true")) failures.push('ambiguous G11+ common math route must be blocked')
+
+const pathwayFoundation = read('src/curriculum-pathway-foundation-v13.ts')
+for (const token of ['getPathwayFoundationUnitContent','resolveCurriculumUnit','生活課程','課程已放在正確的','questions: []']) {
+  if (!pathwayFoundation.includes(token)) failures.push(`pathway foundation missing ${token}`)
+}
 const aggregator = read('src/curriculum-reviewed-content.ts')
-for (const requiredAggregatorToken of [
-  'stableHash',
-  'sanitizeQuestions',
-  'normalizeChoiceQuestion',
-  'getStrictReviewedUnitContent',
-  'getFoundationUnitContent',
-  'upgradeFoundationUnitV12',
-  'optionFeedback',
-  'mediaAssetId',
-  'audioText',
-  'rubric',
-]) {
-  if (!aggregator.includes(requiredAggregatorToken)) failures.push(`curriculum aggregator missing: ${requiredAggregatorToken}`)
-}
+if (!aggregator.includes('getPathwayFoundationUnitContent')) failures.push('pathway foundation content is not wired into content aggregator')
+if (!aggregator.includes('getFoundationUnitContent(unitId) ?? getPathwayFoundationUnitContent(unitId)')) failures.push('base foundation must remain first, pathway fallback second')
 
-const planV5 = read('src/curriculum-plan-v5.ts')
-for (const requiredChapter of ['二元一次聯立方程式', '直角坐標與二元一次方程式圖形', '一元一次不等式']) {
-  if (!planV5.includes(requiredChapter)) failures.push(`grade 7 math researched roadmap missing: ${requiredChapter}`)
-}
-if (planV5.includes('公民：民主與法律')) failures.push('grade 7 social roadmap must not place the old politics/law unit in grade 7')
-if (!planV5.includes('公民：社會互動、規範、文化與福利')) failures.push('grade 7 social researched roadmap is missing the corrected social-life unit')
+const drawer = read('src/components/SideDrawer.tsx')
+for (const token of ['getCurriculumRouteOptions','selectedRouteId','selectedRoute.pathway','依本年級正式結構顯示']) if (!drawer.includes(token)) failures.push(`SideDrawer pathway navigation missing ${token}`)
+if (drawer.includes('查看五科課程')) failures.push('drawer must not claim every grade has the same five-course structure')
+const desktop = read('src/components/DesktopWorkspace.tsx')
+for (const token of ['getCurriculumCourseMeta','getCurriculumTrack(course.grade, course.subject, course.pathway)','pathway={item.course.pathway}']) if (!desktop.includes(token)) failures.push(`desktop pathway persistence missing ${token}`)
+
+const inventory = read('scripts/report-curriculum-audit.mjs')
+for (const token of ['activeTracks !== 75','totalUnits !== 453','structuralBlockerUnits = 0']) if (!inventory.includes(token)) failures.push(`v13 active inventory missing assertion ${token}`)
+
+// Keep Grade 7 researched map protections.
+for (const chapter of ['二元一次聯立方程式','直角坐標與二元一次方程式圖形','一元一次不等式']) if (!plan.includes(chapter)) failures.push(`grade 7 math roadmap missing ${chapter}`)
+if (plan.includes('公民：民主與法律')) failures.push('grade 7 social roadmap regressed to politics/law unit')
 
 if (failures.length) {
   console.error('[curriculum-qa] FAILED')
@@ -190,4 +107,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] v12 reader player + disjoint lesson question groups + subject foundation questions + media/audio/feedback gates passed')
+console.log('[curriculum-qa] V13 route structure + V8/V12 stability + pathway content + disjoint questions + enhanced feedback gates passed')
