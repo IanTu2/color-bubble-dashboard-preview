@@ -11,9 +11,49 @@ export type CurriculumMediaAsset = {
   alt: string
   license: string
   attribution: string
+  mediaType?: 'image' | 'animation'
 }
 
 export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
+  {
+    id: 'science-mitosis-animation',
+    subject: 'science',
+    match: /(有絲分裂|細胞分裂|染色體.*分開|染色體.*分離|母細胞.*子細胞)/,
+    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mitosis%20Animation.gif',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Mitosis_Animation.gif',
+    title: '有絲分裂過程動畫',
+    caption: '用動畫追蹤染色體複製後如何排列、分離並形成兩個子細胞。這類「過程」比單張靜態圖更適合逐步觀看，但教材文字仍要補上各階段名稱與功能。',
+    alt: '細胞中三組染色體進行有絲分裂並形成兩個子細胞的循環動畫',
+    license: 'CC BY-SA 4.0',
+    attribution: 'SadiesBurrow / Wikimedia Commons',
+    mediaType: 'animation',
+  },
+  {
+    id: 'science-blood-circulation-animation',
+    subject: 'science',
+    match: /(血液循環|循環系統|體循環|肺循環|氧氣運輸|血液.*心臟)/,
+    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Blood%20Circulation.gif',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Blood_Circulation.gif',
+    title: '血液循環與氧氣運輸動畫',
+    caption: '動畫可協助追蹤血液經過心臟、肺部與全身的方向，特別適合建立「肺循環／體循環不是兩張分開的圖，而是一條連續路徑」的概念。',
+    alt: '血液經心臟與全身循環並呈現氧氣運輸方向的動畫',
+    license: 'CC BY-SA 3.0',
+    attribution: 'Wapcaplet / Wikimedia Commons',
+    mediaType: 'animation',
+  },
+  {
+    id: 'science-earth-tilt-orbit-animation',
+    subject: 'science',
+    match: /(地球公轉|地軸傾斜|地軸.*傾|四季|季節成因|公轉.*季節)/,
+    src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Earth%20tilt%20animation.gif',
+    sourcePage: 'https://commons.wikimedia.org/wiki/File:Earth_tilt_animation.gif',
+    title: '地球公轉與地軸傾斜動畫',
+    caption: '動畫顯示地球繞太陽公轉時，地軸相對軌道平面的傾斜方向保持近似不變。可搭配日照角度與晝夜長短解釋季節，而不是誤以為四季由日地距離造成。',
+    alt: '地球繞太陽公轉並保持地軸傾斜方向的動畫',
+    license: 'CC BY-SA 3.0',
+    attribution: 'Tfr000 / Wikimedia Commons',
+    mediaType: 'animation',
+  },
   {
     id: 'science-animal-cell-zhtw',
     subject: 'science',
@@ -25,6 +65,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '繁體中文標示的動物細胞構造圖，包含細胞核、粒線體、內質網、高基氏體等胞器',
     license: 'CC BY-SA 3.0',
     attribution: 'LadyofHats 原圖；丁志仁繁體中文翻譯 / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'science-plant-cell-zhtw',
@@ -37,11 +78,12 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '繁體中文標示的植物細胞構造圖，包含細胞壁、葉綠體、大型液胞與其他胞器',
     license: 'Public domain',
     attribution: 'LadyofHats / Mariana Ruiz Villarreal 原圖；User:159265 繁體中文翻譯 / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'science-circulatory-system',
     subject: 'science',
-    match: /(血液循環|循環系統|心臟|動脈|靜脈|血管|體循環|肺循環)/,
+    match: /(心臟構造|動脈|靜脈|血管)/,
     src: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Circulatory%20System%20no%20tags.svg',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:Circulatory_System_no_tags.svg',
     title: '人體循環系統',
@@ -49,6 +91,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '人體循環系統前視圖，呈現心臟與全身主要血管路徑',
     license: 'Public-domain derivative of LadyofHats circulatory-system diagram',
     attribution: 'LadyofHats / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'science-digestive-system',
@@ -61,6 +104,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '人體消化系統構造圖，呈現口腔、食道、胃、小腸、大腸、肝臟與胰臟',
     license: 'Public domain',
     attribution: 'LadyofHats / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'science-food-web',
@@ -73,6 +117,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '由多種生物與箭頭構成的生態系食物網圖',
     license: 'CC0 1.0 derivative',
     attribution: 'Thompsma / Pixelsquid / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'social-taiwan-relief',
@@ -85,6 +130,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '高解析臺灣地形陰影圖，清楚呈現中央山脈與周邊低地起伏',
     license: 'Wikimedia Commons file license; terrain background uses NASA SRTM public-domain data',
     attribution: 'Tschubby / Wikimedia Commons；NASA SRTM terrain data',
+    mediaType: 'image',
   },
   {
     id: 'social-taiwan-blank-map',
@@ -97,6 +143,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '臺灣島輪廓與周邊位置底圖',
     license: 'Public domain',
     attribution: 'CIA World Factbook-derived map / Wikimedia Commons',
+    mediaType: 'image',
   },
   {
     id: 'social-taiwan-topography-cc0',
@@ -109,6 +156,7 @@ export const CURRICULUM_VETTED_MEDIA: CurriculumMediaAsset[] = [
     alt: '強調臺灣中央山地帶的地形圖',
     license: 'CC0 1.0',
     attribution: 'Mariaclaramp / Wikimedia Commons',
+    mediaType: 'image',
   },
 ]
 
