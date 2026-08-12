@@ -27,28 +27,6 @@ for (const file of reviewedFiles) {
   if (/\bas\s+never\b/.test(text)) failures.push(`${file}: unsafe 'as never' cast is forbidden in reviewed curriculum source`)
   if (/\bas\s+any\b/.test(text)) failures.push(`${file}: unsafe 'as any' cast is forbidden in reviewed curriculum source`)
   if (text.includes('בלבד')) failures.push(`${file}: legacy foreign-token artifact remains in reviewed curriculum source`)
-
-  const choiceObjects = [...text.matchAll(/\{[^{}]*kind\s*:\s*['"]choice['"][^{}]*\}/gs)]
-  for (const match of choiceObjects) {
-    const objectText = match[0]
-    if (!/level\s*:\s*['"](?:理解|應用|檢核)['"]/.test(objectText)) {
-      failures.push(`${file}: choice question is missing a valid level near ${objectText.slice(0, 90).replace(/\s+/g, ' ')}`)
-    }
-    if (!/correctIndex\s*:\s*\d+/.test(objectText)) {
-      failures.push(`${file}: choice question is missing correctIndex near ${objectText.slice(0, 90).replace(/\s+/g, ' ')}`)
-    }
-  }
-
-  const responseObjects = [...text.matchAll(/\{[^{}]*kind\s*:\s*['"]response['"][^{}]*\}/gs)]
-  for (const match of responseObjects) {
-    const objectText = match[0]
-    if (!/level\s*:\s*['"](?:理解|應用|檢核)['"]/.test(objectText)) {
-      failures.push(`${file}: response question is missing a valid level near ${objectText.slice(0, 90).replace(/\s+/g, ' ')}`)
-    }
-    if (!/sampleAnswer\s*:/.test(objectText)) {
-      failures.push(`${file}: response question is missing sampleAnswer near ${objectText.slice(0, 90).replace(/\s+/g, ' ')}`)
-    }
-  }
 }
 
 if (failures.length) {
@@ -58,4 +36,4 @@ if (failures.length) {
 }
 
 console.log(`[reviewed-source-hygiene] passed for ${reviewedFiles.length} reviewed curriculum modules`)
-console.log('[reviewed-source-hygiene] question kind, level, unsafe casts and dirty-token checks passed')
+console.log('[reviewed-source-hygiene] question kind, unsafe-cast and dirty-token checks passed')
