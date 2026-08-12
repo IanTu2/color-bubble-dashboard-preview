@@ -1,5 +1,6 @@
 import type { CurriculumSubjectId } from './curriculum-plan'
 import { GRADE7_MATH_OFFICIAL_SCOPE } from './curriculum-official-scope-math7'
+import { SCIENCE7_STAGE_IV_SCOPE } from './curriculum-official-scope-science7'
 
 export type CurriculumAuditTier =
   | 'textbook-ready'
@@ -44,6 +45,7 @@ export const CURRICULUM_OFFICIAL_SOURCES = {
 } as const
 
 const GRADE7_MATH_SCOPE_VERIFIED = new Set(GRADE7_MATH_OFFICIAL_SCOPE.map((item) => item.unitId))
+const SCIENCE7_STAGE_IV_SCOPE_VERIFIED = new Set(SCIENCE7_STAGE_IV_SCOPE.map((item) => item.unitId))
 
 // v10 起 textbook-ready 必須通過課綱範圍、內容、題庫、媒體與整體教學流程五道 gate。
 // 現階段刻意保持空集合：舊的 reviewed 不自動等於教科書級。
@@ -113,7 +115,9 @@ export function getUnitAuditSnapshot(args: {
 }): CurriculumAuditSnapshot {
   const policy = getTrackPolicy(args.grade, args.subject)
   const textbookReady = TEXTBOOK_READY_UNITS.has(args.unitId)
-  const scopeChecked = GRADE7_MATH_SCOPE_VERIFIED.has(args.unitId)
+  const mathScopeChecked = GRADE7_MATH_SCOPE_VERIFIED.has(args.unitId)
+  const scienceStageScopeChecked = SCIENCE7_STAGE_IV_SCOPE_VERIFIED.has(args.unitId)
+  const scopeChecked = mathScopeChecked || scienceStageScopeChecked
 
   if (textbookReady) {
     return {
@@ -142,12 +146,16 @@ export function getUnitAuditSnapshot(args: {
   if (scopeChecked && args.strictReviewed) {
     return {
       tier: 'scope-verified',
-      label: '課綱範圍已核對 · 內容待教科書級加厚',
+      label: scienceStageScopeChecked
+        ? '第四學習階段範圍已核對 · 平台七年級序列待持續加厚'
+        : '課綱範圍已核對 · 內容待教科書級加厚',
       scopeChecked: true,
       contentChecked: true,
       questionsChecked: true,
       textbookReady: false,
-      warnings: ['目前內容已有人工編寫與題目 QA，但仍缺教科書級的多例題、常見迷思、分層題組與完整媒體配置。'],
+      warnings: scienceStageScopeChecked
+        ? ['自然科學的「Ⅳ」代碼適用國中七～九年級；目前只代表 Bubble Space 的七年級生物編排已逐單元對照正式第四學習階段內容，不宣稱國家規定每一碼固定在七年級某學期。教科書級仍需補探究活動、更多資料題、媒體與人工逐頁 QA。']
+        : ['目前內容已有人工編寫與題目 QA，但仍缺教科書級的多例題、常見迷思、分層題組與完整媒體配置。'],
     }
   }
 
