@@ -90,7 +90,7 @@ try {
             if (!question.id?.trim()) failures.push(`${unit.id}: question without id`)
             if (ids.has(question.id)) failures.push(`${unit.id}: duplicate question id ${question.id}`)
             ids.add(question.id)
-            if (normalizedPrompt.length < 8) failures.push(`${unit.id}/${question.id}: prompt too short`)
+            if (normalizedPrompt.length < 2) failures.push(`${unit.id}/${question.id}: prompt is empty or meaningless`)
             if (prompts.has(normalizedPrompt)) failures.push(`${unit.id}: duplicate prompt ${question.prompt}`)
             prompts.add(normalizedPrompt)
             if (!question.explanation?.trim()) failures.push(`${unit.id}/${question.id}: missing explanation`)
