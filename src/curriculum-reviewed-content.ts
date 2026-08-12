@@ -15,6 +15,7 @@ import { getReviewedChinese7UnitContent } from './curriculum-reviewed-chinese7'
 import { getReviewedEnglish7UnitContent } from './curriculum-reviewed-english7'
 import { getReviewedSocial7UnitContent } from './curriculum-reviewed-social7'
 import { getFoundationUnitContent, type FoundationUnitContent } from './curriculum-foundation-content'
+import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import type {
   ReviewedChoiceQuestion,
   ReviewedQuestion,
@@ -83,6 +84,26 @@ function sanitizeQuestions<T extends CurriculumUnitContent>(unit: T | null): T |
   } as T
 }
 
+function enrichStrictReviewedUnit(unit: ReviewedUnitContent, unitId: string): ReviewedUnitContent {
+  const math7Supplement = getMath7TextbookSupplement(unitId)
+  if (!math7Supplement) return unit
+
+  return {
+    ...unit,
+    researchBasis: Array.from(new Set([
+      ...unit.researchBasis,
+      'Bubble Space v10：國教院七年級數學學習內容代碼逐章核對＋教科書深度補強',
+    ])),
+    concepts: [...unit.concepts, ...math7Supplement.misconceptionConcepts],
+    workedExamples: [...unit.workedExamples, ...math7Supplement.workedExamples],
+    questions: [...unit.questions, ...math7Supplement.questions],
+    takeaway: Array.from(new Set([
+      ...unit.takeaway,
+      '除了會算，也要能辨認常見迷思、解釋方法理由，並把方法轉用到新的題型。',
+    ])),
+  }
+}
+
 export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   const raw = getSocial10UnitContent(unitId)
     ?? getReviewedMath7UnitContentV2(unitId)
@@ -90,7 +111,8 @@ export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitConten
     ?? getReviewedChinese7UnitContent(unitId)
     ?? getReviewedEnglish7UnitContent(unitId)
     ?? getReviewedSocial7UnitContent(unitId)
-  return sanitizeQuestions(raw)
+  if (!raw) return null
+  return sanitizeQuestions(enrichStrictReviewedUnit(raw, unitId))
 }
 
 export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
@@ -99,9 +121,7 @@ export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent 
   return sanitizeQuestions(getFoundationUnitContent(unitId))
 }
 
-// 舊 player 的 buildPages 型別仍接受 ReviewedUnitContent；v9 foundation 在執行期
-// 擁有完全相同的 concepts/workedExamples/questions/takeaway 結構，只把審閱狀態另外交給
-// isReviewedUnit / getCurriculumUnitContent 判斷，避免 UI 把「有內容」誤寫成「已審閱」。
+// 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與 v10 audit registry 判斷。
 export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   return getCurriculumUnitContent(unitId) as ReviewedUnitContent | null
 }
