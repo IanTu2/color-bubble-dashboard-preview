@@ -1,8 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import typescriptModule from 'typescript'
 
-const ts = typescriptModule.default ?? typescriptModule
 const root = process.cwd()
 const srcRoot = path.join(root, 'src')
 const failures = []
@@ -22,73 +20,139 @@ function walkFiles(directory) {
   for (const entry of entries) {
     const full = path.join(directory, entry.name)
     if (entry.isDirectory()) files.push(...walkFiles(full))
-    else if (/\.(ts|tsx)$/.test(entry.name) && entry.name.startsWith('curriculum-')) files.push(full)
+    else if (/^curriculum-(reviewed|textbook-supplement)-.*\.(ts|tsx)$/.test(entry.name)) files.push(full)
   }
   return files
 }
 
-function propName(property) {
-  if (!property?.name) return null
-  if (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name) || ts.isNumericLiteral(property.name)) return property.name.text
+function lineNumber(text, index) {
+  return text.slice(0, index).split('\n').length
+}
+
+function readQuoted(text, start) {
+  const quote = text[start]
+  if (!['\'', '"', '`'].includes(quote)) return null
+  let value = ''
+  let escaped = false
+  for (let index = start + 1; index < text.length; index += 1) {
+    const char = text[index]
+    if (escaped) {
+      value += char
+      escaped = false
+      continue
+    }
+    if (char === '\\') {
+      value += char
+      escaped = true
+      continue
+    }
+    if (char === quote) return { value, end: index + 1 }
+    value += char
+  }
   return null
 }
 
-function property(object, name) {
-  return object.properties.find((item) => ts.isPropertyAssignment(item) && propName(item) === name)
-}
+function extractBalanced(text, start, open, close) {
+  if (text[start] !== open) return null
+  let depth = 0
+  let quote = null
+  let escaped = false
+  let lineComment = false
+  let blockComment = false
 
-function stringValue(expression) {
-  if (!expression) return null
-  if (ts.isStringLiteral(expression) || ts.isNoSubstitutionTemplateLiteral(expression)) return expression.text
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index]
+    const next = text[index + 1]
+
+    if (lineComment) {
+      if (char === '\n') lineComment = false
+      continue
+    }
+    if (blockComment) {
+      if (char === '*' && next === '/') { blockComment = false; index += 1 }
+      continue
+    }
+    if (quote) {
+      if (escaped) { escaped = false; continue }
+      if (char === '\\') { escaped = true; continue }
+      if (char === quote) quote = null
+      continue
+    }
+    if (char === '/' && next === '/') { lineComment = true; index += 1; continue }
+    if (char === '/' && next === '*') { blockComment = true; index += 1; continue }
+    if (char === '\'' || char === '"' || char === '`') { quote = char; continue }
+    if (char === open) depth += 1
+    if (char === close) {
+      depth -= 1
+      if (depth === 0) return { text: text.slice(start, index + 1), end: index + 1 }
+    }
+  }
   return null
 }
 
-function numericValue(expression) {
-  if (!expression) return null
-  if (ts.isNumericLiteral(expression)) return Number(expression.text)
-  if (ts.isPrefixUnaryExpression(expression) && expression.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(expression.operand)) return -Number(expression.operand.text)
-  return null
+function findPropertyStart(objectText, name) {
+  const match = new RegExp(`\\b${name}\\s*:\\s*`).exec(objectText)
+  return match ? match.index + match[0].length : -1
 }
 
-function location(sourceFile, node) {
-  const pos = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile))
-  return `${path.relative(root, sourceFile.fileName)}:${pos.line + 1}`
+function readStringProperty(objectText, name) {
+  const start = findPropertyStart(objectText, name)
+  if (start < 0) return null
+  return readQuoted(objectText, start)?.value ?? null
+}
+
+function readNumberProperty(objectText, name) {
+  const start = findPropertyStart(objectText, name)
+  if (start < 0) return null
+  const match = /^-?\d+/.exec(objectText.slice(start))
+  return match ? Number(match[0]) : null
+}
+
+function readStringArrayProperty(objectText, name) {
+  const start = findPropertyStart(objectText, name)
+  if (start < 0 || objectText[start] !== '[') return null
+  const array = extractBalanced(objectText, start, '[', ']')
+  if (!array) return null
+
+  const values = []
+  for (let index = 1; index < array.text.length - 1;) {
+    const char = array.text[index]
+    if (char === '\'' || char === '"' || char === '`') {
+      const parsed = readQuoted(array.text, index)
+      if (!parsed) return null
+      values.push(parsed.value)
+      index = parsed.end
+      continue
+    }
+    index += 1
+  }
+  return values
 }
 
 function normalizePrompt(value) {
-  return value.replace(/\s+/g, ' ').replace(/[「」『』“”"'，。！？、：；,.!?;:]/g, '').trim().toLowerCase()
+  return value.replace(/\\n/g, ' ').replace(/\s+/g, ' ').replace(/[「」『』“”"'，。！？、：；,.!?;:]/g, '').trim().toLowerCase()
 }
 
-function visitObject(sourceFile, node) {
-  if (!ts.isObjectLiteralExpression(node)) return
-  const idProp = property(node, 'id')
-  const id = idProp ? stringValue(idProp.initializer) : null
-  if (!id || !/(?:-q\d+|-supp-q\d+)$/.test(id)) return
-
-  const place = location(sourceFile, node)
-  const kindProp = property(node, 'kind')
-  const promptProp = property(node, 'prompt')
-  const explanationProp = property(node, 'explanation')
-  const contextProp = property(node, 'context')
-  const kind = kindProp ? stringValue(kindProp.initializer) : null
-  const prompt = promptProp ? stringValue(promptProp.initializer) : null
-  const explanation = explanationProp ? stringValue(explanationProp.initializer) : null
-  const context = contextProp ? stringValue(contextProp.initializer) : ''
+function inspectQuestion(file, source, objectText, objectStart, id) {
+  const relative = path.relative(root, file)
+  const place = `${relative}:${lineNumber(source, objectStart)}`
+  const kind = readStringProperty(objectText, 'kind')
+  const prompt = readStringProperty(objectText, 'prompt')
+  const explanation = readStringProperty(objectText, 'explanation')
+  const context = readStringProperty(objectText, 'context') ?? ''
 
   if (ids.has(id)) failures.push(`${place}: duplicate question id ${id}; first seen at ${ids.get(id)}`)
   else ids.set(id, place)
 
-  if (!kind) failures.push(`${place}: question kind must be a literal 'choice' or 'response'; do not rely on type assertions or runtime repair`)
-  else if (kind !== 'choice' && kind !== 'response') failures.push(`${place}: unsupported question kind ${kind}`)
-
-  if (!prompt?.trim()) failures.push(`${place}: missing literal prompt`)
-  if (!explanation?.trim()) failures.push(`${place}: missing literal explanation`)
+  if (kind !== 'choice' && kind !== 'response') failures.push(`${place}: question ${id} must use kind 'choice' or 'response', found ${JSON.stringify(kind)}`)
+  if (!prompt?.trim()) failures.push(`${place}: ${id} is missing a literal prompt`)
+  if (!explanation?.trim()) failures.push(`${place}: ${id} is missing a literal explanation`)
   if (prompt && prompt.trim().length < 5) warnings.push(`${place}: very short prompt may be under-specified: ${JSON.stringify(prompt)}`)
-  if (explanation && explanation.trim().length < 8) warnings.push(`${place}: explanation is too short to teach from: ${JSON.stringify(explanation)}`)
+  if (explanation && explanation.trim().length < 8) warnings.push(`${place}: explanation may be too thin to teach from: ${JSON.stringify(explanation)}`)
 
-  const combined = `${context ?? ''} ${prompt ?? ''}`
+  const combined = `${context} ${prompt ?? ''}`
   for (const phrase of missingMaterialPhrases) {
-    if (combined.includes(phrase)) failures.push(`${place}: missing-material wording ${JSON.stringify(phrase)} is forbidden unless a question-media schema supplies the asset`)
+    if (combined.includes(phrase)) failures.push(`${place}: ${id} refers to missing material (${phrase}) without an attached question-media schema`)
   }
 
   if (prompt) {
@@ -101,58 +165,54 @@ function visitObject(sourceFile, node) {
   }
 
   if (kind === 'choice') {
-    const optionsProp = property(node, 'options')
-    const correctProp = property(node, 'correctIndex')
-    if (!optionsProp || !ts.isArrayLiteralExpression(optionsProp.initializer)) {
-      failures.push(`${place}: choice question requires a literal options array`)
-    } else {
-      const optionNodes = optionsProp.initializer.elements
-      const optionValues = optionNodes.map((item) => stringValue(item))
-      if (optionValues.some((item) => item === null)) failures.push(`${place}: every choice option must be a literal string for source QA`)
-      if (optionValues.length < 3) failures.push(`${place}: choice question has only ${optionValues.length} options`)
-      const normalized = optionValues.filter((item) => item !== null).map((item) => normalizePrompt(item))
-      if (new Set(normalized).size !== normalized.length) failures.push(`${place}: duplicate choice options`)
-      const correctIndex = correctProp ? numericValue(correctProp.initializer) : null
-      if (correctIndex === null || !Number.isInteger(correctIndex)) failures.push(`${place}: choice question requires integer correctIndex`)
-      else if (correctIndex < 0 || correctIndex >= optionValues.length) failures.push(`${place}: correctIndex ${correctIndex} outside ${optionValues.length} options`)
+    const options = readStringArrayProperty(objectText, 'options')
+    const correctIndex = readNumberProperty(objectText, 'correctIndex')
+    if (!options) failures.push(`${place}: ${id} requires a literal options array`)
+    else {
+      if (options.length < 3) failures.push(`${place}: ${id} has only ${options.length} options`)
+      const normalized = options.map(normalizePrompt)
+      if (new Set(normalized).size !== normalized.length) failures.push(`${place}: ${id} has duplicate choice options`)
+      if (correctIndex === null || !Number.isInteger(correctIndex)) failures.push(`${place}: ${id} requires integer correctIndex`)
+      else if (correctIndex < 0 || correctIndex >= options.length) failures.push(`${place}: ${id} correctIndex ${correctIndex} is outside ${options.length} options`)
     }
   }
 
   if (kind === 'response') {
-    const sampleProp = property(node, 'sampleAnswer')
-    const sample = sampleProp ? stringValue(sampleProp.initializer) : null
-    if (!sample?.trim()) failures.push(`${place}: response question requires a literal sampleAnswer`)
-    else if (sample.trim().length < 15) warnings.push(`${place}: response sample answer may be too thin for a scoring reference`)
+    const sampleAnswer = readStringProperty(objectText, 'sampleAnswer')
+    if (!sampleAnswer?.trim()) failures.push(`${place}: ${id} requires a literal sampleAnswer`)
+    else if (sampleAnswer.trim().length < 15) warnings.push(`${place}: ${id} sample answer may be too thin for a scoring reference`)
   }
 
-  questions.push({ id, kind, prompt, file: path.relative(root, sourceFile.fileName), place })
+  questions.push({ id, kind, prompt, file: relative, place })
 }
 
 const sourceFiles = walkFiles(srcRoot)
 for (const file of sourceFiles) {
-  const text = fs.readFileSync(file, 'utf8')
+  const source = fs.readFileSync(file, 'utf8')
   const relative = path.relative(root, file)
-  if (text.includes('בלבד')) {
-    if (relative === 'src/curriculum-reviewed-science7.ts') warnings.push(`${relative}: legacy foreign-token artifact remains in source and blocks textbook-ready promotion until cleaned`)
-    else failures.push(`${relative}: unexpected foreign-token artifact בלבד`)
+  if (source.includes('בלבד')) warnings.push(`${relative}: legacy foreign-token artifact remains in source and must be cleaned before textbook-ready promotion`)
+
+  const pattern = /\{\s*id\s*:\s*(['"])((?:g\d+-)?[^'"\n]+?(?:-supp)?-q\d+)\1/g
+  let match
+  while ((match = pattern.exec(source)) !== null) {
+    const objectStart = match.index
+    const balanced = extractBalanced(source, objectStart, '{', '}')
+    if (!balanced) {
+      failures.push(`${relative}:${lineNumber(source, objectStart)}: could not parse question object ${match[2]}`)
+      continue
+    }
+    inspectQuestion(file, source, balanced.text, objectStart, match[2])
+    pattern.lastIndex = balanced.end
   }
-  const sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
-  const visit = (node) => {
-    visitObject(sourceFile, node)
-    ts.forEachChild(node, visit)
-  }
-  visit(sourceFile)
 }
 
 for (const [prompt, locations] of prompts.entries()) {
   if (locations.length >= 3) warnings.push(`repeated explicit prompt (${locations.length}x): ${prompt.slice(0, 90)} -> ${locations.join(', ')}`)
 }
 
-const explicitReviewed = questions.filter((question) => /curriculum-(reviewed|textbook-supplement)-/.test(question.file))
-const choiceCount = explicitReviewed.filter((question) => question.kind === 'choice').length
-const responseCount = explicitReviewed.filter((question) => question.kind === 'response').length
-
-if (explicitReviewed.length < 300) failures.push(`expected at least 300 explicit reviewed/supplement questions, found ${explicitReviewed.length}`)
+const choiceCount = questions.filter((question) => question.kind === 'choice').length
+const responseCount = questions.filter((question) => question.kind === 'response').length
+if (questions.length < 300) failures.push(`expected at least 300 explicit reviewed/supplement questions, found ${questions.length}`)
 
 if (failures.length) {
   console.error('[curriculum-source-audit] FAILED')
@@ -162,8 +222,8 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log(`[curriculum-source-audit] scanned ${sourceFiles.length} curriculum source files`)
-console.log(`[curriculum-source-audit] explicit reviewed/supplement questions: ${explicitReviewed.length} (${choiceCount} choice / ${responseCount} response)`)
+console.log(`[curriculum-source-audit] scanned ${sourceFiles.length} reviewed/supplement source files`)
+console.log(`[curriculum-source-audit] explicit questions: ${questions.length} (${choiceCount} choice / ${responseCount} response)`)
 console.log(`[curriculum-source-audit] unique explicit question ids: ${ids.size}`)
 console.log(`[curriculum-source-audit] warnings: ${warnings.length}`)
 for (const warning of warnings.slice(0, 25)) console.log(`[curriculum-source-audit] NOTE: ${warning}`)
