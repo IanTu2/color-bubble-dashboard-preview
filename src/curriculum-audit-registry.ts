@@ -1,4 +1,5 @@
 import type { CurriculumSubjectId } from './curriculum-plan'
+import { GRADE7_MATH_OFFICIAL_SCOPE } from './curriculum-official-scope-math7'
 
 export type CurriculumAuditTier =
   | 'textbook-ready'
@@ -42,17 +43,7 @@ export const CURRICULUM_OFFICIAL_SOURCES = {
   social: 'https://www.naer.edu.tw/upload/1/16/doc/819/%E5%8D%81%E4%BA%8C%E5%B9%B4%E5%9C%8B%E6%B0%91%E5%9F%BA%E6%9C%AC%E6%95%99%E8%82%B2%E8%AA%B2%E7%A8%8B%E7%B6%B1%E8%A6%81%E5%9C%8B%E6%B0%91%E4%B8%AD%E5%B0%8F%E5%AD%B8%E6%9A%A8%E6%99%AE%E9%80%9A%E5%9E%8B%E9%AB%98%E7%B4%9A%E4%B8%AD%E7%AD%89%E5%AD%B8%E6%A0%A1-%E7%A4%BE%E6%9C%83%E9%A0%98%E5%9F%9F.pdf',
 } as const
 
-const GRADE7_MATH_SCOPE_VERIFIED = new Set([
-  'g7-math-s1-u1',
-  'g7-math-s1-u2',
-  'g7-math-s1-u3',
-  'g7-math-s2-u1',
-  'g7-math-s2-u2',
-  'g7-math-s2-u3',
-  'g7-math-s2-u4',
-  'g7-math-s2-u5',
-  'g7-math-s2-u6',
-])
+const GRADE7_MATH_SCOPE_VERIFIED = new Set(GRADE7_MATH_OFFICIAL_SCOPE.map((item) => item.unitId))
 
 // v10 起 textbook-ready 必須通過課綱範圍、內容、題庫、媒體與整體教學流程五道 gate。
 // 現階段刻意保持空集合：舊的 reviewed 不自動等於教科書級。
