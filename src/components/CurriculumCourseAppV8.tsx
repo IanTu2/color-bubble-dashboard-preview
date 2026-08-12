@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef } from 'react'
 import {
-  CurriculumCourseApp as CurriculumCourseAppV5,
+  CurriculumCourseApp as CurriculumCourseAppV12,
   type CurriculumCourseSelection,
-} from './CurriculumCourseAppV5'
+} from './CurriculumCourseAppV12'
 import { findVettedCurriculumMedia } from '../curriculum-vetted-media'
 import type { Language } from '../types'
 
@@ -134,7 +134,7 @@ function buildVettedFigure(asset: ReturnType<typeof findVettedCurriculumMedia>, 
   copy.className = 'curriculum-vetted-media-copy'
   const label = document.createElement('span')
   label.className = 'curriculum-vetted-media-label'
-  label.textContent = '教材圖解 · 已核對來源'
+  label.textContent = '教材圖解'
   const title = document.createElement('strong')
   title.textContent = asset.title
   const caption = document.createElement('p')
@@ -143,7 +143,7 @@ function buildVettedFigure(asset: ReturnType<typeof findVettedCurriculumMedia>, 
   source.href = asset.sourcePage
   source.target = '_blank'
   source.rel = 'noreferrer'
-  source.textContent = `來源：${asset.attribution} · ${asset.license}`
+  source.textContent = '圖片來源與授權'
   copy.append(label, title, caption, source)
   figure.append(imageWrap, copy)
   return figure
@@ -221,7 +221,7 @@ export function CurriculumCourseApp(props: Props) {
 
   return (
     <div ref={rootRef} className="curriculum-course-v8">
-      <CurriculumCourseAppV5 {...props} />
+      <CurriculumCourseAppV12 {...props} />
     </div>
   )
 }
