@@ -1,0 +1,51 @@
+name: One-shot v11 curriculum gate and merge
+
+on:
+  push:
+    branches:
+      - feat/curriculum-audit-grade7-languages-social-v11
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: v11-curriculum-gate
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/curriculum-audit-grade7-languages-social-v11
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run every curriculum gate and production build
+        run: npm run build
+
+      - name: Remove one-shot gate from feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/one-shot-v11-gate-and-merge.yml
+          git commit -m "chore: remove one-shot v11 merge gate"
+          git push origin HEAD:feat/curriculum-audit-grade7-languages-social-v11
+
+      - name: Mark PR ready
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr ready 44 --repo IanTu2/color-bubble-dashboard-preview || true
+
+      - name: Merge only after successful gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge 44 --repo IanTu2/color-bubble-dashboard-preview --merge --auto
