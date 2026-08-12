@@ -86,15 +86,15 @@ for (const phrase of bannedMissingMaterial) {
 const player = read('src/components/CurriculumCourseAppV5.tsx')
 if (player.includes("from '../curriculum-teaching-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy teaching-content fallback')
 if (player.includes("from '../curriculum-rich-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy rich-content fallback')
+if (!player.includes('getUnitAuditSnapshot')) failures.push('CurriculumCourseAppV5 must render v10 audit status directly')
+if (!player.includes('getCurriculumUnitContent')) failures.push('CurriculumCourseAppV5 must distinguish available curriculum content from QA tier')
+if (!player.includes('isReviewedUnit')) failures.push('CurriculumCourseAppV5 must distinguish strict human review status')
 
 const stableVisualPlayer = read('src/components/CurriculumCourseAppV8.tsx')
-const foundationStatusPlayer = read('src/components/CurriculumCourseAppV9.tsx')
 const playerExport = read('src/components/CurriculumCourseApp.tsx')
 const stabilityCss = read('src/curriculum-visual-stability-v8.css')
-if (!playerExport.includes("from './CurriculumCourseAppV9'")) failures.push('active curriculum player must use v9 all-grade foundation status layer')
-if (!foundationStatusPlayer.includes("from './CurriculumCourseAppV8'")) failures.push('v9 must preserve the stable v8 visual player')
-if (!foundationStatusPlayer.includes('isReviewedUnit')) failures.push('v9 must distinguish manually reviewed units from foundation content')
-if (!foundationStatusPlayer.includes('基礎教材')) failures.push('v9 must visibly label foundation material instead of pretending it is reviewed')
+if (!playerExport.includes("from './CurriculumCourseAppV8'")) failures.push('active curriculum player must use v8 stable visual layer directly after v10 audit status is rendered inside V5')
+if (playerExport.includes('CurriculumCourseAppV9')) failures.push('v9 status MutationObserver must not remain on the active curriculum path')
 if (!stableVisualPlayer.includes("from './CurriculumCourseAppV5'")) failures.push('v8 must attach directly to v5 instead of nesting the competing v6/v7 observers')
 if (!stableVisualPlayer.includes('useLayoutEffect')) failures.push('v8 visuals must be synchronized before paint with useLayoutEffect')
 if (stableVisualPlayer.includes('requestAnimationFrame')) failures.push('v8 visual layer must not defer layout changes to requestAnimationFrame')
@@ -138,4 +138,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] reviewed + all-grade foundation + vetted animation + visual stability checks passed')
+console.log('[curriculum-qa] reviewed + all-grade foundation + vetted animation + visual stability + direct audit status checks passed')
