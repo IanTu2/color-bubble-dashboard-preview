@@ -14,10 +14,10 @@ import {
   type CurriculumSemester,
   type CurriculumSubjectId,
 } from '../curriculum-plan-v5'
-import {
-  getTextbookUnitContentV14,
-  type TextbookUnitContentV14,
-  type TextbookVisual,
+import { getTextbookUnitContentV14 } from '../curriculum-textbook-v14-final'
+import type {
+  TextbookUnitContentV14,
+  TextbookVisual,
 } from '../curriculum-textbook-v14'
 import { CURRICULUM_VETTED_MEDIA } from '../curriculum-vetted-media'
 import type { Language } from '../types'
@@ -217,8 +217,8 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
   if (!unitContent) {
     return (
       <div className="curriculum-v14-blocked">
-        <strong>教材完整性檢查未通過</strong>
-        <p>這個單元沒有通過 V14 教材 gate，因此學生端不會把半完成內容當成正式教材顯示。</p>
+        <strong>教材準備中</strong>
+        <p>這個單元尚未通過完整教材檢查，因此暫時不顯示未完成內容。</p>
       </div>
     )
   }
@@ -421,7 +421,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
     <div className={`curriculum-v14 course-${subject}`}>
       <header className="curriculum-v14-header">
         <div className="curriculum-v14-identity"><span>{meta.icon}</span><div><strong>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn}</strong><small>{unit.title}</small></div></div>
-        <div className="curriculum-v14-meta"><span>{semester === 1 ? '上學期' : '下學期'}</span><span>{LESSON_LABEL[lesson.kind]} {safeLessonIndex + 1}/{unit.lessons.length}</span><span>{overall}%</span><span>Textbook V14</span><button type="button" onClick={() => setDirectoryOpen(true)}>☰ 課程目錄</button></div>
+        <div className="curriculum-v14-meta"><span>{semester === 1 ? '上學期' : '下學期'}</span><span>{LESSON_LABEL[lesson.kind]} {safeLessonIndex + 1}/{unit.lessons.length}</span><span>{overall}%</span><span>正式教材 V14</span><button type="button" onClick={() => setDirectoryOpen(true)}>☰ 課程目錄</button></div>
       </header>
 
       <main className="curriculum-v14-stage">
@@ -431,7 +431,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
       </main>
 
       <aside className={`curriculum-v14-directory${directoryOpen ? ' open' : ''}`} aria-hidden={!directoryOpen}>
-        <header><div><small>COURSE MAP · TEXTBOOK V14</small><h2>{gradeLabel(grade, language)} · {meta.labelZh}</h2></div><button type="button" onClick={() => setDirectoryOpen(false)}>×</button></header>
+        <header><div><small>COURSE MAP · V14</small><h2>{gradeLabel(grade, language)} · {meta.labelZh}</h2></div><button type="button" onClick={() => setDirectoryOpen(false)}>×</button></header>
         <div className="curriculum-v14-semesters"><button className={semester === 1 ? 'active' : ''} type="button" onClick={() => selectSemester(1)}>上學期</button><button className={semester === 2 ? 'active' : ''} type="button" onClick={() => selectSemester(2)}>下學期</button></div>
         <div className="curriculum-v14-unit-list">{semesterPlan.units.map((entry, nextUnitIndex) => (
           <section key={entry.id} className={nextUnitIndex === safeUnitIndex ? 'active' : ''}>
