@@ -8,6 +8,7 @@ import {
   type CurriculumPathwayId,
   type CurriculumSubjectId,
 } from './curriculum-plan-v5'
+import { getPathwayKnowledgeProfileV14 } from './curriculum-pathway-knowledge-v14'
 import type {
   ReviewedChoiceQuestion,
   ReviewedConcept,
@@ -142,24 +143,31 @@ function generatedConcept(context: UnitContext, phrase: string, index: number): 
 }
 
 function ensureConcepts(context: UnitContext, source: ReviewedConcept[]): ReviewedConcept[] {
-  const concepts: ReviewedConcept[] = source.map((item) => ({
-    title: item.title,
-    explanation: item.explanation.trim(),
-    example: item.example?.trim(),
-  }))
-  const titles = new Set(concepts.map((item) => item.title.replace(/\s+/g, '')))
+  const profile = getPathwayKnowledgeProfileV14({
+    grade: context.grade,
+    subject: context.subject,
+    pathway: context.pathway,
+    title: context.unit.title,
+    focus: context.unit.focus,
+  })
+  const concepts: ReviewedConcept[] = []
+  const titles = new Set<string>()
+  for (const item of [...profile.concepts, ...source]) {
+    const key = item.title.replace(/[\s「」『』（）()]/g, '')
+    if (!key || titles.has(key)) continue
+    titles.add(key)
+    concepts.push({ title: item.title, explanation: item.explanation.trim(), example: item.example?.trim() })
+  }
   let cursor = 0
   for (const phrase of focusPhrases(context)) {
     if (concepts.length >= 7) break
     const candidate = generatedConcept(context, phrase, cursor++)
-    const key = candidate.title.replace(/\s+/g, '')
+    const key = candidate.title.replace(/[\s「」『』（）()]/g, '')
     if (titles.has(key)) continue
     titles.add(key)
     concepts.push(candidate)
   }
-  while (concepts.length < 6) {
-    concepts.push(generatedConcept(context, `${context.unit.title}核心觀念`, concepts.length))
-  }
+  while (concepts.length < 6) concepts.push(generatedConcept(context, `${context.unit.title}核心觀念`, concepts.length))
   return concepts.slice(0, 8)
 }
 
@@ -189,21 +197,9 @@ function buildMisconceptions(context: UnitContext, concepts: ReviewedConcept[]) 
 
 function buildVisuals(context: UnitContext, concepts: ReviewedConcept[], misconceptions: TextbookMisconception[]): TextbookVisual[] {
   return [
-    {
-      id: `${context.unit.id}-v14-concept-map`, kind: 'concept-map', title: `${context.unit.title}｜概念地圖`,
-      caption: '先看概念之間的關係，再進入逐頁解釋。',
-      items: concepts.slice(0, 6).map((item) => ({ label: item.title, detail: compact(item.explanation) })),
-    },
-    {
-      id: `${context.unit.id}-v14-process`, kind: 'process', title: `${getCurriculumCourseMeta(context.subject, context.pathway).labelZh}思考流程`,
-      caption: '本單元會反覆使用同一條可重做的解題／探究流程。',
-      items: methodSteps(context).map((label, index) => ({ label: `${index + 1}. ${label}`, detail: `把「${context.unit.focus}」中和這一步直接相關的條件整理清楚，不跳過理由。` })),
-    },
-    {
-      id: `${context.unit.id}-v14-misconceptions`, kind: 'comparison', title: '常見迷思：錯在哪裡？',
-      caption: '比較錯誤說法與修正方法，建立自我檢查能力。',
-      items: misconceptions.map((item) => ({ label: compact(item.claim, 68), detail: item.correction })),
-    },
+    { id: `${context.unit.id}-v14-concept-map`, kind: 'concept-map', title: `${context.unit.title}｜概念地圖`, caption: '先看概念之間的關係，再進入逐頁解釋。', items: concepts.slice(0, 6).map((item) => ({ label: item.title, detail: compact(item.explanation) })) },
+    { id: `${context.unit.id}-v14-process`, kind: 'process', title: `${getCurriculumCourseMeta(context.subject, context.pathway).labelZh}思考流程`, caption: '本單元會反覆使用同一條可重做的解題／探究流程。', items: methodSteps(context).map((label, index) => ({ label: `${index + 1}. ${label}`, detail: `把「${context.unit.focus}」中和這一步直接相關的條件整理清楚，不跳過理由。` })) },
+    { id: `${context.unit.id}-v14-misconceptions`, kind: 'comparison', title: '常見迷思：錯在哪裡？', caption: '比較錯誤說法與修正方法，建立自我檢查能力。', items: misconceptions.map((item) => ({ label: compact(item.claim, 68), detail: item.correction })) },
   ]
 }
 
@@ -226,10 +222,7 @@ function generatedWorkedExample(context: UnitContext, concept: ReviewedConcept, 
 function ensureWorkedExamples(context: UnitContext, source: ReviewedWorkedExample[], concepts: ReviewedConcept[], _misconceptions: TextbookMisconception[]) {
   const result: ReviewedWorkedExample[] = [...source]
   let cursor = 0
-  while (result.length < 4) {
-    result.push(generatedWorkedExample(context, concepts[cursor % concepts.length], cursor))
-    cursor += 1
-  }
+  while (result.length < 4) { result.push(generatedWorkedExample(context, concepts[cursor % concepts.length], cursor)); cursor += 1 }
   return result.slice(0, 5)
 }
 
@@ -237,17 +230,11 @@ function makeChoice(id: string, level: ReviewedChoiceQuestion['level'], prompt: 
   const options = unique([correct, ...distractors, '只背最後答案，不檢查條件。', '忽略題目提供的限制，直接猜結論。']).slice(0, 4)
   while (options.length < 4) options.push(`不符合本題條件的說法 ${options.length + 1}`)
   const correctIndex = options.indexOf(correct)
-  return {
-    id, kind: 'choice', level, prompt, context, options, correctIndex, explanation,
-    optionFeedback: options.map((option) => option === correct ? `正確。${explanation}` : `這個選項沒有同時符合題目條件與教材定義。${explanation}`),
-  }
+  return { id, kind: 'choice', level, prompt, context, options, correctIndex, explanation, optionFeedback: options.map((option) => option === correct ? `正確。${explanation}` : `這個選項沒有同時符合題目條件與教材定義。${explanation}`) }
 }
 
 function makeResponse(id: string, level: ReviewedResponseQuestion['level'], prompt: string, context: string, sampleAnswer: string, explanation: string): EnhancedResponse {
-  return {
-    id, kind: 'response', level, prompt, context, sampleAnswer, explanation,
-    rubric: ['有正確使用本單元核心觀念或方法', '至少指出兩項題目中的具體線索或條件', '能說明線索如何支持結論並完成檢查'],
-  }
+  return { id, kind: 'response', level, prompt, context, sampleAnswer, explanation, rubric: ['有正確使用本單元核心觀念或方法', '至少指出兩項題目中的具體線索或條件', '能說明線索如何支持結論並完成檢查'] }
 }
 
 function selfContained(question: ReviewedQuestion) {
@@ -259,61 +246,18 @@ function ensureQuestions(context: UnitContext, source: ReviewedQuestion[], conce
   const generated: ReviewedQuestion[] = []
   const descriptions = concepts.map((item) => compact(item.explanation, 95))
   const examples = concepts.map((item) => compact(item.example ?? item.explanation, 95))
-
-  concepts.slice(0, 4).forEach((concept, index) => {
-    generated.push(makeChoice(
-      `${context.unit.id}-tb-v14-def-${index + 1}`, '理解', `下列哪個敘述最符合「${concept.title}」？`, descriptions[index],
-      descriptions.filter((_, itemIndex) => itemIndex !== index).slice(0, 3), concept.explanation,
-      `單元「${context.unit.title}」；請依教材已解釋過的核心觀念判斷。`,
-    ))
-  })
-  concepts.slice(0, 4).forEach((concept, index) => {
-    generated.push(makeChoice(
-      `${context.unit.id}-tb-v14-app-${index + 1}`, '應用', `哪個例子最能直接說明「${concept.title}」？`, examples[index],
-      examples.filter((_, itemIndex) => itemIndex !== index).slice(0, 3), `正確例子必須同時符合「${concept.title}」的完整條件。`,
-      `單元「${context.unit.title}」；比較四個自足例子後再判斷。`,
-    ))
-  })
-  misconceptions.slice(0, 3).forEach((item, index) => {
-    generated.push(makeChoice(
-      `${context.unit.id}-tb-v14-mis-${index + 1}`, '檢核', `同學說：「${item.claim}」哪個修正最完整？`, item.correction,
-      misconceptions.filter((_, itemIndex) => itemIndex !== index).map((entry) => entry.correction).slice(0, 2).concat(item.claim), item.reason,
-      `單元「${context.unit.title}」；判斷原說法漏掉的條件、證據或檢查步驟。`,
-    ))
-  })
-  concepts.slice(0, 3).forEach((concept, index) => {
-    const contextText = concept.example ?? `本單元聚焦：${context.unit.focus}`
-    generated.push(makeResponse(
-      `${context.unit.id}-tb-v14-response-${index + 1}`, index === 0 ? '理解' : '應用',
-      `這個情境如何呈現「${concept.title}」？請寫出至少兩個判斷線索。`, contextText,
-      `${concept.explanation} 完整作答要把概念和情境中的具體條件連起來，並說明這些線索為什麼支持結論。`,
-      `本題檢查是否真的能把「${concept.title}」用在新的完整情境。`,
-    ))
-  })
-  generated.push(makeResponse(
-    `${context.unit.id}-tb-v14-synthesis`, '檢核',
-    `針對「${context.unit.title}」，請說明你會先檢查什麼、如何形成結論，以及最後怎麼驗證或限制結論。`,
-    `本單元範圍：${context.unit.focus}`,
-    `可依「${methodSteps(context).join(' → ')}」回答：先整理條件或證據，再用核心觀念推理，最後用驗算、第二份證據、換情境或資料範圍檢查結論。`,
-    '單元檢核重點是說出一條可重做的思考流程，而不是背固定句。',
-  ))
-
+  concepts.slice(0, 4).forEach((concept, index) => generated.push(makeChoice(`${context.unit.id}-tb-v14-def-${index + 1}`, '理解', `下列哪個敘述最符合「${concept.title}」？`, descriptions[index], descriptions.filter((_, itemIndex) => itemIndex !== index).slice(0, 3), concept.explanation, `單元「${context.unit.title}」；請依教材已解釋過的核心觀念判斷。`)))
+  concepts.slice(0, 4).forEach((concept, index) => generated.push(makeChoice(`${context.unit.id}-tb-v14-app-${index + 1}`, '應用', `哪個例子最能直接說明「${concept.title}」？`, examples[index], examples.filter((_, itemIndex) => itemIndex !== index).slice(0, 3), `正確例子必須同時符合「${concept.title}」的完整條件。`, `單元「${context.unit.title}」；比較四個自足例子後再判斷。`)))
+  misconceptions.slice(0, 3).forEach((item, index) => generated.push(makeChoice(`${context.unit.id}-tb-v14-mis-${index + 1}`, '檢核', `同學說：「${item.claim}」哪個修正最完整？`, item.correction, misconceptions.filter((_, itemIndex) => itemIndex !== index).map((entry) => entry.correction).slice(0, 2).concat(item.claim), item.reason, `單元「${context.unit.title}」；判斷原說法漏掉的條件、證據或檢查步驟。`)))
+  concepts.slice(0, 3).forEach((concept, index) => { const contextText = concept.example ?? `本單元聚焦：${context.unit.focus}`; generated.push(makeResponse(`${context.unit.id}-tb-v14-response-${index + 1}`, index === 0 ? '理解' : '應用', `這個情境如何呈現「${concept.title}」？請寫出至少兩個判斷線索。`, contextText, `${concept.explanation} 完整作答要把概念和情境中的具體條件連起來，並說明這些線索為什麼支持結論。`, `本題檢查是否真的能把「${concept.title}」用在新的完整情境。`)) })
+  generated.push(makeResponse(`${context.unit.id}-tb-v14-synthesis`, '檢核', `針對「${context.unit.title}」，請說明你會先檢查什麼、如何形成結論，以及最後怎麼驗證或限制結論。`, `本單元範圍：${context.unit.focus}`, `可依「${methodSteps(context).join(' → ')}」回答：先整理條件或證據，再用核心觀念推理，最後用驗算、第二份證據、換情境或資料範圍檢查結論。`, '單元檢核重點是說出一條可重做的思考流程，而不是背固定句。'))
   const candidates = [...source.filter(selfContained).slice(0, 6), ...generated]
   const seen = new Set<string>()
-  return candidates.filter((question) => {
-    const key = question.prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, '')
-    if (!key || seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  return candidates.filter((question) => { const key = question.prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, ''); if (!key || seen.has(key)) return false; seen.add(key); return true })
 }
 
 function buildTakeaway(context: UnitContext, concepts: ReviewedConcept[], misconceptions: TextbookMisconception[]) {
-  return [
-    ...concepts.slice(0, 5).map((item) => `${item.title}：${compact(item.explanation, 85)}`),
-    `方法：${methodSteps(context).join(' → ')}。`,
-    `自我檢查：${misconceptions[0]?.correction ?? '重新對照題目條件與結論。'}`,
-  ].slice(0, 7)
+  return [...concepts.slice(0, 5).map((item) => `${item.title}：${compact(item.explanation, 85)}`), `方法：${methodSteps(context).join(' → ')}。`, `自我檢查：${misconceptions[0]?.correction ?? '重新對照題目條件與結論。'}`].slice(0, 7)
 }
 
 function buildTextbookUnit(unitId: string): TextbookUnitContentV14 | null {
@@ -325,23 +269,11 @@ function buildTextbookUnit(unitId: string): TextbookUnitContentV14 | null {
   const workedExamples = ensureWorkedExamples(context, base.workedExamples, concepts, misconceptions)
   const questions = ensureQuestions(context, base.questions, concepts, misconceptions)
   return {
-    grade: context.grade,
-    subject: context.subject,
-    pathway: context.pathway,
-    unitId,
-    reviewStatus: 'textbook-ready',
-    textbookVersion: 'v14',
+    grade: context.grade, subject: context.subject, pathway: context.pathway, unitId, reviewStatus: 'textbook-ready', textbookVersion: 'v14',
     researchBasis: Array.from(new Set([...base.researchBasis, `${stageName(context.grade)}正式領域／科目課程綱要`, '國家教育研究院領域／科目課程綱要與課程手冊', 'Bubble Space V14：逐單元教材完整性、題目自足性、迷思辨析、示範與分層題庫 gate'])),
-    sourceRefs: sourceRefs(context),
-    objectives: buildObjectives(context, concepts),
+    sourceRefs: sourceRefs(context), objectives: buildObjectives(context, concepts),
     overview: `${base.overview}\n\n本單元範圍是「${context.unit.focus}」。學生需要依「${methodSteps(context).join(' → ')}」重新處理新的題目、文本、資料或生活情境。`,
-    concepts,
-    misconceptions,
-    visuals: buildVisuals(context, concepts, misconceptions),
-    vocabulary: buildVocabulary(concepts),
-    workedExamples,
-    questions,
-    takeaway: buildTakeaway(context, concepts, misconceptions),
+    concepts, misconceptions, visuals: buildVisuals(context, concepts, misconceptions), vocabulary: buildVocabulary(concepts), workedExamples, questions, takeaway: buildTakeaway(context, concepts, misconceptions),
   }
 }
 
@@ -362,52 +294,24 @@ export function validateTextbookUnitV14(unit: TextbookUnitContentV14): TextbookV
   if (unit.workedExamples.length < 3) errors.push(`${prefix}: worked examples ${unit.workedExamples.length} < 3`)
   if (unit.workedExamples.some((item) => item.context.length < 25 || item.prompt.length < 18 || item.steps.length < 4 || item.answer.length < 25 || item.explanation.length < 35)) errors.push(`${prefix}: worked example is not fully specified`)
   if (unit.questions.length < 15) errors.push(`${prefix}: questions ${unit.questions.length} < 15`)
-
   const choices = unit.questions.filter((question): question is ReviewedChoiceQuestion => question.kind === 'choice')
   const responses = unit.questions.filter((question): question is ReviewedResponseQuestion => question.kind === 'response')
   if (choices.length < 8) errors.push(`${prefix}: choice questions ${choices.length} < 8`)
   if (responses.length < 3) errors.push(`${prefix}: response questions ${responses.length} < 3`)
   if (!['理解', '應用', '檢核'].every((level) => unit.questions.some((question) => question.level === level))) errors.push(`${prefix}: question levels incomplete`)
-
-  const ids = new Set<string>()
-  const prompts = new Set<string>()
+  const ids = new Set<string>(); const prompts = new Set<string>()
   for (const question of unit.questions) {
-    if (!question.id || ids.has(question.id)) errors.push(`${prefix}: duplicate/empty question id ${question.id}`)
-    ids.add(question.id)
-    const promptKey = question.prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, '')
-    if (!promptKey || prompts.has(promptKey)) errors.push(`${prefix}: duplicate/empty question prompt`)
-    prompts.add(promptKey)
-    const combined = `${question.context ?? ''} ${question.prompt} ${question.explanation}`
-    if (BANNED_MISSING_MATERIAL.some((pattern) => pattern.test(combined))) errors.push(`${prefix}: question refers to missing material`)
+    if (!question.id || ids.has(question.id)) errors.push(`${prefix}: duplicate/empty question id ${question.id}`); ids.add(question.id)
+    const promptKey = question.prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, ''); if (!promptKey || prompts.has(promptKey)) errors.push(`${prefix}: duplicate/empty question prompt`); prompts.add(promptKey)
+    const combined = `${question.context ?? ''} ${question.prompt} ${question.explanation}`; if (BANNED_MISSING_MATERIAL.some((pattern) => pattern.test(combined))) errors.push(`${prefix}: question refers to missing material`)
     if (question.explanation.trim().length < 25) errors.push(`${prefix}: question explanation too short`)
-    if (question.kind === 'choice') {
-      if (question.options.length !== 4 || new Set(question.options.map((item) => item.trim())).size !== 4) errors.push(`${prefix}: choice must have four unique options`)
-      if (question.correctIndex < 0 || question.correctIndex >= question.options.length) errors.push(`${prefix}: invalid correctIndex`)
-      const extra = question as EnhancedChoice
-      if (!extra.optionFeedback || extra.optionFeedback.length !== 4) errors.push(`${prefix}: choice option feedback incomplete`)
-    } else {
-      const extra = question as EnhancedResponse
-      if (question.sampleAnswer.trim().length < 45) errors.push(`${prefix}: response sample answer too short`)
-      if (!extra.rubric || extra.rubric.length < 3) errors.push(`${prefix}: response rubric incomplete`)
-    }
+    if (question.kind === 'choice') { if (question.options.length !== 4 || new Set(question.options.map((item) => item.trim())).size !== 4) errors.push(`${prefix}: choice must have four unique options`); if (question.correctIndex < 0 || question.correctIndex >= question.options.length) errors.push(`${prefix}: invalid correctIndex`); const extra = question as EnhancedChoice; if (!extra.optionFeedback || extra.optionFeedback.length !== 4) errors.push(`${prefix}: choice option feedback incomplete`) }
+    else { const extra = question as EnhancedResponse; if (question.sampleAnswer.trim().length < 45) errors.push(`${prefix}: response sample answer too short`); if (!extra.rubric || extra.rubric.length < 3) errors.push(`${prefix}: response rubric incomplete`) }
   }
   if (unit.takeaway.length < 5) errors.push(`${prefix}: takeaway ${unit.takeaway.length} < 5`)
   return { ready: errors.length === 0, errors }
 }
 
 const cache = new Map<string, TextbookUnitContentV14 | null>()
-
-export function getTextbookUnitContentV14(unitId: string): TextbookUnitContentV14 | null {
-  if (cache.has(unitId)) return cache.get(unitId) ?? null
-  const unit = buildTextbookUnit(unitId)
-  if (!unit) return null
-  const validation = validateTextbookUnitV14(unit)
-  const result = validation.ready ? unit : null
-  cache.set(unitId, result)
-  return result
-}
-
-export function inspectTextbookUnitV14(unitId: string) {
-  const unit = buildTextbookUnit(unitId)
-  return unit ? { unit, validation: validateTextbookUnitV14(unit) } : { unit: null, validation: { ready: false, errors: [`${unitId}: content not found`] } }
-}
+export function getTextbookUnitContentV14(unitId: string): TextbookUnitContentV14 | null { if (cache.has(unitId)) return cache.get(unitId) ?? null; const unit = buildTextbookUnit(unitId); if (!unit) return null; const result = validateTextbookUnitV14(unit).ready ? unit : null; cache.set(unitId, result); return result }
+export function inspectTextbookUnitV14(unitId: string) { const unit = buildTextbookUnit(unitId); return unit ? { unit, validation: validateTextbookUnitV14(unit) } : { unit: null, validation: { ready: false, errors: [`${unitId}: content not found`] } } }
