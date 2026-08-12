@@ -7,11 +7,13 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "predev": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
+    "curriculum:inventory": "node scripts/report-curriculum-audit.mjs",
+    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-curriculum-textbook.mjs && npm run curriculum:inventory",
+    "predev": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "dev": "vite",
-    "prebuild": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
+    "prebuild": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "build": "tsc -b && vite build",
-    "pretypecheck": "node scripts/build-cefr-lexicon.mjs && node scripts/check-curriculum-content.mjs",
+    "pretypecheck": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "typecheck": "tsc -b --pretty false",
     "preview": "vite preview"
   },
@@ -23,8 +25,8 @@
   "devDependencies": {
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.3",
     "typescript": "7.0.2",
-    "vite": "8.1.5"
+    "vite": "8.1.5",
+    "@vitejs/plugin-react": "6.0.3"
   }
 }

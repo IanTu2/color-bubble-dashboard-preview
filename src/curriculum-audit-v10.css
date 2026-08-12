@@ -1,0 +1,142 @@
+.curriculum-compact-meta .audit-status,
+.curriculum-directory-unit-title small[class*="audit-"],
+.curriculum-review-badge[class*="audit-"] {
+  border-radius: 999px;
+}
+
+.curriculum-compact-meta .audit-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.audit-textbook-ready {
+  color: #1b7a45 !important;
+}
+
+.audit-scope-verified {
+  color: #1b62a8 !important;
+}
+
+.audit-legacy-reviewed {
+  color: #8a640f !important;
+}
+
+.audit-foundation-draft {
+  color: #a04d13 !important;
+}
+
+.audit-structural-blocker {
+  color: #a12d39 !important;
+}
+
+.curriculum-review-badge[class*="audit-"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  align-items: center;
+  padding: 10px 13px;
+}
+
+.curriculum-review-badge[class*="audit-"] strong {
+  font-size: 12px;
+}
+
+.curriculum-review-badge[class*="audit-"] span {
+  font-size: 11px;
+  opacity: .78;
+}
+
+.curriculum-audit-warning {
+  margin-top: 10px;
+  padding: 11px 13px;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, currentColor 5%, transparent);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.curriculum-track-policy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 7px 16px;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.curriculum-track-policy strong {
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 999px;
+}
+
+.curriculum-track-policy span {
+  opacity: .8;
+}
+
+.curriculum-track-policy.policy-integrated-life,
+.curriculum-track-policy.policy-discipline-split-required,
+.curriculum-track-policy.policy-path-selection-required {
+  color: #9b3340;
+}
+
+.curriculum-track-policy.policy-platform-extension {
+  color: #8a640f;
+}
+
+@media (max-width: 760px) {
+  .curriculum-track-policy {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 12px;
+  }
+
+  .curriculum-compact-meta .audit-status {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+:root[data-theme="dark"] .audit-textbook-ready,
+:root.dark .audit-textbook-ready {
+  color: #7ed9a7 !important;
+}
+
+:root[data-theme="dark"] .audit-scope-verified,
+:root.dark .audit-scope-verified {
+  color: #8ec8ff !important;
+}
+
+:root[data-theme="dark"] .audit-legacy-reviewed,
+:root.dark .audit-legacy-reviewed {
+  color: #f1c66b !important;
+}
+
+:root[data-theme="dark"] .audit-foundation-draft,
+:root.dark .audit-foundation-draft {
+  color: #f3aa72 !important;
+}
+
+:root[data-theme="dark"] .audit-structural-blocker,
+:root.dark .audit-structural-blocker,
+:root[data-theme="dark"] .curriculum-track-policy.policy-integrated-life,
+:root[data-theme="dark"] .curriculum-track-policy.policy-discipline-split-required,
+:root[data-theme="dark"] .curriculum-track-policy.policy-path-selection-required,
+:root.dark .curriculum-track-policy.policy-integrated-life,
+:root.dark .curriculum-track-policy.policy-discipline-split-required,
+:root.dark .curriculum-track-policy.policy-path-selection-required {
+  color: #ff9aa6 !important;
+}
