@@ -72,7 +72,7 @@ for (const pathway of ['life','physics','chemistry','biology','earth-science','g
 for (const token of ['getCurriculumRouteOptions','getCurriculumCourseMeta','resolveCurriculumUnit','ambiguousBaseRoute','routeToken']) {
   if (!plan.includes(token)) failures.push(`V13 plan missing structural function ${token}`)
 }
-if (!plan.includes("if (grade <= 2)" ) || !plan.includes("pathwayRoute('science', 'life')")) failures.push('grades 1-2 must expose integrated Life Curriculum route')
+if (!plan.includes("if (grade <= 2)") || !plan.includes("pathwayRoute('science', 'life')")) failures.push('grades 1-2 must expose integrated Life Curriculum route')
 if (!plan.includes("grade === 11") || !plan.includes("pathwayRoute('math', 'math-a')") || !plan.includes("pathwayRoute('math', 'math-b')")) failures.push('grade 11 math A/B route split missing')
 if (!plan.includes("pathwayRoute('math', 'math-alpha')") || !plan.includes("pathwayRoute('math', 'math-beta')")) failures.push('grade 12 math 甲/乙 route split missing')
 for (const path of ['physics','chemistry','biology','earth-science']) if (!plan.includes(`pathwayRoute('science', '${path}')`)) failures.push(`high school science route missing ${path}`)
@@ -81,7 +81,7 @@ if (!plan.includes("if (grade >= 10 && (subject === 'science' || subject === 'so
 if (!plan.includes("if (grade >= 11 && subject === 'math') return true")) failures.push('ambiguous G11+ common math route must be blocked')
 
 const pathwayFoundation = read('src/curriculum-pathway-foundation-v13.ts')
-for (const token of ['getPathwayFoundationUnitContent','resolveCurriculumUnit','生活課程','高中分科課程','questions: []']) {
+for (const token of ['getPathwayFoundationUnitContent','resolveCurriculumUnit','生活課程','課程已放在正確的','questions: []']) {
   if (!pathwayFoundation.includes(token)) failures.push(`pathway foundation missing ${token}`)
 }
 const aggregator = read('src/curriculum-reviewed-content.ts')
