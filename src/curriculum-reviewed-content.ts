@@ -20,6 +20,7 @@ import { getPathwayFoundationUnitContent } from './curriculum-pathway-foundation
 import { buildLifeCurriculumQuestionsV13 } from './curriculum-life-question-bank-v13'
 import { enrichFoundationUnitV14 } from './curriculum-textbook-depth-v14'
 import { specializeLifeDepthV14 } from './curriculum-life-depth-v14'
+import { normalizeFoundationDepthV14 } from './curriculum-depth-normalizer-v14'
 import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import { getScience7TextbookSupplement } from './curriculum-textbook-supplement-science7'
 import {
@@ -176,7 +177,8 @@ export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent 
   const deepened = enrichFoundationUnitV14(withLifeQuestions)
   if (!deepened) return null
   const specialized = unitId.includes('-life-') ? specializeLifeDepthV14(deepened) : deepened
-  return sanitizeQuestions(specialized)
+  const normalized = normalizeFoundationDepthV14(specialized)
+  return sanitizeQuestions(normalized)
 }
 
 // 保留舊 API 給仍未遷移的呼叫端；品質層級請使用 isReviewedUnit 與內部 audit registry 判斷。
