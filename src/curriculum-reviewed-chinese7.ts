@@ -47,10 +47,10 @@ const narrativeDescription: ReviewedUnitContent = {
     {id:'g7-chinese-s1-u2-q3',kind:'choice',level:'理解',prompt:'敘事中的「衝突」最主要有什麼功能？',options:['迫使人物面對問題與做出選擇，推動情節','只用來增加字數','保證故事一定悲傷','取代所有場景描寫'],correctIndex:0,explanation:'衝突常使事件發展並呈現人物選擇。'},
     {id:'g7-chinese-s1-u2-q4',kind:'choice',level:'應用',context:'「雨越下越大，巷子盡頭的路燈忽明忽滅。阿澤看了看手中的地址，又看了看沒有門牌的老屋。」',prompt:'場景描寫最可能產生哪種效果？',options:['營造不安與不確定感','證明角色一定迷路十年','說明雨量精確數值','表示故事已經結束'],correctIndex:0,explanation:'大雨、閃爍路燈與無門牌共同營造不確定氣氛。'},
     {id:'g7-chinese-s1-u2-q5',kind:'choice',level:'理解',prompt:'第一人稱「我」敘事通常有哪個限制？',options:['「我」未必知道其他人物沒說出的內心','一定不能描寫任何景物','一定比第三人稱客觀','不能描述過去事件'],correctIndex:0,explanation:'第一人稱視角的資訊通常受敘述者經驗限制。'},
-    {id:'g7-chinese-s1-u2-q6',kind:'應用' as never,level:'應用',context:'故事中主角起初拒絕向同學求助，後來失敗後主動說出困難並接受合作。',prompt:'哪個主旨說法較完整？',options:['故事透過主角從逞強到願意合作，呈現承認限制也是成長的一部分','主旨就是「同學」兩個字','主旨是故事發生在學校','主旨只要寫「友情」就一定完整'],correctIndex:0,explanation:'完整主旨要結合事件與人物變化。'},
+    {id:'g7-chinese-s1-u2-q6',kind:'choice',level:'應用',context:'故事中主角起初拒絕向同學求助，後來失敗後主動說出困難並接受合作。',prompt:'哪個主旨說法較完整？',options:['故事透過主角從逞強到願意合作，呈現承認限制也是成長的一部分','主旨就是「同學」兩個字','主旨是故事發生在學校','主旨只要寫「友情」就一定完整'],correctIndex:0,explanation:'完整主旨要結合事件與人物變化。'},
     {id:'g7-chinese-s1-u2-q7',kind:'choice',level:'檢核',prompt:'閱讀敘事文要判斷人物性格，哪種證據通常較有力？',options:['人物在多個關鍵情境中的行動與選擇','只看人物名字','只看文章長度','只看第一句天氣'],correctIndex:0,explanation:'性格推論需要多個行動與選擇支持，避免單點過度推論。'},
     {id:'g7-chinese-s1-u2-q8',kind:'response',level:'檢核',context:'「媽媽把便當放在桌上，只說：『今天別又忘了。』我正要回嘴，看見她外套肩上還沾著清晨的雨。」',prompt:'這段可推論母親和敘述者之間有什麼情感張力？請引用細節說明。',sampleAnswer:'敘述者原本可能覺得母親在碎念而想反駁，但看到母親冒雨準備便當的痕跡後，讀者可感到責備背後也有照顧；「正要回嘴」與「肩上沾雨」形成轉折。',explanation:'回答不需要只有一個標準情緒詞，但必須以文本細節支持。'},
-  ] as any,
+  ],
   takeaway:['敘事要看事件中的人物選擇與變化。','衝突推動情節。','間接描寫讓讀者從細節推心理。','敘事觀點決定資訊範圍。','主旨要結合事件與改變，不只貼抽象標籤。'],
 }
 
@@ -75,9 +75,9 @@ const classicalBasics: ReviewedUnitContent = {
     {id:'g7-chinese-s1-u3-q4',kind:'choice',level:'理解',prompt:'遇到文言陌生字時，哪個順序較好？',options:['先看上下文與句法，再查注釋／工具書確認','只看現代第一個常用義','跳過整句','每個字都翻成相同固定意思'],correctIndex:0,explanation:'文言詞義高度依賴語境。'},
     {id:'g7-chinese-s1-u3-q5',kind:'choice',level:'應用',context:'「雨甚，客乃止行。」',prompt:'整句較自然的現代語是？',options:['雨下得很大，客人於是停止前行','雨很喜歡客人走路','客人把雨停下來','雨和客人都不存在'],correctIndex:0,explanation:'「甚」表程度，「乃」在此可理解為於是／才。'},
     {id:'g7-chinese-s1-u3-q6',kind:'choice',level:'檢核',prompt:'文言翻譯最不適合哪種做法？',options:['不管句法，每個字固定換一個現代字再串起來','確認人物和動作關係','注意古今義','翻完檢查現代語是否通順'],correctIndex:0,explanation:'逐字機械對譯容易破壞句法與語意。'},
-    {id:'g7-chinese-s1-u3-q7',kind:'應用' as never,level:'應用',context:'「童入室取傘，出而與客。」',prompt:'句中可能省略了哪個成分？',options:['「與」後省略「傘」等受詞','所有人物都省略','「室」一定是動詞','完全沒有可理解內容'],correctIndex:0,explanation:'前文「取傘」提供可補回的受詞，語意是把傘給客人。'},
+    {id:'g7-chinese-s1-u3-q7',kind:'choice',level:'應用',context:'「童入室取傘，出而與客。」',prompt:'句中可能省略了哪個成分？',options:['「與」後省略「傘」等受詞','所有人物都省略','「室」一定是動詞','完全沒有可理解內容'],correctIndex:0,explanation:'前文「取傘」提供可補回的受詞，語意是把傘給客人。'},
     {id:'g7-chinese-s1-u3-q8',kind:'response',level:'檢核',context:'平台自寫句：「晨起，見庭葉滿地，知昨夜風急。」',prompt:'請翻成自然現代中文，並說明「知昨夜風急」是觀察還是由觀察做出的推論。',sampleAnswer:'早晨起來，看見院子裡滿地落葉，便知道昨晚風很強。「滿地落葉」是觀察，「昨夜風很強」是根據現象做的推論。',explanation:'文言閱讀也可以結合資訊層次判斷，不只是翻字。'},
-  ] as any,
+  ],
   takeaway:['文言先找人物、動作與關係。','實詞與虛詞都要依語境判斷。','省略成分要有前後文依據。','翻譯不是逐字機械替換。','翻完要檢查資訊與現代語是否合理。'],
 }
 
@@ -99,12 +99,12 @@ const poetryImagery: ReviewedUnitContent = {
     {id:'g7-chinese-s2-u1-q1',kind:'choice',level:'理解',prompt:'「風在屋簷下低聲抱怨」最明顯使用？',options:['擬人','列數據','定義','因果論證'],correctIndex:0,explanation:'把「抱怨」這種人的行為賦予風。'},
     {id:'g7-chinese-s2-u1-q2',kind:'choice',level:'理解',prompt:'判斷詩中「月亮」的意義，最好的方法是？',options:['看它和其他意象、動詞及全詩脈絡的關係','固定背月亮永遠等於思鄉','只看標題字數','不需要文本證據'],correctIndex:0,explanation:'意象意義由具體文本脈絡產生。'},
     {id:'g7-chinese-s2-u1-q3',kind:'choice',level:'應用',context:'「記憶像口袋裡的一顆小石頭，走很久了還有重量。」',prompt:'譬喻相似點最接近？',options:['記憶雖小卻持續帶來可感的負擔／存在感','記憶真的由石頭製成','所有石頭都會說話','口袋就是大腦'],correctIndex:0,explanation:'譬喻要找兩者在語境中的共同特質。'},
-    {id:'g7-chinese-s2-u1-q4',kind:'理解' as never,level:'理解',prompt:'排比最常見的特徵是？',options:['相近句式連續排列形成強調或節奏','每句都完全沒有關係','只能出現在法律條文','一定只有兩個字'],correctIndex:0,explanation:'排比常以結構相近的多個分句累積語勢。'},
-    {id:'g7-chinese-s2-u1-q5',kind:'應用' as never,level:'應用',context:'「白天廣場擠滿聲音，夜裡只剩噴泉自己數著水滴。」',prompt:'哪個手法最值得注意？',options:['喧鬧與安靜的對比，加上噴泉擬人','只有精確統計','沒有任何修辭','全段都是法律命令'],correctIndex:0,explanation:'白天／夜晚、擁擠／只剩形成對比，「數著」又帶擬人。'},
+    {id:'g7-chinese-s2-u1-q4',kind:'choice',level:'理解',prompt:'排比最常見的特徵是？',options:['相近句式連續排列形成強調或節奏','每句都完全沒有關係','只能出現在法律條文','一定只有兩個字'],correctIndex:0,explanation:'排比常以結構相近的多個分句累積語勢。'},
+    {id:'g7-chinese-s2-u1-q5',kind:'choice',level:'應用',context:'「白天廣場擠滿聲音，夜裡只剩噴泉自己數著水滴。」',prompt:'哪個手法最值得注意？',options:['喧鬧與安靜的對比，加上噴泉擬人','只有精確統計','沒有任何修辭','全段都是法律命令'],correctIndex:0,explanation:'白天／夜晚、擁擠／只剩形成對比，「數著」又帶擬人。'},
     {id:'g7-chinese-s2-u1-q6',kind:'choice',level:'檢核',prompt:'哪個詩歌解釋最有說服力？',options:['先提出理解，再引用具體字詞與意象說明','只說「我就是覺得」','只查作者生日','只數每行字數'],correctIndex:0,explanation:'詩歌解釋仍需回到文本證據。'},
     {id:'g7-chinese-s2-u1-q7',kind:'choice',level:'理解',prompt:'反覆同一句話在詩中出現，每次上下文不同，可能有什麼作用？',options:['讓同一句在不同段落累積或改變意義','一定是作者打錯','完全沒有閱讀價值','表示每段意思都一樣'],correctIndex:0,explanation:'反覆可透過脈絡變化形成節奏與意義層次。'},
     {id:'g7-chinese-s2-u1-q8',kind:'response',level:'檢核',context:'平台原創：「雨停了／窗上的水痕還在往下走／我沒有再等訊息／只是沒有關燈。」',prompt:'請提出一種合理情緒解讀，並引用至少兩個細節。',sampleAnswer:'可讀為表面放下、內心仍等待：說「沒有再等訊息」像是在否認期待，但「沒有關燈」和仍往下的水痕保留未結束感。',explanation:'答案可不同，只要細節與推論能連起來。'},
-  ] as any,
+  ],
   takeaway:['意象沒有固定單一答案，要看全詩脈絡。','情感推論要有語言證據。','修辭要說明效果，不只命名。','對比與反覆能建立情緒層次。','多元解讀仍需要文本支持。'],
 }
 
@@ -126,12 +126,12 @@ const expositionArgument: ReviewedUnitContent = {
     {id:'g7-chinese-s2-u2-q1',kind:'choice',level:'理解',prompt:'文章先解釋「熱島效應」的定義，再列城市例子，主要屬哪種文本目的？',options:['說明事物與現象','敘述人物冒險','抒情表白','只列對話'],correctIndex:0,explanation:'定義與例子服務於說明。'},
     {id:'g7-chinese-s2-u2-q2',kind:'choice',level:'理解',prompt:'「學校應增加飲水機」在論說文中較接近？',options:['主張','統計數據','例句標點','文章作者姓名'],correctIndex:0,explanation:'它是一個希望讀者接受的政策判斷。'},
     {id:'g7-chinese-s2-u2-q3',kind:'choice',level:'理解',prompt:'哪個最接近「證據」？',options:['校內三年飲水機使用量與學生調查資料','我就是覺得比較好','所以一定如此','主張本身再說一次'],correctIndex:0,explanation:'證據應提供可檢查的資料或材料來支持理由。'},
-    {id:'g7-chinese-s2-u2-q4',kind:'應用' as never,level:'應用',context:'研究發現使用圖書館的學生平均成績較高。',prompt:'可以直接說「去圖書館一定使成績提高」嗎？',options:['不行，相關不等於因果，還要考慮其他因素與研究設計','可以，兩件事一起出現就一定有因果','只要樣本超過兩人就可以','完全不能研究這個問題'],correctIndex:0,explanation:'可能是原本較愛學習的學生也更常去圖書館，需要更好的研究設計判斷因果。'},
+    {id:'g7-chinese-s2-u2-q4',kind:'choice',level:'應用',context:'研究發現使用圖書館的學生平均成績較高。',prompt:'可以直接說「去圖書館一定使成績提高」嗎？',options:['不行，相關不等於因果，還要考慮其他因素與研究設計','可以，兩件事一起出現就一定有因果','只要樣本超過兩人就可以','完全不能研究這個問題'],correctIndex:0,explanation:'可能是原本較愛學習的學生也更常去圖書館，需要更好的研究設計判斷因果。'},
     {id:'g7-chinese-s2-u2-q5',kind:'choice',level:'應用',prompt:'讀一張折線圖前，下列哪項最不應省略？',options:['確認坐標軸、單位、時間與來源','只看線條顏色是否漂亮','只看最高點不看時間','忽略圖例'],correctIndex:0,explanation:'圖表的量尺與資料範圍會影響解讀。'},
     {id:'g7-chinese-s2-u2-q6',kind:'choice',level:'檢核',prompt:'哪種證據最可能支持「全校學生午餐滿意度下降」？',options:['相同方法、跨多班級的連續滿意度調查結果','一位同學今天不喜歡一道菜','作者說「大家都知道」','一張沒有來源的迷因'],correctIndex:0,explanation:'群體主張需要較具代表性且可比較的資料。'},
     {id:'g7-chinese-s2-u2-q7',kind:'choice',level:'理解',prompt:'作者主動回應「增加樹蔭會增加維護成本」這個反對意見，有什麼作用？',options:['檢驗並補強自己的論證','表示作者不知道主題','把文章變成詩','取消所有證據'],correctIndex:0,explanation:'回應合理反方能讓論證更完整。'},
     {id:'g7-chinese-s2-u2-q8',kind:'response',level:'檢核',context:'主張：「學校應把午休延長 20 分鐘。」',prompt:'請寫一個可支持此主張的「理由」和一項你希望蒐集的「證據」。',sampleAnswer:'理由：較充足休息可能改善下午注意力；證據：可比較調整前後不同班級的睡眠／休息情形、下午注意力或學習表現，並控制其他作息差異。',explanation:'重點是分清「為什麼」和「拿什麼資料來支持」。'},
-  ] as any,
+  ],
   takeaway:['先分辨文章是在說明還是論證。','主張、理由與證據功能不同。','單一案例不一定有代表性。','相關不等於因果。','圖表也要查時間、單位、來源與尺度。'],
 }
 
@@ -152,13 +152,13 @@ const writingStructure: ReviewedUnitContent = {
   questions:[
     {id:'g7-chinese-s2-u3-q1',kind:'choice',level:'理解',prompt:'題目「一次我改變想法的經驗」最核心的寫作要求是？',options:['寫出原本想法、造成改變的事件與後來理解','只列一天行程','介紹三種動物','只抄名言'],correctIndex:0,explanation:'題目的關鍵是「改變想法」及其過程。'},
     {id:'g7-chinese-s2-u3-q2',kind:'choice',level:'理解',prompt:'寫作前先用一句話寫中心意思，最主要目的？',options:['幫助取捨材料與安排段落','讓文章一定變長','取代正文','不用再修稿'],correctIndex:0,explanation:'中心是判斷材料是否相關的基準。'},
-    {id:'g7-chinese-s2-u3-q3',kind:'應用' as never,level:'應用',prompt:'中心是「第一次獨自搭車讓我學會先做準備」，哪個材料最相關？',options:['出發前查路線、坐錯方向後重新判斷並記下方法','早餐吃了什麼品牌麵包的所有細節','去年另一部電影劇情','同學的星座'],correctIndex:0,explanation:'材料要直接支持「準備與學習」的中心。'},
+    {id:'g7-chinese-s2-u3-q3',kind:'choice',level:'應用',prompt:'中心是「第一次獨自搭車讓我學會先做準備」，哪個材料最相關？',options:['出發前查路線、坐錯方向後重新判斷並記下方法','早餐吃了什麼品牌麵包的所有細節','去年另一部電影劇情','同學的星座'],correctIndex:0,explanation:'材料要直接支持「準備與學習」的中心。'},
     {id:'g7-chinese-s2-u3-q4',kind:'choice',level:'理解',prompt:'何時最適合換段？',options:['主要時間、場景、焦點或段落功能明顯改變時','每寫 20 個字固定換段','只要有逗號就換段','永遠不要換段'],correctIndex:0,explanation:'段落反映意思結構，不是固定字數。'},
     {id:'g7-chinese-s2-u3-q5',kind:'choice',level:'應用',prompt:'要呈現「他很疲憊」，哪一句細節較有畫面？',options:['他進門後鞋都沒脫好，就靠著牆坐了下來','他很疲憊很疲憊很疲憊','疲憊就是累','今天是星期五'],correctIndex:0,explanation:'具體動作能讓讀者自行感受人物狀態。'},
     {id:'g7-chinese-s2-u3-q6',kind:'choice',level:'理解',prompt:'第一輪修訂最值得先看什麼？',options:['中心、材料、順序與段落是否清楚','每個字是不是寫得一樣大','紙張是不是最白','先把所有逗號改成句號'],correctIndex:0,explanation:'先處理高層次內容結構，再處理表面錯誤。'},
-    {id:'g7-chinese-s2-u3-q7',kind:'檢核' as never,level:'檢核',context:'前句說「我原本很想參加」，後句卻接「因此，我決定退出」。',prompt:'如果中間沒有任何原因說明，最主要問題是？',options:['邏輯銜接不足，「因此」缺乏前提','字數太少所以一定錯','不能使用「因此」這個詞','每篇文章都必須參賽'],correctIndex:0,explanation:'連接詞必須和前後邏輯關係一致。'},
+    {id:'g7-chinese-s2-u3-q7',kind:'choice',level:'檢核',context:'前句說「我原本很想參加」，後句卻接「因此，我決定退出」。',prompt:'如果中間沒有任何原因說明，最主要問題是？',options:['邏輯銜接不足，「因此」缺乏前提','字數太少所以一定錯','不能使用「因此」這個詞','每篇文章都必須參賽'],correctIndex:0,explanation:'連接詞必須和前後邏輯關係一致。'},
     {id:'g7-chinese-s2-u3-q8',kind:'response',level:'檢核',prompt:'請為「我學會開口求助的一次經驗」設計三段式大綱，每段一句即可。',sampleAnswer:'第一段：我一直怕麻煩別人，遇到問題都自己撐；第二段：一次任務卡住造成更大麻煩，我終於向同學說明困難；第三段：獲得協助後完成任務，我理解求助不是把責任丟給別人。',explanation:'大綱需要看得出起點、關鍵事件與最後理解的變化。'},
-  ] as any,
+  ],
   takeaway:['先審題再取材。','中心意思決定材料去留。','段落按功能而不是固定字數。','用具體細節代替空泛評語。','修訂先改內容結構，再修字詞標點。'],
 }
 
