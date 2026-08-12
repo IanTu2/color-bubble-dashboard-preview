@@ -4,6 +4,7 @@ import { EnglishLearningStudio } from './EnglishLearningStudioV3'
 import { NotesApp } from './NotesApp'
 import { SearchApp } from './SearchApp'
 import { WindowFrame, clampWindowGeometry, type WindowGeometry } from './WindowFrame'
+import { getCurriculumCourseMeta, getCurriculumTrack } from '../curriculum-plan-v5'
 import type { Language } from '../types'
 
 export type DesktopAppKind = 'notes' | 'search' | 'english' | 'course'
@@ -65,8 +66,12 @@ function appGeometry(app: DesktopAppKind, offset: number): WindowGeometry {
 }
 
 function validCourse(course: CurriculumCourseSelection | undefined) {
-  return Boolean(course && Number.isInteger(course.grade) && course.grade >= 1 && course.grade <= 12
-    && ['chinese', 'english', 'math', 'science', 'social'].includes(course.subject))
+  return Boolean(course
+    && Number.isInteger(course.grade)
+    && course.grade >= 1
+    && course.grade <= 12
+    && ['chinese', 'english', 'math', 'science', 'social'].includes(course.subject)
+    && getCurriculumTrack(course.grade, course.subject, course.pathway))
 }
 
 function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWindow[] {
@@ -106,14 +111,13 @@ function appIcon(app: DesktopAppKind) {
 
 function courseTitle(course: CurriculumCourseSelection | undefined, language: Language) {
   if (!course) return language === 'zh' ? '正式課程' : 'Course'
-  const subjectZh = { chinese: '國文', english: '英文', math: '數學', science: '自然', social: '社會' }[course.subject]
-  const subjectEn = { chinese: 'Chinese', english: 'English', math: 'Math', science: 'Science', social: 'Social' }[course.subject]
+  const meta = getCurriculumCourseMeta(course.subject, course.pathway)
   const gradeZh = course.grade <= 6
     ? `${['一', '二', '三', '四', '五', '六'][course.grade - 1]}年級`
     : course.grade <= 9
       ? `${['七', '八', '九'][course.grade - 7]}年級`
       : `高${['一', '二', '三'][course.grade - 10]}`
-  return language === 'zh' ? `${gradeZh} ${subjectZh}` : `Grade ${course.grade} ${subjectEn}`
+  return language === 'zh' ? `${gradeZh} ${meta.labelZh}` : `Grade ${course.grade} ${meta.labelEn}`
 }
 
 export function DesktopWorkspace({
@@ -231,7 +235,7 @@ export function DesktopWorkspace({
     if (item.app === 'notes') return <NotesApp language={language} userId={userId} />
     if (item.app === 'english') return <EnglishLearningStudio language={language} userId={userId} />
     if (item.app === 'course' && item.course) {
-      return <CurriculumCourseApp language={language} userId={userId} grade={item.course.grade} subject={item.course.subject} />
+      return <CurriculumCourseApp language={language} userId={userId} grade={item.course.grade} subject={item.course.subject} pathway={item.course.pathway} />
     }
     return <SearchApp language={language} userId={userId} instanceId={item.id} />
   }
