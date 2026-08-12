@@ -5,7 +5,7 @@ import {
   type CurriculumSubjectId,
 } from '../src/curriculum-plan-v5'
 import { getUnitAuditSnapshot } from '../src/curriculum-audit-registry'
-import { inspectTextbookUnitV14 } from '../src/curriculum-textbook-v14'
+import { inspectTextbookUnitV14 } from '../src/curriculum-textbook-v14-final'
 
 type RouteSummary = {
   grade: number
