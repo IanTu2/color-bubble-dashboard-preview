@@ -99,10 +99,11 @@ export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent 
   return sanitizeQuestions(getFoundationUnitContent(unitId))
 }
 
-// 舊 player 仍使用這個名稱取教材；v9 起這裡回傳「可教學內容」，
-// 但是否真的完成逐題人工審閱必須用 isReviewedUnit 判斷，不能只看內容是否存在。
-export function getReviewedUnitContent(unitId: string): CurriculumUnitContent | null {
-  return getCurriculumUnitContent(unitId)
+// 舊 player 的 buildPages 型別仍接受 ReviewedUnitContent；v9 foundation 在執行期
+// 擁有完全相同的 concepts/workedExamples/questions/takeaway 結構，只把審閱狀態另外交給
+// isReviewedUnit / getCurriculumUnitContent 判斷，避免 UI 把「有內容」誤寫成「已審閱」。
+export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
+  return getCurriculumUnitContent(unitId) as ReviewedUnitContent | null
 }
 
 export function isReviewedUnit(unitId: string) {
