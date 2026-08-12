@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { getCurriculumTrack, type CurriculumSemester, type CurriculumSubjectId } from '../curriculum-plan-v5'
+import {
+  getCurriculumRouteOptions,
+  getCurriculumTrack,
+  type CurriculumPathwayId,
+  type CurriculumSemester,
+  type CurriculumSubjectId,
+} from '../curriculum-plan-v5'
 import type { Language } from '../types'
 import type { DesktopAppKind } from './DesktopWorkspace'
 
@@ -12,19 +18,10 @@ type SideDrawerProps = {
   onOpenSettings: () => void
   onOpenAuth: () => void
   onOpenDesktopApp: (app: DesktopAppKind) => void
-  onOpenCourse: (grade: number, subject: CurriculumSubjectId) => void
+  onOpenCourse: (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => void
 }
 
 type DrawerPanel = 'curriculum' | 'practice' | null
-
-type CurriculumSubject = {
-  id: CurriculumSubjectId
-  icon: string
-  labelZh: string
-  labelEn: string
-  hintZh: string
-  hintEn: string
-}
 
 type GradeGroup = {
   id: 'elementary' | 'junior' | 'senior'
@@ -39,14 +36,6 @@ const GRADE_GROUPS: GradeGroup[] = [
   { id: 'senior', labelZh: '高中', labelEn: 'Senior high', grades: [10, 11, 12] },
 ]
 
-const CURRICULUM_SUBJECTS: CurriculumSubject[] = [
-  { id: 'chinese', icon: '文', labelZh: '國文', labelEn: 'Chinese', hintZh: '閱讀・語文・寫作', hintEn: 'Reading · language · writing' },
-  { id: 'english', icon: 'EN', labelZh: '英文', labelEn: 'English', hintZh: '字彙・句型・聽讀寫', hintEn: 'Words · patterns · listening & reading' },
-  { id: 'math', icon: '∑', labelZh: '數學', labelEn: 'Math', hintZh: '觀念・例題・解題', hintEn: 'Concepts · examples · problem solving' },
-  { id: 'science', icon: '⚗', labelZh: '自然', labelEn: 'Science', hintZh: '觀察・實驗・推理', hintEn: 'Observation · experiments · reasoning' },
-  { id: 'social', icon: '社', labelZh: '社會', labelEn: 'Social studies', hintZh: '歷史・地理・公民', hintEn: 'History · geography · civics' },
-]
-
 function gradeLabel(grade: number, language: Language) {
   if (language === 'en') return `Grade ${grade}`
   if (grade <= 6) return `${['一', '二', '三', '四', '五', '六'][grade - 1]}年級`
@@ -57,36 +46,39 @@ function gradeLabel(grade: number, language: Language) {
 export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpenSettings, onOpenAuth, onOpenDesktopApp, onOpenCourse }: SideDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanel>(null)
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null)
-  const [selectedSubject, setSelectedSubject] = useState<CurriculumSubjectId | null>(null)
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
   const [selectedSemester, setSelectedSemester] = useState<CurriculumSemester>(1)
 
   const copy = language === 'zh'
     ? {
         menu: '主要選單', close: '關閉選單', workspace: '工作視窗', notes: '記事本', search: '新增搜尋視窗', searchHint: '可同時開啟多個',
-        learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '國英數自社', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
+        learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '依年級顯示正式課程路線', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
         login: '登入或註冊', settings: '設定', curriculum: '課程總覽', chooseGrade: '選擇年級', chooseGradeHint: '一年級到高三，直式排列',
-        chooseSubject: '選擇科目', chooseSubjectHint: '國文、英文、數學、自然、社會', roadmap: '課程內容', roadmapHint: '選擇學期與單元，再進入正式教學',
-        semesterOne: '上學期', semesterTwo: '下學期', sourceNote: '依十二年國教領域方向整理，不綁定單一出版社版本。', startCourse: '開始上課 →', lessons: '觀念・示範・練習・解析',
+        chooseSubject: '選擇課程', roadmap: '課程內容', roadmapHint: '選擇學期與單元，再進入正式教學',
+        semesterOne: '上學期', semesterTwo: '下學期', sourceNote: '依十二年國教領域／科目結構整理，不綁定單一出版社版本。', startCourse: '開始上課 →', lessons: '觀念・示範・練習・解析',
         practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具', practiceTitle: '練習場與學習工具',
-        practiceDescription: '跨年級練習 App 放這裡；正式國英數自社教材走課程總覽。', englishPractice: '英文情境練習', englishPracticeHint: '程度測驗、情境挖空、無限練習、複習與單字工具', open: '開啟', coming: '更多練習工具會陸續加入',
+        practiceDescription: '跨年級練習 App 放這裡；正式教材走課程總覽。', englishPractice: '英文情境練習', englishPracticeHint: '程度測驗、情境挖空、無限練習、複習與單字工具', open: '開啟', coming: '更多練習工具會陸續加入',
       }
     : {
         menu: 'Main menu', close: 'Close menu', workspace: 'Work windows', notes: 'Notes', search: 'New search window', searchHint: 'Open multiple windows',
-        learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: '5 core subjects', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
+        learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: 'Grade-correct curriculum routes', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
         login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', chooseGrade: 'Choose grade', chooseGradeHint: 'Grades 1–12 in one vertical list',
-        chooseSubject: 'Choose subject', chooseSubjectHint: 'Chinese, English, Math, Science, Social studies', roadmap: 'Course content', roadmapHint: 'Choose semester and unit, then enter the formal lesson',
-        semesterOne: 'Semester 1', semesterTwo: 'Semester 2', sourceNote: 'Aligned to Taiwan curriculum domains without binding to one publisher.', startCourse: 'Start course →', lessons: 'Concept · example · practice · explanation',
+        chooseSubject: 'Choose course', roadmap: 'Course content', roadmapHint: 'Choose semester and unit, then enter the formal lesson',
+        semesterOne: 'Semester 1', semesterTwo: 'Semester 2', sourceNote: 'Aligned to Taiwan curriculum domains/subjects without binding to one publisher.', startCourse: 'Start course →', lessons: 'Concept · example · practice · explanation',
         practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path', practiceTitle: 'Practice lab and learning tools',
         practiceDescription: 'Cross-grade apps stay here; formal subjects use the course browser.', englishPractice: 'English context practice', englishPracticeHint: 'Placement, context cloze, continuous practice, review, and vocabulary tools', open: 'Open', coming: 'More practice tools will be added later',
       }
 
-  const selectedSubjectMeta = CURRICULUM_SUBJECTS.find((item) => item.id === selectedSubject) ?? null
-  const selectedTrack = selectedGrade && selectedSubject ? getCurriculumTrack(selectedGrade, selectedSubject) : null
+  const routeOptions = selectedGrade ? getCurriculumRouteOptions(selectedGrade) : []
+  const selectedRoute = routeOptions.find((item) => item.id === selectedRouteId) ?? null
+  const selectedTrack = selectedGrade && selectedRoute
+    ? getCurriculumTrack(selectedGrade, selectedRoute.subject, selectedRoute.pathway)
+    : null
   const selectedSemesterPlan = selectedTrack?.semesters.find((item) => item.semester === selectedSemester) ?? null
 
   const resetCoursePath = () => {
     setSelectedGrade(null)
-    setSelectedSubject(null)
+    setSelectedRouteId(null)
     setSelectedSemester(1)
   }
 
@@ -102,11 +94,11 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
   }
 
   const openCourse = () => {
-    if (!selectedGrade || !selectedSubject) return
+    if (!selectedGrade || !selectedRoute) return
     const grade = selectedGrade
-    const subject = selectedSubject
+    const { subject, pathway } = selectedRoute
     closeAll()
-    onOpenCourse(grade, subject)
+    onOpenCourse(grade, subject, pathway)
   }
 
   return (
@@ -163,8 +155,8 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
                 <h3>{language === 'zh' ? group.labelZh : group.labelEn}</h3>
                 <div className="curriculum-vertical-list">
                   {group.grades.map((grade) => (
-                    <button type="button" className={selectedGrade === grade ? 'active' : ''} key={grade} onClick={() => { setSelectedGrade(grade); setSelectedSubject(null); setSelectedSemester(1) }}>
-                      <span className="curriculum-list-index">{String(grade).padStart(2, '0')}</span><span className="curriculum-list-copy"><strong>{gradeLabel(grade, language)}</strong><small>{language === 'zh' ? '查看五科課程' : 'Browse five subjects'}</small></span><i>›</i>
+                    <button type="button" className={selectedGrade === grade ? 'active' : ''} key={grade} onClick={() => { setSelectedGrade(grade); setSelectedRouteId(null); setSelectedSemester(1) }}>
+                      <span className="curriculum-list-index">{String(grade).padStart(2, '0')}</span><span className="curriculum-list-copy"><strong>{gradeLabel(grade, language)}</strong><small>{language === 'zh' ? '查看本年級課程路線' : 'Browse this grade’s course routes'}</small></span><i>›</i>
                     </button>
                   ))}
                 </div>
@@ -175,25 +167,27 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
       ) : null}
 
       {loggedIn && selectedGrade ? (
-        <section className={`curriculum-layer curriculum-subject-curtain${selectedSubject ? ' rail' : ''}${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
+        <section className={`curriculum-layer curriculum-subject-curtain${selectedRoute ? ' rail' : ''}${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
           <header className="curriculum-layer-head">
-            <button type="button" aria-label={language === 'zh' ? '返回年級' : 'Back to grades'} onClick={() => { setSelectedGrade(null); setSelectedSubject(null) }}>‹</button>
-            <div><p>COURSE · 02</p><h2>{copy.chooseSubject}</h2><span>{gradeLabel(selectedGrade, language)} · {copy.chooseSubjectHint}</span></div>
-            {selectedSubjectMeta ? <span className="curriculum-rail-label">{language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</span> : null}
+            <button type="button" aria-label={language === 'zh' ? '返回年級' : 'Back to grades'} onClick={() => { setSelectedGrade(null); setSelectedRouteId(null) }}>‹</button>
+            <div><p>COURSE · 02</p><h2>{copy.chooseSubject}</h2><span>{gradeLabel(selectedGrade, language)} · {language === 'zh' ? '依本年級正式結構顯示' : 'Routes reflect this grade structure'}</span></div>
+            {selectedRoute ? <span className="curriculum-rail-label">{language === 'zh' ? selectedRoute.labelZh : selectedRoute.labelEn}</span> : null}
           </header>
-          <div className="curriculum-vertical-list curriculum-subject-list">
-            {CURRICULUM_SUBJECTS.map((subject) => (
-              <button type="button" className={selectedSubject === subject.id ? 'active' : ''} key={subject.id} onClick={() => { setSelectedSubject(subject.id); setSelectedSemester(1) }}>
-                <span className={`curriculum-list-icon subject-${subject.id}`}>{subject.icon}</span><span className="curriculum-list-copy"><strong>{language === 'zh' ? subject.labelZh : subject.labelEn}</strong><small>{language === 'zh' ? subject.hintZh : subject.hintEn}</small></span><i>›</i>
-              </button>
-            ))}
+          <div className="curriculum-vertical-scroll">
+            <div className="curriculum-vertical-list curriculum-subject-list">
+              {routeOptions.map((route) => (
+                <button type="button" className={selectedRoute?.id === route.id ? 'active' : ''} key={route.id} onClick={() => { setSelectedRouteId(route.id); setSelectedSemester(1) }}>
+                  <span className={`curriculum-list-icon subject-${route.subject} pathway-${route.id}`}>{route.icon}</span><span className="curriculum-list-copy"><strong>{language === 'zh' ? route.labelZh : route.labelEn}</strong><small>{route.extension ? (language === 'zh' ? `校本／平台延伸 · ${route.hintZh}` : `School/platform extension · ${route.hintEn}`) : language === 'zh' ? route.hintZh : route.hintEn}</small></span><i>›</i>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
       ) : null}
 
-      {loggedIn && selectedGrade && selectedSubject && selectedTrack && selectedSubjectMeta ? (
+      {loggedIn && selectedGrade && selectedRoute && selectedTrack ? (
         <section className={`curriculum-layer curriculum-content-curtain${open && panel === 'curriculum' ? ' open' : ''}`} aria-hidden={!(open && panel === 'curriculum')}>
-          <header className="curriculum-layer-head"><button type="button" aria-label={language === 'zh' ? '返回科目' : 'Back to subjects'} onClick={() => setSelectedSubject(null)}>‹</button><div><p>COURSE · 03</p><h2>{copy.roadmap}</h2><span>{gradeLabel(selectedGrade, language)} · {language === 'zh' ? selectedSubjectMeta.labelZh : selectedSubjectMeta.labelEn}</span></div></header>
+          <header className="curriculum-layer-head"><button type="button" aria-label={language === 'zh' ? '返回課程' : 'Back to courses'} onClick={() => setSelectedRouteId(null)}>‹</button><div><p>COURSE · 03</p><h2>{copy.roadmap}</h2><span>{gradeLabel(selectedGrade, language)} · {language === 'zh' ? selectedRoute.labelZh : selectedRoute.labelEn}</span></div></header>
           <div className="curriculum-content-body">
             <div className="curriculum-roadmap-intro"><strong>{copy.roadmapHint}</strong><p>{selectedTrack.note ?? copy.sourceNote}</p></div>
             <div className="curriculum-semester-tabs" role="tablist"><button type="button" className={selectedSemester === 1 ? 'active' : ''} onClick={() => setSelectedSemester(1)}>{copy.semesterOne}</button><button type="button" className={selectedSemester === 2 ? 'active' : ''} onClick={() => setSelectedSemester(2)}>{copy.semesterTwo}</button></div>
