@@ -5,6 +5,7 @@ const stats = {
   activeUnits: 0,
   reviewedUnits: 0,
   foundationUnits: 0,
+  lifeUnits: 0,
   depthPassed: 0,
   questions: 0,
   choice: 0,
@@ -69,6 +70,18 @@ try {
           const exampleTitles = rendered.workedExamples.map((item) => item.title.trim())
           if (new Set(exampleTitles).size !== exampleTitles.length) failures.push(`${unit.id}: duplicate worked example titles`)
 
+          const isLife = unit.id.includes('-life-')
+          if (isLife) {
+            stats.lifeUnits += 1
+            if (!rendered.researchBasis.some((item) => item.includes('生活課程課程綱要'))) failures.push(`${unit.id}: Life Curriculum missing official Life syllabus basis`)
+            if (!conceptTitles.includes('常見迷思：我覺得就是我觀察到的事實')) failures.push(`${unit.id}: Life-specific observation misconception missing`)
+            if (!conceptTitles.includes('常見迷思：合作就是大家一起做，不需要分工和比較')) failures.push(`${unit.id}: Life-specific collaboration misconception missing`)
+            if (conceptTitles.some((title) => title === '常見迷思：科學模型就是實物本身' || /^常見迷思：觀察到/.test(title))) failures.push(`${unit.id}: generic science misconception leaked into Life Curriculum`)
+            if (!exampleTitles.includes('錯誤診斷：把「我覺得」改成可以比較的觀察')) failures.push(`${unit.id}: Life-specific error clinic missing`)
+            if (!exampleTitles.includes('轉移示範：把探究方法帶到新的生活問題')) failures.push(`${unit.id}: Life-specific transfer example missing`)
+            if (exampleTitles.includes('錯誤診斷：把觀察和因果分開') || exampleTitles.includes('轉移示範：用同一模型預測新的觀察')) failures.push(`${unit.id}: generic science worked example leaked into Life Curriculum`)
+          }
+
           const ids = new Set()
           const prompts = new Set()
           for (const question of rendered.questions) {
@@ -117,6 +130,7 @@ if (stats.activeUnits !== 453) failures.push(`active runtime units ${stats.activ
 if (stats.foundationUnits !== 420) failures.push(`runtime Foundation units ${stats.foundationUnits} != 420`)
 if (stats.depthPassed !== 420) failures.push(`V14 depth-passed Foundation units ${stats.depthPassed} != 420`)
 if (stats.reviewedUnits !== 33) failures.push(`reviewed/scope units ${stats.reviewedUnits} != 33`)
+if (stats.lifeUnits !== 12) failures.push(`Life Curriculum runtime units ${stats.lifeUnits} != 12`)
 
 if (failures.length) {
   console.error('[curriculum-v14-runtime] FAILED')
@@ -128,4 +142,5 @@ if (failures.length) {
 
 console.log('[curriculum-v14-runtime] all 453 active units resolved at runtime')
 console.log('[curriculum-v14-runtime] all 420 Foundation units passed V14 depth + uniqueness + self-contained-question gates')
+console.log('[curriculum-v14-runtime] all 12 Life Curriculum units use integrated Life-specific misconceptions/examples/questions')
 console.log(JSON.stringify(stats, null, 2))
