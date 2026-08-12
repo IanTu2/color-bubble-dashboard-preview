@@ -74,8 +74,6 @@ for (const requiredSourceToken of [
   'SCIENCE_RULES',
   'SOCIAL_RULES',
   'workedExampleFor',
-  'buildQuestions',
-  'foundation-q8',
 ]) {
   if (!foundation.includes(requiredSourceToken)) failures.push(`foundation curriculum missing source requirement: ${requiredSourceToken}`)
 }
@@ -83,19 +81,64 @@ for (const phrase of bannedMissingMaterial) {
   if (foundation.includes(phrase)) failures.push(`foundation curriculum contains banned missing-material wording: ${phrase}`)
 }
 
-const player = read('src/components/CurriculumCourseAppV5.tsx')
-if (player.includes("from '../curriculum-teaching-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy teaching-content fallback')
-if (player.includes("from '../curriculum-rich-content'")) failures.push('CurriculumCourseAppV5 must not import the legacy rich-content fallback')
-if (!player.includes('getUnitAuditSnapshot')) failures.push('CurriculumCourseAppV5 must render v10 audit status directly')
-if (!player.includes('getCurriculumUnitContent')) failures.push('CurriculumCourseAppV5 must distinguish available curriculum content from QA tier')
-if (!player.includes('isReviewedUnit')) failures.push('CurriculumCourseAppV5 must distinguish strict human review status')
+const foundationV12 = read('src/curriculum-foundation-question-bank-v12.ts')
+for (const requiredToken of [
+  'buildFoundationSubjectQuestions',
+  'upgradeFoundationUnitV12',
+  '3x+5=20',
+  '沉著',
+  'Mia goes to the library after school on Tuesday',
+  'science-animal-cell-zhtw',
+  'science-earth-tilt-orbit-animation',
+  'social-taiwan-relief',
+  'optionFeedback',
+  'rubric',
+  'audioText',
+  'mediaAssetId',
+]) {
+  if (!foundationV12.includes(requiredToken)) failures.push(`v12 subject question bank missing: ${requiredToken}`)
+}
+if (count(foundationV12, /foundation-v12-q/g) < 1) failures.push('v12 foundation question ids are not versioned')
+
+const player = read('src/components/CurriculumCourseAppV12.tsx')
+for (const requiredPlayerToken of [
+  'splitQuestionBank',
+  'groups.guided',
+  'groups.practice',
+  'groups.assessment',
+  'QuestionMedia',
+  'AudioPrompt',
+  'optionFeedback',
+  'curriculum-response-rubric',
+  'CURRICULUM_VETTED_MEDIA',
+]) {
+  if (!player.includes(requiredPlayerToken)) failures.push(`CurriculumCourseAppV12 missing: ${requiredPlayerToken}`)
+}
+for (const forbiddenPlayerToken of [
+  'getUnitAuditSnapshot',
+  'getTrackPolicy',
+  'compactAuditLabel',
+  'curriculum-audit-warning',
+  'curriculum-review-badge',
+  '品質層級',
+  'MutationObserver',
+  'requestAnimationFrame',
+]) {
+  if (player.includes(forbiddenPlayerToken)) failures.push(`reader-facing V12 must not contain internal/DOM-rewrite token: ${forbiddenPlayerToken}`)
+}
+if (!player.includes("if (lesson.kind === 'guided') return groups.guided")) failures.push('guided lesson must have its own disjoint question group')
+if (!player.includes("if (lesson.kind === 'practice') return groups.practice")) failures.push('practice lesson must have its own disjoint question group')
+if (!player.includes("if (lesson.kind === 'assessment') return groups.assessment")) failures.push('assessment lesson must have its own disjoint question group')
+if (player.includes("lesson.kind === 'launch') return all.slice")) failures.push('launch lesson must not recycle subject questions from later lessons')
+if (player.includes("lesson.kind === 'example') return all.slice")) failures.push('example lesson must not recycle subject questions from later lessons')
 
 const stableVisualPlayer = read('src/components/CurriculumCourseAppV8.tsx')
 const playerExport = read('src/components/CurriculumCourseApp.tsx')
 const stabilityCss = read('src/curriculum-visual-stability-v8.css')
-if (!playerExport.includes("from './CurriculumCourseAppV8'")) failures.push('active curriculum player must use v8 stable visual layer directly after v10 audit status is rendered inside V5')
-if (playerExport.includes('CurriculumCourseAppV9')) failures.push('v9 status MutationObserver must not remain on the active curriculum path')
-if (!stableVisualPlayer.includes("from './CurriculumCourseAppV5'")) failures.push('v8 must attach directly to v5 instead of nesting the competing v6/v7 observers')
+if (!playerExport.includes("from './CurriculumCourseAppV8'")) failures.push('active curriculum player must export the stable v8 visual layer directly')
+if (playerExport.includes('MutationObserver') || playerExport.includes('requestAnimationFrame')) failures.push('active export must not rewrite reader-facing copy after render')
+if (!stableVisualPlayer.includes("from './CurriculumCourseAppV12'")) failures.push('v8 must attach directly to reader-first V12 player')
+if (stableVisualPlayer.includes("from './CurriculumCourseAppV5'")) failures.push('v8 must not route through the old internal-status V5 player')
 if (!stableVisualPlayer.includes('useLayoutEffect')) failures.push('v8 visuals must be synchronized before paint with useLayoutEffect')
 if (stableVisualPlayer.includes('requestAnimationFrame')) failures.push('v8 visual layer must not defer layout changes to requestAnimationFrame')
 if (!stableVisualPlayer.includes('observer?.disconnect()')) failures.push('v8 must disconnect its observer while mutating the visual DOM')
@@ -119,11 +162,20 @@ for (const requiredMetadata of ['sourcePage:', 'license:', 'attribution:', 'alt:
 }
 
 const aggregator = read('src/curriculum-reviewed-content.ts')
-if (!aggregator.includes('stableHash')) failures.push('curriculum choices must use stable per-question option shuffling')
-if (!aggregator.includes('sanitizeQuestions')) failures.push('curriculum question sanitizer is missing')
-if (!aggregator.includes('normalizeChoiceQuestion')) failures.push('curriculum content must normalize choice questions from their actual options')
-if (!aggregator.includes('getStrictReviewedUnitContent')) failures.push('reviewed content must remain separately identifiable from foundation content')
-if (!aggregator.includes('getFoundationUnitContent')) failures.push('all-grade foundation content must be wired under manually reviewed content')
+for (const requiredAggregatorToken of [
+  'stableHash',
+  'sanitizeQuestions',
+  'normalizeChoiceQuestion',
+  'getStrictReviewedUnitContent',
+  'getFoundationUnitContent',
+  'upgradeFoundationUnitV12',
+  'optionFeedback',
+  'mediaAssetId',
+  'audioText',
+  'rubric',
+]) {
+  if (!aggregator.includes(requiredAggregatorToken)) failures.push(`curriculum aggregator missing: ${requiredAggregatorToken}`)
+}
 
 const planV5 = read('src/curriculum-plan-v5.ts')
 for (const requiredChapter of ['二元一次聯立方程式', '直角坐標與二元一次方程式圖形', '一元一次不等式']) {
@@ -138,4 +190,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] reviewed + all-grade foundation + vetted animation + visual stability + direct audit status checks passed')
+console.log('[curriculum-qa] v12 reader player + disjoint lesson question groups + subject foundation questions + media/audio/feedback gates passed')
