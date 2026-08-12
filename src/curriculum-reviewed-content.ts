@@ -83,7 +83,7 @@ function sanitizeQuestions<T extends CurriculumUnitContent>(unit: T | null): T |
   } as T
 }
 
-export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
+export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitContent | null {
   const raw = getSocial10UnitContent(unitId)
     ?? getReviewedMath7UnitContentV2(unitId)
     ?? getReviewedScience7UnitContent(unitId)
@@ -94,13 +94,19 @@ export function getReviewedUnitContent(unitId: string): ReviewedUnitContent | nu
 }
 
 export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
-  const reviewed = getReviewedUnitContent(unitId)
+  const reviewed = getStrictReviewedUnitContent(unitId)
   if (reviewed) return reviewed
   return sanitizeQuestions(getFoundationUnitContent(unitId))
 }
 
+// 舊 player 仍使用這個名稱取教材；v9 起這裡回傳「可教學內容」，
+// 但是否真的完成逐題人工審閱必須用 isReviewedUnit 判斷，不能只看內容是否存在。
+export function getReviewedUnitContent(unitId: string): CurriculumUnitContent | null {
+  return getCurriculumUnitContent(unitId)
+}
+
 export function isReviewedUnit(unitId: string) {
-  return Boolean(getReviewedUnitContent(unitId))
+  return Boolean(getStrictReviewedUnitContent(unitId))
 }
 
 export function hasCurriculumUnitContent(unitId: string) {
