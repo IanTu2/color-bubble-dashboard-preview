@@ -8,139 +8,116 @@ export type English7TextbookSupplement = {
   questions: ReviewedQuestion[]
 }
 
+const supplement = (
+  unitId: string,
+  scopeCodes: string[],
+  misconceptionConcepts: ReviewedConcept[],
+  workedExamples: ReviewedWorkedExample[],
+  questions: ReviewedQuestion[],
+): English7TextbookSupplement => ({ unitId, scopeCodes, misconceptionConcepts, workedExamples, questions })
+
 const SUPPLEMENTS: English7TextbookSupplement[] = [
-  {
-    unitId: 'g7-english-s1-u1',
-    scopeCodes: ['1-Ⅳ-1～4', '2-Ⅳ-2～8', '3-Ⅳ-5～8', '5-Ⅳ-1～3'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜be is not a “filler verb”', explanation: 'Use am/is/are when the sentence connects a subject to identity, state, location, or description. Do not add be before every ordinary verb.', example: 'She is tired. / She plays tennis. NOT: She is plays tennis.' },
-      { title: 'Common mistake｜a/an follows sound, not just spelling', explanation: 'The choice depends on the first sound of the next word. A word beginning with a vowel letter may start with a consonant sound, and vice versa.', example: 'a uniform (/j/ sound), an hour (silent h).' },
-    ],
-    workedExamples: [{
-      title: 'Read a student profile and ask for missing information',
-      context: 'Student card: Name: Hana Wu / Class: 705 / Club: Art Club / Mood today: excited / Homeroom: Room 302.',
-      prompt: 'How can a new classmate turn this information into natural statements and questions?',
-      steps: ['Use be for identity and class: “She is Hana. She is in Class 705.”', 'Use be for state: “She is excited today.”', 'Use where + be to ask location: “Where is her homeroom?”', 'Do not use be before an ordinary activity verb unless a different tense requires it: “She joins the Art Club,” not “She is joins…”.'],
-      answer: 'A profile becomes communication only when the learner can both state known information and ask for missing information.',
-      explanation: 'Grammar is serving identity, state, and information-gap communication.',
-    }],
-    questions: [
-      { id: 'g7-english-s1-u1-supp-q1', kind: 'choice', level: '理解', prompt: 'Choose the sentence with correct use of be.', options: ['My teacher is kind.', 'My teacher is teaches English.', 'They is ready.', 'I are hungry.'], correctIndex: 0, explanation: 'Kind describes a state/quality, so “is” links the subject and adjective.' },
-      { id: 'g7-english-s1-u1-supp-q2', kind: 'choice', level: '應用', context: 'A: ___ your new classmates?\nB: Mia and Owen.', prompt: 'Which question word fits?', options: ['Who are', 'Where is', 'How old is', 'What time are'], correctIndex: 0, explanation: 'The answer names people, so “Who are your new classmates?” is the natural question.' },
-      { id: 'g7-english-s1-u1-supp-q3', kind: 'choice', level: '應用', prompt: 'Which phrase is correct?', options: ['an hour', 'a hour', 'an uniform', 'an university'], correctIndex: 0, explanation: 'Hour begins with a vowel sound because h is silent. Uniform/university begin with a /j/ consonant sound.' },
-      { id: 'g7-english-s1-u1-supp-q4', kind: 'response', level: '檢核', context: 'Profile: Leo / Class 703 / from Tainan / nervous today.', prompt: 'Write two statements and one question you could use when meeting Leo. Use be naturally.', sampleAnswer: 'You are Leo. You are in Class 703. Are you nervous about the first day?', explanation: 'A strong response uses be for identity/state and forms a real question, not three disconnected grammar drills.' },
-    ],
-  },
-  {
-    unitId: 'g7-english-s1-u2',
-    scopeCodes: ['1-Ⅳ-3～4', '2-Ⅳ-5～7', '3-Ⅳ-4～8', '5-Ⅳ-2', '5-Ⅳ-11'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜does already carries the grammar marker', explanation: 'After does/doesn’t, use the base verb. Do not mark third-person singular twice.', example: 'Does he play? / He doesn’t play. NOT: Does he plays?' },
-      { title: 'Common mistake｜frequency words and exact frequency are different', explanation: 'Usually/often/sometimes give an approximate frequency; twice a week/every day give more explicit frequency information.' },
-    ],
-    workedExamples: [{
-      title: 'Use a weekly schedule to compare two routines',
-      context: 'Mina: Mon/Wed/Fri—swim 17:00; Tue/Thu—study at library 16:30.\nKai: Mon–Fri—take the bus home 16:10; Sat—play soccer 09:00.',
-      prompt: 'What can we say and ask from this schedule?',
-      steps: ['Mina swims three times a week: third-person singular → swims.', 'She studies at the library twice a week: study → studies.', 'Kai takes the bus home on weekdays.', 'Information-gap question: “How often does Mina swim?” → “Three times a week.”', 'After does, use the base form: “does Mina swim,” not “does Mina swims.”'],
-      answer: 'A schedule can produce statements, how-often questions, and comparisons of routines.',
-      explanation: 'Reading a table and turning data into language matches real communicative use.',
-    }],
-    questions: [
-      { id: 'g7-english-s1-u2-supp-q1', kind: 'choice', level: '理解', prompt: 'Which question is correct?', options: ['How often does Ken practice?', 'How often does Ken practices?', 'How often Ken does practice?', 'How often is Ken practice?'], correctIndex: 0, explanation: 'Use does + subject + base verb.' },
-      { id: 'g7-english-s1-u2-supp-q2', kind: 'choice', level: '應用', context: 'Ella reads before bed on Monday, Wednesday, Friday, and Sunday.', prompt: 'Which sentence best matches the data?', options: ['Ella reads before bed four times a week.', 'Ella never reads before bed.', 'Ella is reading every day right now.', 'Ella read before bed yesterday only.'], correctIndex: 0, explanation: 'The schedule gives four regular days each week, so present simple plus “four times a week” fits.' },
-      { id: 'g7-english-s1-u2-supp-q3', kind: 'choice', level: '應用', prompt: 'Choose the most natural sentence.', options: ['My brother usually walks to school.', 'My brother walks usually to school.', 'My brother usually walk to school.', 'My brother does usually walks to school.'], correctIndex: 0, explanation: 'With an ordinary main verb, the frequency adverb commonly goes before the verb; brother also requires walks.' },
-      { id: 'g7-english-s1-u2-supp-q4', kind: 'response', level: '檢核', context: 'Schedule: Mom—exercise Tue/Thu/Sat; cook dinner Mon–Fri.', prompt: 'Write one statement and one How often question-answer pair from the schedule.', sampleAnswer: 'My mom exercises three times a week. How often does she cook dinner? She cooks dinner five days a week.', explanation: 'The answer must accurately convert table information into present-simple language.' },
-    ],
-  },
-  {
-    unitId: 'g7-english-s1-u3',
-    scopeCodes: ['2-Ⅳ-6～7', '3-Ⅳ-7～12', '5-Ⅳ-6～7', '5-Ⅳ-10～12'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜choose the Wh-word from the missing information', explanation: 'Do not memorize Wh-words as a fixed order. Look at the expected answer: person → who, place → where, time → when/what time, reason → why, method/state → how.' },
-      { title: 'Common mistake｜a complete Wh-question still needs the right helper', explanation: 'With be, move be before the subject; with ordinary present-simple verbs, use do/does. Mixing the two systems creates errors.', example: 'Where is Mia? / Where does Mia study? NOT: Where does Mia is?' },
-    ],
-    workedExamples: [{
-      title: 'Read a club notice and ask useful questions',
-      context: 'ROBOT CLUB OPEN DAY\nDate: September 18\nTime: 3:30–5:00 p.m.\nPlace: Lab 2\nBring: a pencil case\nContact: Ms. Chen',
-      prompt: 'Turn the notice into questions a student may actually ask.',
-      steps: ['Date → “When is the open day?”', 'Place → “Where is it?”', 'Person → “Who can I contact?”', 'Object → “What should I bring?”', 'The question form depends on the verb: “Where is it?” uses be; “What should I bring?” uses a modal.'],
-      answer: 'Wh-questions are tools for recovering missing information from a real notice.',
-      explanation: 'The learner should connect question form to information type and context.',
-    }],
-    questions: [
-      { id: 'g7-english-s1-u3-supp-q1', kind: 'choice', level: '理解', context: 'A: ___ do you eat lunch?\nB: At 12:10.', prompt: 'Choose the best Wh-word.', options: ['When', 'Who', 'Where', 'Why'], correctIndex: 0, explanation: 'The answer is a time, so When fits.' },
-      { id: 'g7-english-s1-u3-supp-q2', kind: 'choice', level: '應用', context: 'Answer: “Because I have a science test tomorrow.”', prompt: 'Which question best matches?', options: ['Why are you studying tonight?', 'Where are you studying tonight?', 'Who is your teacher?', 'What time is tomorrow?'], correctIndex: 0, explanation: 'Because introduces a reason, so a Why-question is expected.' },
-      { id: 'g7-english-s1-u3-supp-q3', kind: 'choice', level: '應用', prompt: 'Which question is grammatically correct?', options: ['Where does Leo practice basketball?', 'Where does Leo practices basketball?', 'Where is Leo practice basketball?', 'Where Leo does practice basketball?'], correctIndex: 0, explanation: 'Ordinary present-simple verb → does + subject + base verb.' },
-      { id: 'g7-english-s1-u3-supp-q4', kind: 'response', level: '檢核', context: 'Movie Night: Friday / 6:30 p.m. / School Hall / free entry.', prompt: 'Write three different Wh-questions that can be answered from the notice.', sampleAnswer: 'When is Movie Night? What time does it start? Where is it?', explanation: 'The questions must ask different information and use natural auxiliary/be structure.' },
-    ],
-  },
-  {
-    unitId: 'g7-english-s2-u1',
-    scopeCodes: ['1-Ⅳ-2～4', '2-Ⅳ-2～5', '3-Ⅳ-3～6', '5-Ⅳ-3'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜can’t and mustn’t do not mean the same thing', explanation: 'Can’t may express inability or lack of permission depending on context; mustn’t expresses prohibition. The situation determines meaning.' },
-      { title: 'Common mistake｜a rule must fit the place and purpose', explanation: 'A grammatically correct imperative can still be a bad answer if it does not solve the safety or social need in the situation.' },
-    ],
-    workedExamples: [{
-      title: 'Choose language for a museum notice',
-      context: 'Museum situation: Photography is allowed in the lobby but prohibited in the special exhibition. Visitors may use wheelchairs provided at the entrance. Food is not allowed in galleries.',
-      prompt: 'Write three short signs without changing the meaning.',
-      steps: ['Lobby permission: “You can take photos in the lobby.”', 'Exhibition prohibition: “Don’t take photos in the special exhibition.” / “You mustn’t take photos…”', 'Accessibility option: “You can use a wheelchair from the entrance.”', 'Food rule: “No food in the galleries.” / “Don’t eat in the galleries.”'],
-      answer: 'Choose can for permission/availability and imperative/mustn’t for clear prohibitions, matching each location.',
-      explanation: 'Meaning and context come before choosing a grammar label.',
-    }],
-    questions: [
-      { id: 'g7-english-s2-u1-supp-q1', kind: 'choice', level: '理解', prompt: '“You mustn’t touch the artwork.” means:', options: ['Touching the artwork is prohibited.', 'You are physically unable to touch it.', 'You touched it yesterday.', 'Touching it is required.'], correctIndex: 0, explanation: 'Mustn’t expresses prohibition.' },
-      { id: 'g7-english-s2-u1-supp-q2', kind: 'choice', level: '應用', context: 'A science lab sign should prevent eye injury.', prompt: 'Which rule fits best?', options: ['Wear safety glasses.', 'Sing loudly.', 'Bring extra snacks.', 'Open every bottle.'], correctIndex: 0, explanation: 'The instruction must match the actual safety goal.' },
-      { id: 'g7-english-s2-u1-supp-q3', kind: 'choice', level: '應用', context: 'A: I can’t lift this box alone.', prompt: 'What does can’t most likely mean here?', options: ['lack of ability', 'prohibition by a rule', 'past tense', 'future plan'], correctIndex: 0, explanation: 'The physical-task context makes inability the natural interpretation.' },
-      { id: 'g7-english-s2-u1-supp-q4', kind: 'response', level: '檢核', context: 'School computer room: no drinks; students may print homework; keep voices low.', prompt: 'Write three natural English rules/permissions for the room.', sampleAnswer: 'Don’t bring drinks into the computer room. You can print your homework here. Keep your voice low.', explanation: 'The response should express the three meanings clearly, not merely include a modal word.' },
-    ],
-  },
-  {
-    unitId: 'g7-english-s2-u2',
-    scopeCodes: ['1-Ⅳ-3～4', '2-Ⅳ-6', '2-Ⅳ-10', '3-Ⅳ-4～8', '5-Ⅳ-1～4'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜now does not automatically make every sentence progressive', explanation: 'The progressive is mainly for ongoing/temporary actions. Some verbs often describe states rather than visible actions, so learners should understand meaning instead of blindly reacting to a time word.' },
-      { title: 'Common mistake｜be is part of the tense, not optional', explanation: 'The present progressive needs a form of be plus V-ing. “He studying” is incomplete in standard English.' },
-    ],
-    workedExamples: [{
-      title: 'Read a live school-event update',
-      context: '3:10 p.m. live update: Students are setting up tables. Ms. Lin is checking the microphones. Two parents are waiting at the gate. The music club practices every Tuesday, but today they are helping on the stage.',
-      prompt: 'Which actions are happening now, and which sentence describes a routine?',
-      steps: ['“are setting up / is checking / are waiting / are helping” describe the current event.', '“practices every Tuesday” describes a regular routine, so it uses present simple.', 'The same group can have a routine and a different temporary activity today.', 'Use the time viewpoint, not just the subject, to select tense.'],
-      answer: 'The live actions use be + V-ing; the regular Tuesday practice uses present simple.',
-      explanation: 'Contrasting two time viewpoints is more useful than memorizing isolated forms.',
-    }],
-    questions: [
-      { id: 'g7-english-s2-u2-supp-q1', kind: 'choice', level: '理解', prompt: 'Which sentence describes an action happening at this moment?', options: ['Mia is waiting for the bus now.', 'Mia takes the bus every day.', 'Mia took the bus yesterday.', 'Mia usually walks.'], correctIndex: 0, explanation: 'Now plus an ongoing action fits the present progressive.' },
-      { id: 'g7-english-s2-u2-supp-q2', kind: 'choice', level: '應用', context: 'Every Monday, Ben ___ chess. Today he ___ basketball because the chess club is closed.', prompt: 'Choose the best pair.', options: ['plays / is playing', 'is playing / plays', 'play / playing', 'played / plays'], correctIndex: 0, explanation: 'Every Monday = routine; today’s temporary ongoing situation = present progressive.' },
-      { id: 'g7-english-s2-u2-supp-q3', kind: 'choice', level: '應用', prompt: 'Which sentence is complete and correct?', options: ['The students are preparing the room.', 'The students preparing the room.', 'The students are prepare the room.', 'The students is preparing the room.'], correctIndex: 0, explanation: 'Plural subject students takes are, followed by preparing.' },
-      { id: 'g7-english-s2-u2-supp-q4', kind: 'response', level: '檢核', context: 'Routine: Leo practices guitar after dinner. Current situation: he has a test and is studying now.', prompt: 'Write two sentences that clearly contrast the routine and the current situation.', sampleAnswer: 'Leo practices guitar after dinner, but he is studying for a test right now.', explanation: 'The contrast should show present simple for routine and present progressive for the temporary action.' },
-    ],
-  },
-  {
-    unitId: 'g7-english-s2-u3',
-    scopeCodes: ['1-Ⅳ-4～8', '2-Ⅳ-6～9', '3-Ⅳ-8～12', '5-Ⅳ-6～10'],
-    misconceptionConcepts: [
-      { title: 'Common mistake｜did and a past-form verb should not normally be doubled', explanation: 'Did already marks the clause as past, so the main verb returns to its base form in questions and negatives.', example: 'Did you go? / I didn’t go. NOT: Did you went?' },
-      { title: 'Common mistake｜a past narrative needs event order, not only past verbs', explanation: 'A list of past-tense sentences may still be hard to follow. Time expressions and cause/effect links help readers reconstruct what happened.' },
-    ],
-    workedExamples: [{
-      title: 'Read a short message and reconstruct yesterday’s events',
-      context: 'Message from Noah: “Sorry I missed practice yesterday. My bike got a flat tire after school. I called my dad, waited near the library, and got home at 6:20. I didn’t see your message until dinner.”',
-      prompt: 'What happened, in what order, and what can we infer?',
-      steps: ['Time frame: yesterday / after school establishes past events.', 'Event order: bike got a flat tire → called dad → waited → got home → saw message later.', '“didn’t see” uses did + not + base verb.', 'A reasonable inference is that the bike problem explains the missed practice, but the text does not say Noah intentionally skipped it.'],
-      answer: 'The message uses past forms plus chronological details to explain a completed chain of events.',
-      explanation: 'Reading past tense includes timeline and inference, not just verb recognition.',
-    }],
-    questions: [
-      { id: 'g7-english-s2-u3-supp-q1', kind: 'choice', level: '理解', prompt: 'Which sentence is correct?', options: ['Did Mia finish the book?', 'Did Mia finished the book?', 'Does Mia finished the book?', 'Mia did finished the book?'], correctIndex: 0, explanation: 'After Did, use the base verb finish.' },
-      { id: 'g7-english-s2-u3-supp-q2', kind: '應用' as 'choice', level: '應用', context: 'Yesterday, Leo first missed the bus, then called his mom, and finally walked home.', prompt: 'Which connector best introduces the last event?', options: ['Finally', 'Usually', 'Right now', 'Every day'], correctIndex: 0, explanation: 'Finally signals the last event in a completed sequence.' },
-      { id: 'g7-english-s2-u3-supp-q3', kind: 'choice', level: '應用', context: 'A: Why were you late?\nB: ___', prompt: 'Which answer is the most complete and natural?', options: ['Because I missed the bus and walked to school.', 'Because I miss the bus tomorrow.', 'I am late every yesterday.', 'Did the bus late.'], correctIndex: 0, explanation: 'The question asks about a past reason; the answer uses completed past events.' },
-      { id: 'g7-english-s2-u3-supp-q4', kind: 'response', level: '檢核', context: 'Notes: Saturday morning—visit grandmother; then—help cook lunch; afternoon—go home by train.', prompt: 'Turn the notes into a coherent 3-sentence past narrative with at least one sequence word.', sampleAnswer: 'Last Saturday morning, I visited my grandmother. Then I helped her cook lunch. In the afternoon, I went home by train.', explanation: 'A good response preserves the past time frame and makes event order easy to follow.' },
-    ],
-  },
+  supplement('g7-english-s1-u1', ['1-Ⅳ-1～4', '2-Ⅳ-2～8', '3-Ⅳ-5～8', '5-Ⅳ-1～3'], [
+    { title: 'Common mistake｜be is not a filler before every verb', explanation: 'Use am/is/are for identity, state, location or description. Ordinary action verbs do not automatically need be.', example: 'She is tired. / She plays tennis. NOT: She is plays tennis.' },
+    { title: 'Common mistake｜a/an follows sound', explanation: 'Choose a/an from the first sound of the next word, not only the first letter.', example: 'an hour; a uniform.' },
+  ], [{
+    title: 'Turn a student card into real questions',
+    context: 'Student card: Hana Wu / Class 705 / Art Club / excited today / Homeroom 302.',
+    prompt: 'State known information and ask for missing information naturally.',
+    steps: ['Identity: She is Hana.', 'Class: She is in Class 705.', 'State: She is excited today.', 'Location question: Where is her homeroom?', 'Do not write “She is joins the Art Club.”'],
+    answer: 'Use be for identity/state/location and form questions from the actual missing information.',
+    explanation: 'The grammar is serving first-day communication.',
+  }], [
+    { id: 'g7-english-s1-u1-supp-q1', kind: 'choice', level: '理解', prompt: 'Choose the correct sentence.', options: ['My teacher is kind.', 'My teacher is teaches English.', 'They is ready.', 'I are hungry.'], correctIndex: 0, explanation: 'Kind is a description linked to the subject by is.' },
+    { id: 'g7-english-s1-u1-supp-q2', kind: 'choice', level: '應用', context: 'A: ___ your new classmates? B: Mia and Owen.', prompt: 'Which form fits?', options: ['Who are', 'Where is', 'When is', 'How old is'], correctIndex: 0, explanation: 'The answer names people, so Who is the needed information type.' },
+    { id: 'g7-english-s1-u1-supp-q3', kind: 'choice', level: '應用', prompt: 'Which phrase is correct?', options: ['an hour', 'a hour', 'an uniform', 'an university'], correctIndex: 0, explanation: 'Hour starts with a vowel sound; uniform/university start with /j/.' },
+    { id: 'g7-english-s1-u1-supp-q4', kind: 'response', level: '檢核', context: 'Profile: Leo / Class 703 / from Tainan / nervous today.', prompt: 'Write two statements and one natural question using be.', sampleAnswer: 'You are Leo. You are in Class 703. Are you nervous about the first day?', explanation: 'The response should communicate information, not only recite a pattern.' },
+  ]),
+
+  supplement('g7-english-s1-u2', ['1-Ⅳ-3～4', '2-Ⅳ-5～7', '3-Ⅳ-4～8', '5-Ⅳ-2', '5-Ⅳ-11'], [
+    { title: 'Common mistake｜does already marks third person', explanation: 'After does/doesn’t, use the base verb; do not mark -s twice.', example: 'Does he play? NOT: Does he plays?' },
+    { title: 'Common mistake｜usually and three times a week are not identical', explanation: 'Frequency adverbs are approximate; expressions such as twice a week state frequency more explicitly.' },
+  ], [{
+    title: 'Read a weekly schedule and compare routines',
+    context: 'Mina: swim Mon/Wed/Fri; study at the library Tue/Thu. Kai: take the bus home Mon–Fri; play soccer Sat.',
+    prompt: 'Turn the table into statements and a How often question.',
+    steps: ['Mina swims three times a week.', 'She studies at the library twice a week.', 'Kai takes the bus home on weekdays.', 'How often does Mina swim? Three times a week.', 'After does, use swim, not swims.'],
+    answer: 'A schedule can be converted into routine statements and information-gap questions.',
+    explanation: 'This combines table reading with present-simple communication.',
+  }], [
+    { id: 'g7-english-s1-u2-supp-q1', kind: 'choice', level: '理解', prompt: 'Which question is correct?', options: ['How often does Ken practice?', 'How often does Ken practices?', 'How often Ken does practice?', 'How often is Ken practice?'], correctIndex: 0, explanation: 'Use does + subject + base verb.' },
+    { id: 'g7-english-s1-u2-supp-q2', kind: 'choice', level: '應用', context: 'Ella reads before bed on Mon/Wed/Fri/Sun.', prompt: 'Which sentence matches?', options: ['Ella reads before bed four times a week.', 'Ella never reads before bed.', 'Ella is reading every day right now.', 'Ella read only yesterday.'], correctIndex: 0, explanation: 'The data describe a repeated weekly routine.' },
+    { id: 'g7-english-s1-u2-supp-q3', kind: 'choice', level: '應用', prompt: 'Choose the natural sentence.', options: ['My brother usually walks to school.', 'My brother walks usually to school.', 'My brother usually walk to school.', 'My brother does usually walks to school.'], correctIndex: 0, explanation: 'Usually commonly goes before an ordinary main verb; brother requires walks.' },
+    { id: 'g7-english-s1-u2-supp-q4', kind: 'response', level: '檢核', context: 'Mom: exercise Tue/Thu/Sat; cook dinner Mon–Fri.', prompt: 'Write one routine statement and one How often question-answer pair.', sampleAnswer: 'My mom exercises three times a week. How often does she cook dinner? She cooks dinner five days a week.', explanation: 'The language must accurately reflect the schedule.' },
+  ]),
+
+  supplement('g7-english-s1-u3', ['2-Ⅳ-6～7', '3-Ⅳ-7～12', '5-Ⅳ-6～7', '5-Ⅳ-10～12'], [
+    { title: 'Common mistake｜choose the Wh-word from the missing information', explanation: 'Person, place, time, reason and method need different question words; do not choose by memorized order.' },
+    { title: 'Common mistake｜be questions and do/does questions use different helpers', explanation: 'Move be before the subject, but use do/does with ordinary present-simple verbs.', example: 'Where is Mia? / Where does Mia study?' },
+  ], [{
+    title: 'Read a club notice and ask useful questions',
+    context: 'ROBOT CLUB OPEN DAY\nDate: Sep 18\nTime: 3:30–5:00 p.m.\nPlace: Lab 2\nBring: a pencil case\nContact: Ms. Chen',
+    prompt: 'Turn the notice into information-gap questions.',
+    steps: ['When is the open day?', 'Where is it?', 'Who can I contact?', 'What should I bring?', 'Choose the helper from the verb structure, not from a memorized template.'],
+    answer: 'Wh-questions recover specific missing information from the notice.',
+    explanation: 'Question form and information type must match.',
+  }], [
+    { id: 'g7-english-s1-u3-supp-q1', kind: 'choice', level: '理解', context: 'A: ___ do you eat lunch? B: At 12:10.', prompt: 'Choose the best word.', options: ['When', 'Who', 'Where', 'Why'], correctIndex: 0, explanation: 'At 12:10 is a time.' },
+    { id: 'g7-english-s1-u3-supp-q2', kind: 'choice', level: '應用', context: 'Answer: Because I have a science test tomorrow.', prompt: 'Which question fits best?', options: ['Why are you studying tonight?', 'Where are you studying tonight?', 'Who is your teacher?', 'What time is tomorrow?'], correctIndex: 0, explanation: 'Because introduces a reason.' },
+    { id: 'g7-english-s1-u3-supp-q3', kind: 'choice', level: '應用', prompt: 'Which question is correct?', options: ['Where does Leo practice basketball?', 'Where does Leo practices basketball?', 'Where is Leo practice basketball?', 'Where Leo does practice basketball?'], correctIndex: 0, explanation: 'Use does + subject + base verb with practice.' },
+    { id: 'g7-english-s1-u3-supp-q4', kind: 'response', level: '檢核', context: 'Movie Night: Friday / 6:30 p.m. / School Hall / free entry.', prompt: 'Write three different Wh-questions answered by the notice.', sampleAnswer: 'When is Movie Night? What time does it start? Where is it?', explanation: 'Questions should target different information.' },
+  ]),
+
+  supplement('g7-english-s2-u1', ['1-Ⅳ-2～4', '2-Ⅳ-2～5', '3-Ⅳ-3～6', '5-Ⅳ-3'], [
+    { title: 'Common mistake｜can’t and mustn’t differ', explanation: 'Can’t may mean inability or lack of permission; mustn’t expresses prohibition. Context decides the intended function.' },
+    { title: 'Common mistake｜a grammatically correct rule can still be contextually wrong', explanation: 'A safety rule or sign must solve the actual problem in the place.' },
+  ], [{
+    title: 'Rewrite museum information as signs',
+    context: 'Photos allowed in lobby; photos prohibited in special exhibition; wheelchairs available at entrance; food prohibited in galleries.',
+    prompt: 'Write short signs without changing the meaning.',
+    steps: ['You can take photos in the lobby.', 'Don’t take photos in the special exhibition.', 'You can use a wheelchair from the entrance.', 'No food in the galleries.'],
+    answer: 'Choose permission, prohibition and imperative language according to the actual rule.',
+    explanation: 'Function comes before grammar labels.',
+  }], [
+    { id: 'g7-english-s2-u1-supp-q1', kind: 'choice', level: '理解', prompt: '“You mustn’t touch the artwork.” means:', options: ['Touching the artwork is prohibited.', 'You are physically unable to touch it.', 'You touched it yesterday.', 'Touching it is required.'], correctIndex: 0, explanation: 'Mustn’t expresses prohibition.' },
+    { id: 'g7-english-s2-u1-supp-q2', kind: 'choice', level: '應用', context: 'A lab sign should prevent eye injury.', prompt: 'Which rule fits best?', options: ['Wear safety glasses.', 'Sing loudly.', 'Bring snacks.', 'Open every bottle.'], correctIndex: 0, explanation: 'The rule must match the safety goal.' },
+    { id: 'g7-english-s2-u1-supp-q3', kind: 'choice', level: '應用', context: 'A: I can’t lift this box alone.', prompt: 'What does can’t most likely mean?', options: ['lack of ability', 'prohibition', 'past time', 'future plan'], correctIndex: 0, explanation: 'The physical-task context indicates inability.' },
+    { id: 'g7-english-s2-u1-supp-q4', kind: 'response', level: '檢核', context: 'Computer room: no drinks; printing homework allowed; keep voices low.', prompt: 'Write three natural rules/permissions.', sampleAnswer: 'Don’t bring drinks into the computer room. You can print your homework here. Keep your voice low.', explanation: 'The three different functions should all be clear.' },
+  ]),
+
+  supplement('g7-english-s2-u2', ['1-Ⅳ-3～4', '2-Ⅳ-6', '2-Ⅳ-10', '3-Ⅳ-4～8', '5-Ⅳ-1～4'], [
+    { title: 'Common mistake｜now is a clue, not a magic tense switch', explanation: 'Use the progressive for ongoing/temporary actions after understanding the meaning, not merely because the sentence contains now.' },
+    { title: 'Common mistake｜be is required in the progressive', explanation: 'Standard present progressive needs am/is/are + V-ing.', example: 'He is studying. NOT: He studying.' },
+  ], [{
+    title: 'Separate routine from a live update',
+    context: '3:10 p.m.: Students are setting up tables. Ms. Lin is checking microphones. The music club practices every Tuesday, but today they are helping on stage.',
+    prompt: 'Which language describes now and which describes routine?',
+    steps: ['are setting up / is checking / are helping = current actions.', 'practices every Tuesday = routine.', 'The same subject may have a routine and a different temporary action.', 'Choose tense from time viewpoint.'],
+    answer: 'Use present progressive for the live actions and present simple for the regular Tuesday practice.',
+    explanation: 'Tense is a meaning choice, not only verb spelling.',
+  }], [
+    { id: 'g7-english-s2-u2-supp-q1', kind: 'choice', level: '理解', prompt: 'Which sentence describes an action happening now?', options: ['Mia is waiting for the bus now.', 'Mia takes the bus every day.', 'Mia took the bus yesterday.', 'Mia usually walks.'], correctIndex: 0, explanation: 'The action is ongoing at this moment.' },
+    { id: 'g7-english-s2-u2-supp-q2', kind: 'choice', level: '應用', context: 'Every Monday, Ben ___ chess. Today he ___ basketball.', prompt: 'Choose the best pair.', options: ['plays / is playing', 'is playing / plays', 'play / playing', 'played / plays'], correctIndex: 0, explanation: 'Routine uses present simple; temporary current action uses progressive.' },
+    { id: 'g7-english-s2-u2-supp-q3', kind: 'choice', level: '應用', prompt: 'Which sentence is complete?', options: ['The students are preparing the room.', 'The students preparing the room.', 'The students are prepare the room.', 'The students is preparing the room.'], correctIndex: 0, explanation: 'Plural subject takes are + preparing.' },
+    { id: 'g7-english-s2-u2-supp-q4', kind: 'response', level: '檢核', context: 'Routine: Leo practices guitar after dinner. Now: he is studying for a test.', prompt: 'Write two sentences that clearly contrast the routine and now.', sampleAnswer: 'Leo practices guitar after dinner, but he is studying for a test right now.', explanation: 'The two tenses must match the two time viewpoints.' },
+  ]),
+
+  supplement('g7-english-s2-u3', ['1-Ⅳ-4～8', '2-Ⅳ-6～9', '3-Ⅳ-8～12', '5-Ⅳ-6～10'], [
+    { title: 'Common mistake｜did already carries past time', explanation: 'Questions and negatives with did normally return the main verb to base form.', example: 'Did you go? / I didn’t go. NOT: Did you went?' },
+    { title: 'Common mistake｜past verbs alone do not make a clear story', explanation: 'Readers also need time order and relationships among events.' },
+  ], [{
+    title: 'Reconstruct events from a short message',
+    context: 'Noah: “Sorry I missed practice yesterday. My bike got a flat tire after school. I called my dad, waited near the library, and got home at 6:20. I didn’t see your message until dinner.”',
+    prompt: 'Put the events in order and identify a safe inference.',
+    steps: ['Past frame: yesterday / after school.', 'Order: flat tire → called dad → waited → got home → saw message.', 'didn’t see = did + not + base verb.', 'We may infer the bike problem explains the absence, but not that Noah skipped on purpose.'],
+    answer: 'The message combines past forms with chronology and evidence-based inference.',
+    explanation: 'Past-tense reading is more than identifying -ed forms.',
+  }], [
+    { id: 'g7-english-s2-u3-supp-q1', kind: 'choice', level: '理解', prompt: 'Which question is correct?', options: ['Did Mia finish the book?', 'Did Mia finished the book?', 'Does Mia finished the book?', 'Mia did finished the book?'], correctIndex: 0, explanation: 'After Did, use base verb finish.' },
+    { id: 'g7-english-s2-u3-supp-q2', kind: 'choice', level: '應用', context: 'Leo first missed the bus, then called his mom, and ___ walked home.', prompt: 'Choose the best sequence word.', options: ['finally', 'usually', 'right now', 'every day'], correctIndex: 0, explanation: 'Finally introduces the last event in the sequence.' },
+    { id: 'g7-english-s2-u3-supp-q3', kind: 'choice', level: '應用', context: 'A: Why were you late? B: ___', prompt: 'Choose the natural answer.', options: ['Because I missed the bus and walked to school.', 'Because I miss the bus tomorrow.', 'I am late every yesterday.', 'Did the bus late.'], correctIndex: 0, explanation: 'The answer explains a completed past reason.' },
+    { id: 'g7-english-s2-u3-supp-q4', kind: 'response', level: '檢核', context: 'Notes: Sat morning—visit grandmother; then—help cook lunch; afternoon—go home by train.', prompt: 'Write a coherent three-sentence past narrative.', sampleAnswer: 'Last Saturday morning, I visited my grandmother. Then I helped her cook lunch. In the afternoon, I went home by train.', explanation: 'Keep a past time frame and clear event order.' },
+  ]),
 ]
 
 export function getEnglish7TextbookSupplement(unitId: string) {
