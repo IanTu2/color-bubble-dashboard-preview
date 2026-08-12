@@ -9,6 +9,7 @@ const plan = read('src/curriculum-plan-v5.ts')
 const lifeBank = read('src/curriculum-life-question-bank-v13.ts')
 const pathwayFoundation = read('src/curriculum-pathway-foundation-v13.ts')
 const aggregator = read('src/curriculum-reviewed-content.ts')
+const activeWrapper = read('src/components/CurriculumCourseApp.tsx')
 const player = read('src/components/CurriculumCourseAppV13.tsx')
 const drawer = read('src/components/SideDrawer.tsx')
 const app = read('src/App.tsx')
@@ -56,9 +57,16 @@ if (!app.includes('course: { grade, subject, pathway }')) failures.push('App dro
 if (!desktop.includes('pathway={item.course.pathway}')) failures.push('DesktopWorkspace drops pathway before player render')
 if (!player.includes('getCurriculumCourseBundleV13(grade, subject, pathway)')) failures.push('V13 player does not load the selected pathway')
 
+// DesktopWorkspace intentionally reuses one course window. The active wrapper must force a player remount
+// whenever grade/subject/pathway changes, so semester/page/answers/report UI state cannot leak into a new course.
+if (!activeWrapper.includes("const routeKey = `${props.grade}-${props.subject}-${props.pathway ?? 'base'}`")) {
+  failures.push('active curriculum wrapper does not build a route-specific remount key')
+}
+if (!activeWrapper.includes('key={routeKey}')) failures.push('active curriculum wrapper does not remount the player on route changes')
+
 // Reader layer must stay clean: no internal QA labels and no asynchronous DOM copy rewrites.
 for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級','教科書級 QA']) {
-  if (player.includes(forbidden)) failures.push(`V13 player contains reader-forbidden token: ${forbidden}`)
+  if (player.includes(forbidden) || activeWrapper.includes(forbidden)) failures.push(`V13 reader path contains reader-forbidden token: ${forbidden}`)
 }
 
 if (failures.length) {
@@ -67,4 +75,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-v13-integration] pathway identity + Life integration + HS splits + end-to-end pathway propagation passed')
+console.log('[curriculum-v13-integration] pathway identity + Life integration + HS splits + propagation + route-change remount passed')
