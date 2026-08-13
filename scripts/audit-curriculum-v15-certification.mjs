@@ -1,7 +1,7 @@
 import { createServer } from 'vite'
 
 const failures = []
-const stats = { candidates: 0, math: 0, science: 0, passed: 0, questions: 0, mediaMatched: 0 }
+const stats = { candidates: 0, math: 0, science: 0, passed: 0, questions: 0, mediaMatched: 0, promoted: 0 }
 const server = await createServer({ logLevel: 'error', server: { middlewareMode: true }, appType: 'custom' })
 
 function normalize(value) {
@@ -13,6 +13,7 @@ try {
   const mathScope = await server.ssrLoadModule('/src/curriculum-official-scope-math7.ts')
   const scienceScope = await server.ssrLoadModule('/src/curriculum-official-scope-science7.ts')
   const media = await server.ssrLoadModule('/src/curriculum-vetted-media.ts')
+  const registry = await server.ssrLoadModule('/src/curriculum-audit-registry.ts')
 
   const candidates = [
     ...mathScope.GRADE7_MATH_OFFICIAL_SCOPE.map((item) => ({ ...item, subject: 'math' })),
@@ -98,11 +99,21 @@ try {
       }
     }
 
+    if (!registry.isTextbookReadyUnit(candidate.unitId)) {
+      localFailures.push('passed candidate missing from internal textbook-ready registry')
+    } else {
+      stats.promoted += 1
+    }
+
     if (localFailures.length) {
       for (const reason of localFailures) failures.push(`${candidate.unitId}: ${reason}`)
     } else {
       stats.passed += 1
     }
+  }
+
+  for (const controlId of ['g7-chinese-s1-u1', 'g7-english-s1-u1', 'g7-social-s1-u1', 'g8-math-s1-u1']) {
+    if (registry.isTextbookReadyUnit(controlId)) failures.push(`${controlId}: non-certified control unit was incorrectly promoted`)
   }
 } finally {
   await server.close()
@@ -110,6 +121,7 @@ try {
 
 if (stats.math !== 9) failures.push(`math candidates ${stats.math} != 9`)
 if (stats.science !== 6) failures.push(`science candidates ${stats.science} != 6`)
+if (stats.promoted !== 15) failures.push(`promoted candidates ${stats.promoted} != 15`)
 
 if (failures.length) {
   console.error('[curriculum-v15-certification] FAILED')
@@ -118,5 +130,5 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-v15-certification] 15/15 Grade 7 math/science candidates passed strict certification gates')
+console.log('[curriculum-v15-certification] 15/15 Grade 7 math/science candidates passed strict certification and promotion gates')
 console.log(JSON.stringify(stats, null, 2))
