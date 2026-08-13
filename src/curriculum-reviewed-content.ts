@@ -21,6 +21,7 @@ import { buildLifeCurriculumQuestionsV13 } from './curriculum-life-question-bank
 import { enrichFoundationUnitV14 } from './curriculum-textbook-depth-v14'
 import { specializeLifeDepthV14 } from './curriculum-life-depth-v14'
 import { normalizeFoundationDepthV14 } from './curriculum-depth-normalizer-v14'
+import { enrichTextbookCertificationCandidateV15 } from './curriculum-textbook-certification-v15'
 import { getMath7TextbookSupplement } from './curriculum-textbook-supplement-math7'
 import { getScience7TextbookSupplement } from './curriculum-textbook-supplement-science7'
 import {
@@ -162,7 +163,9 @@ export function getStrictReviewedUnitContent(unitId: string): ReviewedUnitConten
     ?? getReviewedEnglish7UnitContent(unitId)
     ?? getReviewedSocial7UnitContent(unitId)
   if (!raw) return null
-  return sanitizeQuestions(enrichStrictReviewedUnit(raw, unitId))
+  const deepened = enrichStrictReviewedUnit(raw, unitId)
+  const certifiedCandidate = enrichTextbookCertificationCandidateV15(deepened, unitId)
+  return sanitizeQuestions(certifiedCandidate)
 }
 
 export function getCurriculumUnitContent(unitId: string): CurriculumUnitContent | null {
