@@ -13,6 +13,42 @@ function normalizedPrompt(value: string) {
   return value.replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
+function unitFrame(unit: FoundationUnitContent) {
+  const anchor = unit.concepts[0]?.title ?? '本單元核心概念'
+  if (unit.unitId.includes('-life-')) {
+    return `生活課程主題「${anchor}」：${unit.overview}`
+  }
+  if (unit.subject === 'english') {
+    return `Unit focus “${anchor}”: ${unit.overview}`
+  }
+  return `本單元「${anchor}」：${unit.overview}`
+}
+
+function frameQuestion(unit: FoundationUnitContent, question: ReviewedQuestion): ReviewedQuestion {
+  const frame = unitFrame(unit)
+  const context = question.context?.trim()
+    ? `${frame}\n${question.context.trim()}`
+    : frame
+  const anchor = unit.concepts[0]?.title ?? unit.overview
+
+  if (question.kind === 'choice' && question.id.includes('-v14-diagnostic')) {
+    const prompt = unit.subject === 'english'
+      ? `In the unit “${anchor}”, which strategy best prevents a shortcut from replacing careful understanding?`
+      : unit.unitId.includes('-life-')
+        ? `在生活課程「${anchor}」中，哪個做法最能避免只憑感覺就下結論？`
+        : unit.subject === 'math'
+          ? `在「${anchor}」的新題型中，哪個做法最能避免直接套公式造成的錯誤？`
+          : unit.subject === 'science'
+            ? `在「${anchor}」的探究中，哪個做法最能避免把相關誤當成因果？`
+            : unit.subject === 'social'
+              ? `分析「${anchor}」的資料時，哪個做法最能避免用單一資料下過度結論？`
+              : `閱讀「${anchor}」相關文本時，哪個做法最能避免只抓關鍵字就下結論？`
+    return { ...question, context, prompt }
+  }
+
+  return { ...question, context }
+}
+
 function uniqueQuestions(questions: ReviewedQuestion[]) {
   const ids = new Set<string>()
   const prompts = new Set<string>()
@@ -42,10 +78,10 @@ function supplementalChoice(unit: FoundationUnitContent, index: number): Enhance
     id: `${unit.unitId}-v14-balance-choice-${index + 1}`,
     kind: 'choice',
     level: index % 2 === 0 ? '理解' : '應用',
-    context: concept.explanation,
+    context: `${unitFrame(unit)}\n${concept.explanation}`,
     prompt: english
-      ? `Checkpoint ${index + 1}: Which concept best matches the teaching note above?`
-      : `概念檢核 ${index + 1}：上面的教材說明最符合哪一個概念？`,
+      ? `Checkpoint ${index + 1}: Which concept best matches this unit-specific teaching note?`
+      : `概念檢核 ${index + 1}：這段本單元教材說明最符合哪一個概念？`,
     options: conceptOptions(unit, concept.title, index),
     correctIndex: 0,
     explanation: english
@@ -64,7 +100,7 @@ function supplementalResponse(unit: FoundationUnitContent, index: number): Enhan
     id: `${unit.unitId}-v14-balance-response-${index + 1}`,
     kind: 'response',
     level: '應用',
-    context: concept.example ?? concept.explanation,
+    context: `${unitFrame(unit)}\n${concept.example ?? concept.explanation}`,
     prompt: english
       ? `Transfer check ${index + 1}: Explain “${concept.title}” in your own words and create one new example.`
       : `轉述檢核 ${index + 1}：請用自己的話說明「${concept.title}」，並舉一個新的例子。`,
@@ -81,7 +117,7 @@ function supplementalResponse(unit: FoundationUnitContent, index: number): Enhan
 }
 
 export function normalizeFoundationDepthV14(unit: FoundationUnitContent): FoundationUnitContent {
-  const questions = uniqueQuestions(unit.questions)
+  const questions = uniqueQuestions(unit.questions.map((question) => frameQuestion(unit, question)))
   let choiceCount = questions.filter((item) => item.kind === 'choice').length
   let responseCount = questions.filter((item) => item.kind === 'response').length
   let choiceCursor = 0
