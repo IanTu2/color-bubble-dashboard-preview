@@ -34,7 +34,7 @@ for (const token of ['buildFoundationSubjectQuestions','upgradeFoundationUnitV12
   if (!foundationV12.includes(token)) failures.push(`v12 subject question bank missing ${token}`)
 }
 
-// Existing reader and visual stability chain must not regress.
+// Keep the older reviewed-content and visual chain healthy because V14 still reuses its subject-specific base content.
 const v12 = read('src/components/CurriculumCourseAppV12.tsx')
 for (const token of ['splitQuestionBank','groups.guided','groups.practice','groups.assessment','QuestionMedia','AudioPrompt','optionFeedback','curriculum-response-rubric','CURRICULUM_VETTED_MEDIA']) {
   if (!v12.includes(token)) failures.push(`V12 reader missing ${token}`)
@@ -49,20 +49,25 @@ if (!v8.includes('useLayoutEffect') || v8.includes('requestAnimationFrame')) fai
 if (!v8.includes('observer?.disconnect()')) failures.push('V8 observer mutation guard regressed')
 if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('V8 media aspect-ratio reservation missing')
 
-// V13 active router adds pathway courses while preserving V8 for ordinary routes.
+// V14 is now the single active formal-course reader for base routes and pathway routes.
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
-const v13 = read('src/components/CurriculumCourseAppV13.tsx')
-const v13Css = read('src/curriculum-course-v13.css')
-if (!activeExport.includes("from './CurriculumCourseAppV13'")) failures.push('active curriculum export must route through V13')
-if (!v13.includes("from './CurriculumCourseAppV8'")) failures.push('V13 must preserve V8 for non-pathway courses')
-if (!v13.includes('if (!props.pathway)')) failures.push('V13 must explicitly preserve the legacy/base stable player')
-for (const token of ['getCurriculumCourseBundleV13','questionGroups','guided: questions.slice','practice: questions.slice','assessment: questions.slice','optionFeedback','mediaAssetId','audioText','rubric','pathway']) {
-  if (!v13.includes(token)) failures.push(`V13 pathway player missing ${token}`)
+const v14 = read('src/components/CurriculumCourseAppV14.tsx')
+const v14Css = read('src/curriculum-course-v14.css')
+const textbookV14 = read('src/curriculum-textbook-v14.ts')
+if (!activeExport.includes("from './CurriculumCourseAppV14'")) failures.push('active curriculum export must route through Textbook V14')
+if (!activeExport.includes("-textbook-v14`")) failures.push('active reader route key must remount on V14 route changes')
+for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV14','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS','textbookVersion: \'v14\'']) {
+  if (!v14.includes(token)) failures.push(`V14 reader missing ${token}`)
 }
-for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','品質層級']) {
-  if (v13.includes(forbidden)) failures.push(`V13 reader contains forbidden token ${forbidden}`)
+for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級']) {
+  if (v14.includes(forbidden)) failures.push(`V14 reader contains forbidden internal/DOM token ${forbidden}`)
 }
-if (!v13Css.includes('grid-template-columns') || !v13Css.includes('html[data-theme="light"]')) failures.push('V13 layout must include responsive grid and light theme')
+for (const token of ['grid-template-columns','html[data-theme="light"]','.curriculum-v14-misconception','.curriculum-v14-visual-grid','.curriculum-v14-report-kinds']) {
+  if (!v14Css.includes(token)) failures.push(`V14 layout missing ${token}`)
+}
+for (const token of ['reviewStatus: \'textbook-ready\'','textbookVersion: \'v14\'','sourceRefs','objectives','misconceptions','visuals','vocabulary','ensureWorkedExamples','ensureQuestions','validateTextbookUnitV14','BANNED_MISSING_MATERIAL','optionFeedback','rubric']) {
+  if (!textbookV14.includes(token)) failures.push(`V14 textbook layer missing ${token}`)
+}
 
 // Structural route model: active learner routes must reflect grade-specific official organization.
 const plan = read('src/curriculum-plan-v5.ts')
@@ -75,8 +80,8 @@ for (const token of ['getCurriculumRouteOptions','getCurriculumCourseMeta','reso
 if (!plan.includes("if (grade <= 2)") || !plan.includes("pathwayRoute('science', 'life')")) failures.push('grades 1-2 must expose integrated Life Curriculum route')
 if (!plan.includes("grade === 11") || !plan.includes("pathwayRoute('math', 'math-a')") || !plan.includes("pathwayRoute('math', 'math-b')")) failures.push('grade 11 math A/B route split missing')
 if (!plan.includes("pathwayRoute('math', 'math-alpha')") || !plan.includes("pathwayRoute('math', 'math-beta')")) failures.push('grade 12 math 甲/乙 route split missing')
-for (const path of ['physics','chemistry','biology','earth-science']) if (!plan.includes(`pathwayRoute('science', '${path}')`)) failures.push(`high school science route missing ${path}`)
-for (const path of ['geography','history','civics']) if (!plan.includes(`pathwayRoute('social', '${path}')`)) failures.push(`high school social route missing ${path}`)
+for (const pathName of ['physics','chemistry','biology','earth-science']) if (!plan.includes(`pathwayRoute('science', '${pathName}')`)) failures.push(`high school science route missing ${pathName}`)
+for (const pathName of ['geography','history','civics']) if (!plan.includes(`pathwayRoute('social', '${pathName}')`)) failures.push(`high school social route missing ${pathName}`)
 if (!plan.includes("if (grade >= 10 && (subject === 'science' || subject === 'social')) return true")) failures.push('ambiguous high-school merged science/social route must be blocked')
 if (!plan.includes("if (grade >= 11 && subject === 'math') return true")) failures.push('ambiguous G11+ common math route must be blocked')
 
@@ -94,10 +99,7 @@ if (drawer.includes('查看五科課程')) failures.push('drawer must not claim 
 const desktop = read('src/components/DesktopWorkspace.tsx')
 for (const token of ['getCurriculumCourseMeta','getCurriculumTrack(course.grade, course.subject, course.pathway)','pathway={item.course.pathway}']) if (!desktop.includes(token)) failures.push(`desktop pathway persistence missing ${token}`)
 
-const inventory = read('scripts/report-curriculum-audit.mjs')
-for (const token of ['activeTracks !== 75','totalUnits !== 453','structuralBlockerUnits = 0']) if (!inventory.includes(token)) failures.push(`v13 active inventory missing assertion ${token}`)
-
-// Keep Grade 7 researched map protections.
+// Keep researched Grade 7 map protections while the runtime V14 audit covers every active unit.
 for (const chapter of ['二元一次聯立方程式','直角坐標與二元一次方程式圖形','一元一次不等式']) if (!plan.includes(chapter)) failures.push(`grade 7 math roadmap missing ${chapter}`)
 if (plan.includes('公民：民主與法律')) failures.push('grade 7 social roadmap regressed to politics/law unit')
 
@@ -107,4 +109,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] V13 route structure + V8/V12 stability + pathway content + disjoint questions + enhanced feedback gates passed')
+console.log('[curriculum-qa] Textbook V14 active reader + legacy subject content + V13 route structure + feedback/media/rubric source gates passed')
