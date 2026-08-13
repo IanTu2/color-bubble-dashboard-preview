@@ -75,12 +75,13 @@ if (!aggregator.includes('const normalized = normalizeFoundationDepthV14(special
 if (!aggregator.includes('return sanitizeQuestions(normalized)')) failures.push('sanitization must run after V14 final normalization')
 if (!aggregator.includes("unitId.includes('-life-')")) failures.push('Life Curriculum override must remain in aggregator')
 
-for (const token of ['foundationDepthReadyUnits !== 420','foundationDraftUnits = 0','version: \'v14-textbook-depth\'']) {
-  if (!inventory.includes(token)) failures.push(`V14 inventory missing assertion: ${token}`)
+for (const token of ['foundationDepthReadyUnits !== 420','foundationDraftUnits = 0',"version: 'v15-textbook-certification'"]) {
+  if (!inventory.includes(token)) failures.push(`V14/V15 inventory missing assertion: ${token}`)
 }
 
-// Depth completion must not silently promote every unit to textbook-ready.
-if (!registry.includes('const TEXTBOOK_READY_UNITS = new Set<string>()')) failures.push('textbook-ready registry must remain explicit')
+// V15 may promote explicitly certified strict-reviewed units, but V14 Foundation depth itself
+// must never self-promote Foundation units or erase the non-certified state.
+if (!registry.includes('const TEXTBOOK_READY_UNITS = new Set<string>([')) failures.push('textbook-ready registry must remain explicit after V15 promotion')
 if (!registry.includes("tier: 'foundation-draft'")) failures.push('registry must retain a non-certified state for units lacking official per-unit promotion')
 if (depth.includes("reviewStatus: 'reviewed'") || depth.includes("reviewStatus: 'textbook-ready'")) {
   failures.push('V14 depth engine must not self-promote Foundation units to reviewed/textbook-ready')
@@ -104,4 +105,4 @@ if (failures.length) {
 
 console.log('[curriculum-v14-depth] Foundation textbook-depth + Life specialization + final dedupe/rebalance contracts passed')
 console.log('[curriculum-v14-depth] gate: concepts>=6 misconceptions>=2 workedExamples>=3 questions>=12 choice>=6 response>=2 rubric>=1 + diagnosis + transfer')
-console.log('[curriculum-v14-depth] certification remains separate: depth-ready does not equal textbook-ready')
+console.log('[curriculum-v14-depth] V15 promotions do not change Foundation depth certification boundaries')
