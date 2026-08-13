@@ -80,7 +80,7 @@ try {
       if (!example.explanation?.trim()) localFailures.push(`worked example ${example.title}: missing explanation`)
     }
 
-    const scopeCodes = Array.isArray(candidate.codes) ? candidate.codes : Array.isArray(candidate.scopeCodes) ? candidate.scopeCodes : []
+    const scopeCodes = Array.isArray(candidate.items) ? candidate.items.map((item) => item.code).filter(Boolean) : []
     if (!scopeCodes.length) localFailures.push('official scope mapping contains no codes')
     if (!unit.researchBasis.some((item) => /國教院|國家教育研究院/.test(item))) localFailures.push('research basis does not identify NAER review')
 
