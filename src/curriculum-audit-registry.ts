@@ -50,9 +50,17 @@ export const CURRICULUM_OFFICIAL_SOURCES = {
 const GRADE7_MATH_SCOPE_VERIFIED = new Set(GRADE7_MATH_OFFICIAL_SCOPE.map((item) => item.unitId))
 const SCIENCE7_STAGE_IV_SCOPE_VERIFIED = new Set(SCIENCE7_STAGE_IV_SCOPE.map((item) => item.unitId))
 
-// textbook-ready 必須通過課綱範圍、內容、題庫、媒體與整體教學流程五道 gate。
-// v13 修正的是「學生可進入的課程結構」，不因此自動升級任何單元的教材成熟度。
-const TEXTBOOK_READY_UNITS = new Set<string>()
+// V15 certification: these units passed official-scope, human-content, misconception,
+// worked-example, question/rubric/diagnostic-feedback gates; Grade 7 science also passed
+// vetted-media source/license/accessibility checks. Keep this registry internal-only.
+const TEXTBOOK_READY_UNITS = new Set<string>([
+  ...GRADE7_MATH_OFFICIAL_SCOPE.map((item) => item.unitId),
+  ...SCIENCE7_STAGE_IV_SCOPE.map((item) => item.unitId),
+])
+
+export function isTextbookReadyUnit(unitId: string) {
+  return TEXTBOOK_READY_UNITS.has(unitId)
+}
 
 function isSciencePath(pathway?: CurriculumPathwayId) {
   return pathway === 'physics' || pathway === 'chemistry' || pathway === 'biology' || pathway === 'earth-science'
