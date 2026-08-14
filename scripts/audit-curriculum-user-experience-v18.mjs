@@ -33,8 +33,8 @@ try {
   const visualSource = await readFile(new URL('../src/components/CurriculumPedagogyVisualV18.tsx', import.meta.url), 'utf8')
   const cssSource = await readFile(new URL('../src/user-experience-audit-v18.css', import.meta.url), 'utf8')
 
-  if (!readerSource.includes('getTextbookUnitContentV18') || !readerSource.includes('CurriculumPedagogyVisualV18')) {
-    findings.push({ unitId: 'reader', reasons: ['active reader is not wired to V18 content and visuals'] })
+  if (!readerSource.includes('getTextbookUnitContentV18') || !(readerSource.includes('CurriculumPedagogyVisualV18') || readerSource.includes('CurriculumPedagogyVisualV19'))) {
+    findings.push({ unitId: 'reader', reasons: ['active reader is not wired to V18 content and a V18-or-newer visual renderer'] })
   }
   if (readerSource.includes('一次學一個觀念，學完馬上試一次') || readerSource.includes("title: '準備開始'")) {
     findings.push({ unitId: 'reader', reasons: ['redundant pedagogy transition page remains in learner flow'] })
