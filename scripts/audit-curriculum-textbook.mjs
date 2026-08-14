@@ -65,13 +65,13 @@ if (!aggregator.includes('upgradeFoundationUnitV12(foundation)')) failures.push(
 for (const feature of ['optionFeedback','mediaAssetId','audioText','rubric']) {
   if (!aggregator.includes(feature)) failures.push(`aggregator no longer preserves ${feature}`)
   if (!foundationV12.includes(feature)) failures.push(`foundation question bank cannot produce ${feature}`)
-  if (!v17.includes(feature)) failures.push(`V17 reader cannot consume ${feature}`)
+  if (!v17.includes(feature)) failures.push(`active learner reader cannot consume ${feature}`)
 }
 
-if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active formal-course export must use Pedagogy V17 reader')
-if (!activeExport.includes('pedagogy-v17')) failures.push('active V17 reader must remount when the course route changes')
+if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active formal-course export must keep the stable reader component entry')
+if (!activeExport.includes('user-audit-v18')) failures.push('active V18 reader must remount when the course route changes')
 if (!v8.includes("from './CurriculumCourseAppV12'")) failures.push('legacy vetted-media reader chain regressed')
-for (const reader of [{ name: 'V12', text: v12 }, { name: 'V14', text: v14 }, { name: 'V17', text: v17 }]) {
+for (const reader of [{ name: 'V12', text: v12 }, { name: 'V14', text: v14 }, { name: 'V18-active', text: v17 }]) {
   for (const leak of ['getUnitAuditSnapshot','getTrackPolicy','品質層級','MutationObserver','requestAnimationFrame']) {
     if (reader.text.includes(leak)) failures.push(`${reader.name} reader leaks internal/DOM token ${leak}`)
   }
@@ -92,7 +92,7 @@ for (const token of [
   'BANNED_MISSING_MATERIAL',
 ]) if (!textbookV14.includes(token)) failures.push(`Textbook V14 structural layer missing ${token}`)
 for (const token of ['getTextbookUnitContentV17','inspectTextbookUnitV17','buildPedagogyQuestions','upgradeExamples','getConceptChecksV17']) {
-  if (!pedagogyV17.includes(token)) failures.push(`Pedagogy V17 learner layer missing ${token}`)
+  if (!pedagogyV17.includes(token)) failures.push(`Pedagogy V17 learner base missing ${token}`)
 }
 for (const token of ['stats.activeUnits !== 453','stats.foundationUnits !== 420','stats.depthPassed !== 420','all 453 active units resolved at runtime']) {
   if (!runtimeAudit.includes(token)) failures.push(`current V14 runtime audit missing ${token}`)
@@ -134,6 +134,6 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[textbook-audit] V17 active learner reader + V14 structural runtime + V15 certification + official Grade 7 gates passed')
+console.log('[textbook-audit] V18 active learner overlay + V17 pedagogy base + V14 structural runtime + V15 certification + official Grade 7 gates passed')
 console.log(`[textbook-audit] grade 7 math supplement: 9 units, ${math7QuestionCount} extra questions, ${math7MisconceptionCount} misconception concepts`)
 console.log(`[textbook-audit] grade 7 science supplement: 6 units, ${science7QuestionCount} extra questions, ${science7MisconceptionCount} misconception concepts`)
