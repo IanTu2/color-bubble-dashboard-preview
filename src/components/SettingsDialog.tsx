@@ -20,11 +20,11 @@ export function SettingsDialog({ language, fontScale, preferences, open, onClose
   const copy = language === 'zh'
     ? {
         close: '關閉', title: '設定', subtitle: '調整外觀、顯示、背景動畫、音樂與工作區行為。', language: '語言', appearance: '外觀主題', appearanceHint: '淺色適合長時間閱讀課程；也可以切回深色或跟隨作業系統。',
-        light: '淺色', dark: '深色', system: '跟隨系統', fontSize: '字體大小', motion: '背景動畫', motionHint: '降低動畫可減少電腦負擔，也比較不容易分心。', low: '柔和', normal: '標準', high: '活潑', bubbles: '泡泡數量', backgroundTools: '背景工具', music: '常駐音樂播放器', musicHint: '啟用後，右下角會顯示小型播放器，可展開完整音樂工作室。', workspace: '工作區', rememberWindows: '記住開啟中的視窗', rememberHint: '重新整理後恢復記事本、搜尋、英文與課程視窗；關閉的視窗不會恢復。', saved: '設定會保存在這個瀏覽器中。', reset: '恢復所有預設設定',
+        light: '淺色', dark: '深色', system: '跟隨系統', fontSize: '字體大小', fontSmall: '50% / 小', fontLarge: '125% / 大', motion: '背景動畫', motionHint: '降低動畫可減少電腦負擔，也比較不容易分心。', low: '柔和', normal: '標準', high: '活潑', bubbles: '泡泡數量', backgroundTools: '背景工具', music: '常駐音樂播放器', musicHint: '啟用後，右下角會顯示小型播放器，可展開完整音樂工作室。', workspace: '工作區', rememberWindows: '記住開啟中的視窗', rememberHint: '重新整理後恢復記事本、搜尋、英文與課程視窗；關閉的視窗不會恢復。', saved: '設定會保存在這個瀏覽器中。', reset: '恢復所有預設設定',
       }
     : {
         close: 'Close', title: 'Settings', subtitle: 'Adjust appearance, display, background motion, music, and workspace behavior.', language: 'Language', appearance: 'Appearance', appearanceHint: 'Light mode is tuned for longer study sessions; you can also use dark mode or follow your system.',
-        light: 'Light', dark: 'Dark', system: 'System', fontSize: 'Font size', motion: 'Background motion', motionHint: 'Lower motion reduces system load and visual distraction.', low: 'Gentle', normal: 'Standard', high: 'Lively', bubbles: 'Bubble count', backgroundTools: 'Background tools', music: 'Persistent music player', musicHint: 'Shows a compact player at the bottom-right with an expandable music studio.', workspace: 'Workspace', rememberWindows: 'Remember open windows', rememberHint: 'Restores notes, search, English, and course windows after refresh. Closed windows stay closed.', saved: 'Settings are saved in this browser.', reset: 'Reset all settings',
+        light: 'Light', dark: 'Dark', system: 'System', fontSize: 'Font size', fontSmall: '50% / Small', fontLarge: '125% / Large', motion: 'Background motion', motionHint: 'Lower motion reduces system load and visual distraction.', low: 'Gentle', normal: 'Standard', high: 'Lively', bubbles: 'Bubble count', backgroundTools: 'Background tools', music: 'Persistent music player', musicHint: 'Shows a compact player at the bottom-right with an expandable music studio.', workspace: 'Workspace', rememberWindows: 'Remember open windows', rememberHint: 'Restores notes, search, English, and course windows after refresh. Closed windows stay closed.', saved: 'Settings are saved in this browser.', reset: 'Reset all settings',
       }
 
   const updatePreferences = (changes: Partial<AppPreferences>) => onPreferencesChange({ ...preferences, ...changes })
@@ -70,7 +70,7 @@ export function SettingsDialog({ language, fontScale, preferences, open, onClose
           <section className="settings-section">
             <div className="settings-row"><h3>{copy.fontSize}</h3><output>{fontScale}%</output></div>
             <input className="font-size-range" type="range" min="50" max="125" step="5" value={fontScale} onChange={(event: ChangeEvent<HTMLInputElement>) => onFontScaleChange(Number(event.target.value))} />
-            <div className="range-labels" aria-hidden="true"><span>A</span><span>A</span></div>
+            <div className="range-labels font-scale-labels" aria-hidden="true"><span>{copy.fontSmall}</span><span>{copy.fontLarge}</span></div>
           </section>
 
           <section className="settings-section settings-section-span">
