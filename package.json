@@ -8,7 +8,8 @@
   },
   "scripts": {
     "curriculum:inventory": "node scripts/report-curriculum-audit.mjs",
-    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-reviewed-source-hygiene.mjs && node scripts/audit-curriculum-v13-integration.mjs && node scripts/audit-curriculum-v14-depth.mjs && node scripts/audit-curriculum-v14-runtime.mjs && node scripts/audit-curriculum-v14-cross-unit.mjs && node scripts/audit-curriculum-textbook.mjs && node scripts/audit-curriculum-v15-certification.mjs && npm run curriculum:inventory",
+    "curriculum:pedagogy-audit": "node scripts/audit-curriculum-pedagogy-v16.mjs",
+    "curriculum:audit": "node scripts/check-curriculum-content.mjs && node scripts/audit-reviewed-source-hygiene.mjs && node scripts/audit-curriculum-v13-integration.mjs && node scripts/audit-curriculum-v14-depth.mjs && node scripts/audit-curriculum-v14-runtime.mjs && node scripts/audit-curriculum-v14-cross-unit.mjs && node scripts/audit-curriculum-textbook.mjs && node scripts/audit-curriculum-v15-certification.mjs && npm run curriculum:pedagogy-audit && npm run curriculum:inventory",
     "predev": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
     "dev": "vite",
     "prebuild": "node scripts/build-cefr-lexicon.mjs && npm run curriculum:audit",
