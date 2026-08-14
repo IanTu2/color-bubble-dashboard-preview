@@ -4,6 +4,8 @@ import { createServer } from 'vite'
 const server = await createServer({ logLevel: 'error', server: { middlewareMode: true }, appType: 'custom' })
 const normalize = (value) => String(value ?? '').replace(/\s+/g, ' ').trim()
 const metaPattern = /哪個做法最|最能正確使用|哪一個做法最可靠|先確認量、單位與限制|題目提供一組具體|情境\s*\d+：請用|看到.*就立刻套|直接搬用|算出一個數字就停止/
+const metaMisconceptionPattern = /只要記住|最後結論|重新檢查題目條件|整理已知與未知|建立表示與關係|推理或計算|驗算與檢查|回答原情境|不能只看表面詞|不能只看表面現象|先讀情境/
+const genericDistractorPattern = /^其他不符合條件的結果\s*\d+$/
 const concreteMathPattern = /[-+×÷=^%]|\d/
 const evidencePattern = /\d|°C|公里|公分|公斤|公升|元|人|年|月|日|小時|分鐘|昨天|明天|Yesterday|Saturday|資料|句子|短文|照片|報紙|地圖|燈泡|幼苗|杯|水|氣溫|票|長方形|量測|公車|政府|居民|商品|bag|school|grandmother/i
 
@@ -13,6 +15,8 @@ const stats = {
   structuralFailures: 0,
   learnerQuestions: 0,
   metaQuestions: 0,
+  genericDistractorOptions: 0,
+  metaMisconceptions: 0,
   concreteQuestions: 0,
   concreteMathQuestions: 0,
   mathQuestions: 0,
@@ -59,23 +63,37 @@ try {
           const content = inspected.unit
           let unitMeta = 0
           let unitConcrete = 0
+          let unitGenericDistractors = 0
+          let unitMetaMisconceptions = 0
           for (const question of content.questions) {
             const extra = question
             const mediaQuestion = Boolean(extra.mediaAssetId || extra.audioText)
-            if (mediaQuestion) continue
-            stats.learnerQuestions += 1
-            const text = normalize(`${question.context ?? ''} ${question.prompt ?? ''} ${question.kind === 'choice' ? question.options.join(' ') : question.sampleAnswer ?? ''}`)
-            if (metaPattern.test(text)) {
-              stats.metaQuestions += 1
-              unitMeta += 1
+            if (!mediaQuestion) {
+              stats.learnerQuestions += 1
+              const text = normalize(`${question.context ?? ''} ${question.prompt ?? ''} ${question.kind === 'choice' ? question.options.join(' ') : question.sampleAnswer ?? ''}`)
+              if (metaPattern.test(text)) {
+                stats.metaQuestions += 1
+                unitMeta += 1
+              }
+              if (evidencePattern.test(text)) {
+                stats.concreteQuestions += 1
+                unitConcrete += 1
+              }
+              if (route.subject === 'math') {
+                stats.mathQuestions += 1
+                if (concreteMathPattern.test(text)) stats.concreteMathQuestions += 1
+              }
             }
-            if (evidencePattern.test(text)) {
-              stats.concreteQuestions += 1
-              unitConcrete += 1
+            if (question.kind === 'choice') {
+              const generic = question.options.filter((option) => genericDistractorPattern.test(option)).length
+              stats.genericDistractorOptions += generic
+              unitGenericDistractors += generic
             }
-            if (route.subject === 'math') {
-              stats.mathQuestions += 1
-              if (concreteMathPattern.test(text)) stats.concreteMathQuestions += 1
+          }
+          for (const misconception of content.misconceptions) {
+            if (metaMisconceptionPattern.test(normalize(`${misconception.claim} ${misconception.correction} ${misconception.reason}`))) {
+              stats.metaMisconceptions += 1
+              unitMetaMisconceptions += 1
             }
           }
           const checks = content.questions.filter((question) => question.id.includes('-ped-v17-check-')).length
@@ -84,6 +102,8 @@ try {
             stats.unitsWithMeta += 1
             findings.push({ unitId: unit.id, reasons: [`${unitMeta} learner questions still test meta-strategy wording`] })
           }
+          if (unitGenericDistractors) findings.push({ unitId: unit.id, reasons: [`${unitGenericDistractors} generic placeholder distractors remain`] })
+          if (unitMetaMisconceptions) findings.push({ unitId: unit.id, reasons: [`${unitMetaMisconceptions} meta-strategy misconceptions remain`] })
           if (!unitConcrete) {
             stats.unitsWithoutConcreteEvidence += 1
             findings.push({ unitId: unit.id, reasons: ['no concrete learner question with numeric/textual/observational evidence'] })
@@ -110,6 +130,8 @@ if (
   stats.ready !== 453 ||
   stats.structuralFailures ||
   stats.metaQuestions ||
+  stats.genericDistractorOptions ||
+  stats.metaMisconceptions ||
   stats.unitsWithoutConcreteEvidence ||
   concretePct < 95 ||
   mathConcretePct < 95 ||
@@ -118,4 +140,4 @@ if (
   console.error('[curriculum-user-experience-v18] FAILED: concrete learner UX gate regressed')
   process.exit(1)
 }
-console.log('[curriculum-user-experience-v18] PASSED: 453 units use concrete learner tasks, streamlined flow, and responsive safeguards')
+console.log('[curriculum-user-experience-v18] PASSED: 453 units use concrete learner tasks, concrete misconceptions, clean distractors, streamlined flow, and responsive safeguards')
