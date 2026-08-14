@@ -10,7 +10,8 @@ body:has(.desktop-dock-hidden) .ai-assistant-card {
   transform: translateY(12px) !important;
 }
 
-/* Course browsing should feel like one browser, not three stacked curtains. */
+/* Course browsing is one browser, not three stacked curtains. Desktop swaps
+   panels in the same region immediately, so no previous rail flashes through. */
 @media (min-width: 981px) {
   .curriculum-grade-curtain,
   .curriculum-subject-curtain,
@@ -22,19 +23,30 @@ body:has(.desktop-dock-hidden) .ai-assistant-card {
     min-width: 0 !important;
     border-left: 1px solid rgba(255,255,255,.10);
     border-radius: 24px;
+    transition: none !important;
   }
 
+  .curriculum-layer.open { transform: none !important; }
   .curriculum-layer.rail {
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transform: translateX(-18px) !important;
-  }
-
-  .curriculum-layer.rail .curriculum-layer-head,
-  .curriculum-layer.rail .curriculum-vertical-scroll,
-  .curriculum-layer.rail .curriculum-subject-list {
     display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: none !important;
   }
+}
+
+/* Closed off-canvas drawers are removed from layout/focus targeting. On narrow
+   screens a focused close button otherwise caused the browser to horizontally
+   scroll the immersive course while the drawer translated off-screen. */
+.curriculum-v14-directory:not(.open),
+.curriculum-v14-report-curtain:not(.open) {
+  display: none !important;
+}
+.curriculum-v14-directory.open,
+.curriculum-v14-report-curtain.open {
+  display: block !important;
+  transform: none !important;
 }
 
 /* Login intro always remains legible, including light theme. */
