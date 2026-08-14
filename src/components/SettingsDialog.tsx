@@ -69,7 +69,7 @@ export function SettingsDialog({ language, fontScale, preferences, open, onClose
 
           <section className="settings-section">
             <div className="settings-row"><h3>{copy.fontSize}</h3><output>{fontScale}%</output></div>
-            <input className="font-size-range" type="range" min="85" max="125" step="5" value={fontScale} onChange={(event: ChangeEvent<HTMLInputElement>) => onFontScaleChange(Number(event.target.value))} />
+            <input className="font-size-range" type="range" min="50" max="125" step="5" value={fontScale} onChange={(event: ChangeEvent<HTMLInputElement>) => onFontScaleChange(Number(event.target.value))} />
             <div className="range-labels" aria-hidden="true"><span>A</span><span>A</span></div>
           </section>
 

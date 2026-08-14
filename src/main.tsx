@@ -34,6 +34,7 @@ import './curriculum-vetted-media-v7.css'
 import './curriculum-visual-stability-v8.css'
 import './curriculum-foundation-v9.css'
 import './curriculum-audit-v10.css'
+import './font-scale.css'
 
 const rootElement = document.getElementById('root')
 

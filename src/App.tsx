@@ -27,7 +27,7 @@ function readLanguage(): Language {
 
 function readFontScale() {
   const storedValue = Number(window.localStorage.getItem(FONT_SCALE_KEY))
-  return Number.isFinite(storedValue) && storedValue >= 85 && storedValue <= 125 ? storedValue : 100
+  return Number.isFinite(storedValue) && storedValue >= 50 && storedValue <= 125 ? storedValue : 100
 }
 
 function App() {
@@ -48,7 +48,10 @@ function App() {
   }, [language])
 
   useEffect(() => {
+    const scale = fontScale / 100
     document.documentElement.style.fontSize = `${fontScale}%`
+    document.documentElement.style.setProperty('--bubble-font-scale', String(scale))
+    document.documentElement.style.setProperty('--bubble-font-scale-inverse', `${100 / scale}%`)
     window.localStorage.setItem(FONT_SCALE_KEY, String(fontScale))
   }, [fontScale])
 
