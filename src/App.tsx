@@ -32,6 +32,7 @@ function readFontScale() {
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [courseBrowserRequest, setCourseBrowserRequest] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [desktopRequest, setDesktopRequest] = useState<DesktopRequest | null>(null)
@@ -116,6 +117,11 @@ function App() {
     setDesktopRequest({ id: Date.now() + Math.random(), kind })
   }
 
+  const browseCurriculum = () => {
+    setDrawerOpen(true)
+    setCourseBrowserRequest(Date.now())
+  }
+
   const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => {
     setDrawerOpen(false)
     setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject, pathway } })
@@ -139,6 +145,7 @@ function App() {
         language={language}
         open={drawerOpen}
         loggedIn={Boolean(user)}
+        courseBrowserRequest={courseBrowserRequest}
         onToggle={() => setDrawerOpen((current) => !current)}
         onClose={() => setDrawerOpen(false)}
         onOpenSettings={() => { setDrawerOpen(false); setAuthOpen(false); setSettingsOpen(true) }}
@@ -152,7 +159,7 @@ function App() {
         loggedIn={Boolean(user)}
         userId={user?.id}
         onNotice={setToast}
-        onBrowseCourses={() => setDrawerOpen(true)}
+        onBrowseCourses={browseCurriculum}
         onOpenCourse={requestCurriculumCourse}
       />
       {user ? <DesktopWorkspace language={language} userId={user.id} request={desktopRequest} rememberWindows={preferences.rememberWindows} /> : null}
