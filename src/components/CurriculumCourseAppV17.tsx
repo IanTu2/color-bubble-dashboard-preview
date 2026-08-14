@@ -15,16 +15,16 @@ import {
   type CurriculumSubjectId,
 } from '../curriculum-plan-v5'
 import {
-  getConceptChecksV17,
-  getTextbookUnitContentV17,
-} from '../curriculum-pedagogy-v17'
+  getConceptChecksV18,
+  getTextbookUnitContentV18,
+} from '../curriculum-pedagogy-v18'
 import type {
   TextbookUnitContentV14,
   TextbookVisual,
 } from '../curriculum-textbook-v14'
 import { CURRICULUM_VETTED_MEDIA } from '../curriculum-vetted-media'
 import type { Language } from '../types'
-import { CurriculumPedagogyVisualV17 } from './CurriculumPedagogyVisualV17'
+import { CurriculumPedagogyVisualV18 } from './CurriculumPedagogyVisualV18'
 import '../curriculum-course-v14.css'
 import '../curriculum-course-v17.css'
 
@@ -95,7 +95,7 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
   const conceptVisual = unitContent.visuals.find((item) => item.kind === 'concept-map') ?? unitContent.visuals[0]
   const processVisual = unitContent.visuals.find((item) => item.kind === 'process') ?? unitContent.visuals[1] ?? unitContent.visuals[0]
   const misconceptionVisual = unitContent.visuals.find((item) => item.kind === 'comparison') ?? unitContent.visuals[2] ?? unitContent.visuals[0]
-  const conceptChecks = getConceptChecksV17(unitContent)
+  const conceptChecks = getConceptChecksV18(unitContent)
 
   if (lesson.kind === 'launch') return [
     {
@@ -106,17 +106,9 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
       objectives: unitContent.objectives,
     },
     { id: `${lesson.id}-visual`, kind: 'visual', title: '先用圖看整體關係', visual: conceptVisual },
-    { id: `${lesson.id}-recap`, kind: 'recap', title: '準備開始', items: unitContent.takeaway.slice(0, 5) },
   ]
 
   if (lesson.kind === 'concept') return [
-    {
-      id: `${lesson.id}-intro`,
-      kind: 'intro',
-      title: '一次學一個觀念，學完馬上試一次',
-      body: '每個重點都會先用具體情境解釋，再立刻出一個小檢查。答錯不用等到整章結束才發現；看完解析後再繼續下一個觀念。',
-    },
-    { id: `${lesson.id}-visual`, kind: 'visual', title: '這些觀念彼此怎麼連起來？', visual: conceptVisual },
     ...unitContent.concepts.map((concept, index): Page => ({
       id: `${lesson.id}-concept-${index}`,
       kind: 'concept',
@@ -131,13 +123,7 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
   ]
 
   if (lesson.kind === 'example') return [
-    {
-      id: `${lesson.id}-intro`,
-      kind: 'intro',
-      title: '看完整情境怎麼一步一步處理',
-      body: '例題不只列答案。先看情境，再看每一步為什麼成立，最後主動檢查答案或結論有沒有超出條件。',
-    },
-    { id: `${lesson.id}-process`, kind: 'visual', title: '這類問題的思考流程', visual: processVisual },
+    { id: `${lesson.id}-process`, kind: 'visual', title: '先看這類問題的思考流程', visual: processVisual },
     ...unitContent.workedExamples.map((model, index): Page => ({
       id: `${lesson.id}-model-${index}`,
       kind: 'model',
@@ -156,16 +142,6 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
   const groups = questionGroups(unitContent.questions)
   const questions = lesson.kind === 'guided' ? groups.guided : lesson.kind === 'practice' ? groups.practice : groups.assessment
   return [
-    {
-      id: `${lesson.id}-intro`,
-      kind: 'intro',
-      title: `${label}，確認能不能真的用出來`,
-      body: lesson.kind === 'guided'
-        ? '先從有提示的情境開始。每題作答後立刻看解析，重點是修正思考，而不是只累積答對題數。'
-        : lesson.kind === 'practice'
-          ? '題目會換數值、文本、資料或情境，確認你能轉移方法，不只是記住剛才的例子。'
-          : '最後用不同情境做一次獨立檢核。開放題會提供評分焦點，讓你自己確認證據與推理是否完整。',
-    },
     ...(lesson.kind === 'assessment' ? [{ id: `${lesson.id}-misconception`, kind: 'visual' as const, title: '檢核前，快速掃過容易錯的地方', visual: misconceptionVisual }] : []),
     ...questions.map((question, index): Page => ({
       id: `${lesson.id}-${question.id}`,
@@ -223,13 +199,13 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
   const unit: CurriculumUnitBundle = semesterPlan.units[safeUnitIndex]
   const safeLessonIndex = Math.min(lessonIndex, Math.max(0, unit.lessons.length - 1))
   const lesson = unit.lessons[safeLessonIndex]
-  const unitContent = getTextbookUnitContentV17(unit.id)
+  const unitContent = getTextbookUnitContentV18(unit.id)
 
   if (!unitContent) {
     return (
       <div className="curriculum-v14-blocked">
         <strong>教材準備中</strong>
-        <p>這個單元沒有通過 V17 教材完整性檢查，因此暫時不顯示未完成內容。</p>
+        <p>這個單元沒有通過最新教材完整性檢查，因此暫時不顯示未完成內容。</p>
       </div>
     )
   }
@@ -361,7 +337,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
       pageTitle: page.title,
       issueKind: reportKind,
       message: reportText.trim(),
-      textbookVersion: 'v17-pedagogy',
+      textbookVersion: 'v18-user-audit',
       createdAt: new Date().toISOString(),
     }
     try {
@@ -395,7 +371,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
           <button className="curriculum-v14-check" type="button" disabled={selected === undefined} onClick={() => updateAnswer(question.id, { ...state, checked: true })}>{language === 'zh' ? '確認答案' : 'Check answer'}</button>
           {state.checked && selected !== undefined ? (
             <div className={`curriculum-v14-feedback ${selected === question.correctIndex ? 'correct' : 'wrong'}`}>
-              <strong>{selected === question.correctIndex ? '✓ 答對了' : '先看是哪個條件漏掉了'}</strong>
+              <strong>{selected === question.correctIndex ? '✓ 答對了' : '看看是哪個條件沒有對上'}</strong>
               {extra.optionFeedback?.[selected] ? <p>{extra.optionFeedback[selected]}</p> : null}
               <p>{question.explanation}</p>
             </div>
@@ -410,7 +386,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
         {extra.audioText ? <button className="curriculum-v14-audio" type="button" onClick={() => playAudio(extra.audioText!)}>🔊 {language === 'zh' ? '播放聽力' : 'Play audio'}</button> : null}
         {question.context ? <div className="curriculum-v14-context">{question.context}</div> : null}
         <h3>{question.prompt}</h3>
-        <textarea value={state.text ?? ''} onChange={(event) => updateAnswer(question.id, { text: event.target.value, checked: false })} placeholder={language === 'zh' ? '寫下你的判斷、線索與理由。' : 'Write your answer, evidence, and reasoning.'} />
+        <textarea value={state.text ?? ''} onChange={(event) => updateAnswer(question.id, { text: event.target.value, checked: false })} placeholder={language === 'zh' ? '寫下你的答案，再指出題目中的數字、文字或證據。' : 'Write your answer and point to evidence from the task.'} />
         <button className="curriculum-v14-check" type="button" disabled={!state.text?.trim()} onClick={() => updateAnswer(question.id, { ...state, checked: true })}>{language === 'zh' ? '對照評分焦點' : 'Check criteria'}</button>
         {state.checked ? (
           <div className="curriculum-v14-feedback neutral">
@@ -424,7 +400,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
 
   const renderVisual = (visual: TextbookVisual) => (
     <>
-      <CurriculumPedagogyVisualV17 subject={subject} unitTitle={unit.title} focus={unit.focus} visual={visual} />
+      <CurriculumPedagogyVisualV18 subject={subject} unitTitle={unit.title} focus={unit.focus} visual={visual} />
       <div className={`curriculum-v14-visual-grid visual-${visual.kind}`}>
         {visual.items.map((item, index) => (
           <article key={`${item.label}-${index}`}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong><p>{item.detail}</p></article>
@@ -452,7 +428,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
         <span className="curriculum-v14-eyebrow">重點 {page.index + 1}</span><h2>{page.title}</h2><p>{page.explanation}</p>
         {page.example ? <div className="curriculum-v14-example"><strong>先看一個具體情境</strong><p>{page.example}</p></div> : null}
         {page.misconception ? <div className="curriculum-v14-misconception"><strong>容易搞混的地方</strong><p className="claim">× {page.misconception.claim}</p><p className="correction">✓ {page.misconception.correction}</p><small>{page.misconception.reason}</small></div> : null}
-        {page.quickCheck ? <section className="curriculum-v17-quick-check"><header><strong>現在就試一題</strong><span>不用等到章末才知道自己會不會</span></header>{renderQuestion(page.quickCheck)}</section> : null}
+        {page.quickCheck ? <section className="curriculum-v17-quick-check"><header><strong>現在就試一題</strong><span>用剛才的觀念直接解決一個具體問題</span></header>{renderQuestion(page.quickCheck)}</section> : null}
       </article>
     )
     if (page.kind === 'model') return (
@@ -519,7 +495,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
               <div>
                 <span className="curriculum-v14-eyebrow">你的學習路徑</span>
                 <h1>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn}</h1>
-                <p>新版課程會把「教一點、馬上試一下、看解析、再往下學」放在同一條路徑裡；圖解也會依數學、自然、社會內容換成不同的教學圖。</p>
+                <p>從目前進度繼續往下學；每個觀念會直接搭配例子與練習，答完就能看到解析。</p>
                 <div className="curriculum-v14-hero-actions"><button type="button" className="curriculum-v14-primary" onClick={continueCourse}>{overall >= 100 ? '重新開始' : completedInCourse > 0 ? '繼續學習 →' : '開始學習 →'}</button><button type="button" className="curriculum-v14-secondary" onClick={() => setDirectoryOpen(true)}>查看全部單元</button></div>
               </div>
               <div className="curriculum-v14-overall-progress" aria-label={`整體進度 ${overall}%`}><strong>{overall}%</strong><span>整體進度</span><div><i style={{ width: `${overall}%` }} /></div><small>{completedInCourse} / {allLessons.length} 個學習步驟</small></div>
@@ -567,7 +543,6 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
         <div className="curriculum-v14-progress"><span style={{ width: `${((safePageIndex + 1) / pages.length) * 100}%` }} /></div>
         <section className="curriculum-v14-reading-column">
           <div className="curriculum-v14-reading-meta"><span>{LESSON_LABEL[lesson.kind]}</span><small>第 {safePageIndex + 1} / {pages.length} 頁</small></div>
-          {lesson.kind === 'concept' ? <div className="curriculum-v17-reader-note">每個觀念後面都有立即小檢查，答完再往下走</div> : null}
           {renderPage()}
           <button className="curriculum-v14-report" type="button" onClick={() => { setReportOpen(true); setReportSaved(false) }}>這一頁有問題？</button>
         </section>
