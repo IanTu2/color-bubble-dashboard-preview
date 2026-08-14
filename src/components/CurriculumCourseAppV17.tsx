@@ -24,9 +24,13 @@ import type {
 } from '../curriculum-textbook-v14'
 import { CURRICULUM_VETTED_MEDIA } from '../curriculum-vetted-media'
 import type { Language } from '../types'
-import { CurriculumPedagogyVisualV18 } from './CurriculumPedagogyVisualV18'
+import {
+  CurriculumLearningVisualV19,
+  CurriculumPedagogyVisualV19,
+} from './CurriculumSubjectVisualV19'
 import '../curriculum-course-v14.css'
 import '../curriculum-course-v17.css'
+import '../curriculum-course-v19.css'
 
 export type CurriculumCourseSelection = {
   grade: number
@@ -76,6 +80,13 @@ function gradeLabel(grade: number, language: Language) {
 
 function enhancement(question: ReviewedQuestion) {
   return question as ReviewedQuestion & CurriculumQuestionEnhancement
+}
+
+function leadText(value: string, max = 112) {
+  const clean = value.replace(/\s+/g, ' ').trim()
+  const sentence = clean.split(/(?<=[。！？!?])/)[0]?.trim() || clean
+  const source = sentence.length >= 24 ? sentence : clean
+  return source.length <= max ? source : `${source.slice(0, max - 1).replace(/[，、；：,.!?。！？\s]+$/g, '')}…`
 }
 
 function questionGroups(questions: ReviewedQuestion[]) {
@@ -337,7 +348,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
       pageTitle: page.title,
       issueKind: reportKind,
       message: reportText.trim(),
-      textbookVersion: 'v18-user-audit',
+      textbookVersion: 'v19-subject-visual',
       createdAt: new Date().toISOString(),
     }
     try {
@@ -400,7 +411,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
 
   const renderVisual = (visual: TextbookVisual) => (
     <>
-      <CurriculumPedagogyVisualV18 subject={subject} unitTitle={unit.title} focus={unit.focus} visual={visual} />
+      <CurriculumPedagogyVisualV19 subject={subject} unitTitle={unit.title} focus={unit.focus} visual={visual} />
       <div className={`curriculum-v14-visual-grid visual-${visual.kind}`}>
         {visual.items.map((item, index) => (
           <article key={`${item.label}-${index}`}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.label}</strong><p>{item.detail}</p></article>
@@ -411,30 +422,44 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
 
   const renderPage = () => {
     if (page.kind === 'intro') return (
-      <article className="curriculum-v14-card intro">
+      <article className="curriculum-v14-card intro v19-visual-first">
         <span className="curriculum-v14-eyebrow">{LESSON_LABEL[lesson.kind]}</span>
         <h2>{page.title}</h2>
-        <p>{page.body}</p>
-        {page.objectives?.length ? <div className="curriculum-v14-objectives"><strong>學完這一單元，你會做到：</strong>{page.objectives.map((item, index) => <div key={item}><span>{index + 1}</span><p>{item}</p></div>)}</div> : null}
+        <CurriculumLearningVisualV19 subject={subject} unitTitle={unit.title} focus={unit.focus} title={unit.title} explanation={page.body} example={page.objectives?.[0]} mode="intro" />
+        <p className="curriculum-v19-lead">{leadText(page.body)}</p>
+        <details className="curriculum-v19-details">
+          <summary>展開完整單元說明與學習目標</summary>
+          <p>{page.body}</p>
+          {page.objectives?.length ? <div className="curriculum-v14-objectives"><strong>學完這一單元，你會做到：</strong>{page.objectives.map((item, index) => <div key={item}><span>{index + 1}</span><p>{item}</p></div>)}</div> : null}
+        </details>
       </article>
     )
     if (page.kind === 'visual') return (
-      <article className="curriculum-v14-card visual">
+      <article className="curriculum-v14-card visual v19-visual-first">
         <span className="curriculum-v14-eyebrow">圖解</span><h2>{page.visual.title}</h2><p>{page.visual.caption}</p>{renderVisual(page.visual)}
       </article>
     )
     if (page.kind === 'concept') return (
-      <article className="curriculum-v14-card concept">
-        <span className="curriculum-v14-eyebrow">重點 {page.index + 1}</span><h2>{page.title}</h2><p>{page.explanation}</p>
-        {page.example ? <div className="curriculum-v14-example"><strong>先看一個具體情境</strong><p>{page.example}</p></div> : null}
-        {page.misconception ? <div className="curriculum-v14-misconception"><strong>容易搞混的地方</strong><p className="claim">× {page.misconception.claim}</p><p className="correction">✓ {page.misconception.correction}</p><small>{page.misconception.reason}</small></div> : null}
+      <article className="curriculum-v14-card concept v19-visual-first">
+        <span className="curriculum-v14-eyebrow">重點 {page.index + 1}</span><h2>{page.title}</h2>
+        <CurriculumLearningVisualV19 subject={subject} unitTitle={unit.title} focus={unit.focus} title={page.title} explanation={page.explanation} example={page.example} misconception={page.misconception} mode="concept" />
+        <p className="curriculum-v19-lead">{leadText(page.explanation)}</p>
+        {page.misconception ? <div className="curriculum-v19-misconception-compact"><span>⚠</span><p>{page.misconception.correction}</p></div> : null}
+        <details className="curriculum-v19-details">
+          <summary>展開完整說明、例子與常見錯誤</summary>
+          <p>{page.explanation}</p>
+          {page.example ? <div className="curriculum-v14-example"><strong>具體情境</strong><p>{page.example}</p></div> : null}
+          {page.misconception ? <div className="curriculum-v14-misconception"><strong>容易搞混的地方</strong><p className="claim">× {page.misconception.claim}</p><p className="correction">✓ {page.misconception.correction}</p><small>{page.misconception.reason}</small></div> : null}
+        </details>
         {page.quickCheck ? <section className="curriculum-v17-quick-check"><header><strong>現在就試一題</strong><span>用剛才的觀念直接解決一個具體問題</span></header>{renderQuestion(page.quickCheck)}</section> : null}
       </article>
     )
     if (page.kind === 'model') return (
-      <article className="curriculum-v14-card model">
-        <span className="curriculum-v14-eyebrow">情境例題 {page.index + 1}</span><h2>{page.title}</h2><div className="curriculum-v14-context">{page.context}</div><h3>{page.prompt}</h3>
-        <ol>{page.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+      <article className="curriculum-v14-card model v19-visual-first">
+        <span className="curriculum-v14-eyebrow">情境例題 {page.index + 1}</span><h2>{page.title}</h2>
+        <CurriculumLearningVisualV19 subject={subject} unitTitle={unit.title} focus={unit.focus} title={page.prompt} explanation={page.context} example={page.answer} mode="model" />
+        <div className="curriculum-v14-context">{page.context}</div><h3>{page.prompt}</h3>
+        <ol className="curriculum-v19-model-steps">{page.steps.map((step) => <li key={step}>{step}</li>)}</ol>
         <div className="curriculum-v14-answer"><strong>答案與檢查</strong><p>{page.answer}</p><small>{page.explanation}</small></div>
       </article>
     )
