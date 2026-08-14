@@ -1,0 +1,222 @@
+/* Final user-facing overrides from the 2026-08-14 desktop/mobile audit. */
+
+/* Keep background tools out of the immersive course. The assistant hub was
+   physically covering the mobile Continue button. */
+body:has(.desktop-dock-hidden) .assistant-tool-hub,
+body:has(.desktop-dock-hidden) .ai-assistant-card {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(12px) !important;
+}
+
+/* Course browsing is one browser, not three stacked curtains. Desktop swaps
+   panels in the same region immediately, so no previous rail flashes through. */
+@media (min-width: 981px) {
+  .curriculum-grade-curtain,
+  .curriculum-subject-curtain,
+  .curriculum-content-curtain,
+  .curriculum-grade-curtain.rail,
+  .curriculum-subject-curtain.rail {
+    left: 326px !important;
+    width: min(720px, calc(100vw - 342px)) !important;
+    min-width: 0 !important;
+    border-left: 1px solid rgba(255,255,255,.10);
+    border-radius: 24px;
+    transition: none !important;
+  }
+
+  .curriculum-layer.open { transform: none !important; }
+  .curriculum-layer.rail {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: none !important;
+  }
+}
+
+/* Closed off-canvas drawers are removed from layout/focus targeting. On narrow
+   screens a focused close button otherwise caused the browser to horizontally
+   scroll the immersive course while the drawer translated off-screen. */
+.curriculum-v14-directory:not(.open),
+.curriculum-v14-report-curtain:not(.open) {
+  display: none !important;
+}
+.curriculum-v14-directory.open,
+.curriculum-v14-report-curtain.open {
+  display: block !important;
+  transform: none !important;
+}
+
+/* Login intro always remains legible, including light theme. */
+.auth-intro,
+.auth-intro h2 {
+  color: #fff !important;
+}
+.auth-intro .eyebrow {
+  color: rgba(255,255,255,.78) !important;
+}
+.auth-intro > p:last-child {
+  color: rgba(255,255,255,.84) !important;
+}
+
+/* The font slider endpoints should explain the actual available range. */
+.font-scale-labels {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: .68rem;
+  font-weight: 750;
+}
+.font-scale-labels span:last-child { text-align: right; }
+
+/* Continue-learning card lives inside the existing member dashboard. */
+.learning-resume-card {
+  display: grid;
+  gap: 11px;
+  padding: 16px;
+  border: 1px solid rgba(88,226,210,.20);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(88,226,210,.11), rgba(156,124,255,.08));
+  box-shadow: 0 18px 54px rgba(10,7,26,.18);
+  backdrop-filter: blur(24px);
+}
+.learning-resume-head {
+  display: grid;
+  grid-template-columns: 34px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+.learning-resume-head > span,
+.learning-resume-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+  color: #dffdf8;
+  background: rgba(88,226,210,.14);
+  font-size: .9rem;
+  font-weight: 900;
+}
+.learning-resume-head > div,
+.learning-resume-copy { display: grid; gap: 2px; min-width: 0; }
+.learning-resume-head small,
+.learning-resume-copy small { color: var(--aqua); font-size: .6rem; font-weight: 850; letter-spacing: .08em; }
+.learning-resume-head strong,
+.learning-resume-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .83rem; }
+.learning-resume-head b { font-size: .8rem; }
+.learning-resume-progress { height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.08); }
+.learning-resume-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--aqua), var(--purple)); }
+.learning-resume-card > p,
+.learning-resume-copy p { margin: 0; color: var(--muted); font-size: .68rem; line-height: 1.5; }
+.learning-resume-card > p em { margin-right: 7px; color: rgba(255,255,255,.48); font-style: normal; }
+.learning-resume-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.learning-resume-actions small { color: var(--muted); font-size: .58rem; }
+.learning-resume-card button {
+  min-height: 35px;
+  padding: 0 12px;
+  border: 1px solid rgba(88,226,210,.23);
+  border-radius: 11px;
+  color: #eafffb;
+  background: rgba(88,226,210,.10);
+  cursor: pointer;
+  font-size: .67rem;
+  font-weight: 850;
+}
+.learning-resume-card button:hover { background: rgba(88,226,210,.18); }
+.learning-resume-empty { grid-template-columns: 40px minmax(0,1fr); align-items: center; }
+.learning-resume-empty > button { grid-column: 1 / -1; justify-self: stretch; }
+
+/* V18 concrete number line: readable labels and a stronger zero/reference cue. */
+.curriculum-v18-numberline .v18-numberline-value {
+  fill: currentColor;
+  font-size: 14px;
+  font-weight: 850;
+}
+.curriculum-v18-numberline .v18-numberline-value.zero { fill: #5fd6b4; font-size: 17px; }
+.curriculum-v18-numberline .v18-numberline-negative { fill: #f0b66d; stroke: rgba(255,255,255,.78); stroke-width: 2; }
+.curriculum-v18-numberline .v18-numberline-positive { fill: #5fd6b4; stroke: rgba(255,255,255,.78); stroke-width: 2; }
+.curriculum-v18-numberline .v18-numberline-pair { fill: none; stroke: #8e7cf4; stroke-width: 3; }
+.curriculum-v18-numberline .v18-distance-line { stroke: rgba(234,241,251,.55); stroke-width: 3; stroke-linecap: round; }
+.curriculum-v18-numberline .v18-numberline-title { fill: currentColor; font-size: 13px; font-weight: 850; }
+
+/* Improve instructional diagram text contrast in light mode. */
+html[data-theme="light"] .curriculum-v17-diagram .v17-label,
+html[data-theme="light"] .curriculum-v17-diagram .v18-numberline-value,
+html[data-theme="light"] .curriculum-v17-diagram .v18-numberline-title {
+  fill: #23364a;
+  opacity: 1;
+}
+html[data-theme="light"] .curriculum-v17-diagram .v17-caption,
+html[data-theme="light"] .curriculum-v17-diagram .v17-number {
+  fill: #53677d;
+  opacity: .92;
+}
+html[data-theme="light"] .curriculum-v18-numberline .v18-numberline-value.zero { fill: #16806d; }
+
+/* Mobile course header keeps the directory visible and leaves a safe footer. */
+@media (max-width: 760px) {
+  .desktop-window.desktop-window-immersive {
+    inset: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .curriculum-v14-reader-header {
+    grid-template-columns: auto minmax(0,1fr) auto !important;
+    gap: 8px !important;
+    padding: 10px 92px 10px 10px !important;
+  }
+  .curriculum-v14-reader-back {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    overflow: hidden;
+    padding: 0 !important;
+    font-size: 0 !important;
+  }
+  .curriculum-v14-reader-back::before { content: '←'; font-size: 18px; }
+  .curriculum-v14-reader-title small { display: none; }
+  .curriculum-v14-reader-title strong { font-size: 13px !important; }
+  .curriculum-v14-reader-tools { display: flex !important; gap: 5px !important; }
+  .curriculum-v14-reader-tools > span { display: none; }
+  .curriculum-v14-reader-tools button {
+    min-width: 42px;
+    min-height: 38px;
+    padding: 0 8px !important;
+    font-size: 0 !important;
+  }
+  .curriculum-v14-reader-tools button::before { content: '☰'; font-size: 18px; }
+  .curriculum-v14-lesson-path { padding-right: 38px !important; }
+  .curriculum-v14-lesson-path::after {
+    content: '左右滑動';
+    position: sticky;
+    right: 0;
+    display: grid;
+    align-items: center;
+    padding: 0 8px;
+    color: var(--learn-muted);
+    background: linear-gradient(90deg, transparent, var(--learn-bg) 30%);
+    font-size: 9px;
+    pointer-events: none;
+  }
+  .curriculum-v14-stage { padding-bottom: 18px !important; }
+  .curriculum-v14-reader-navigation {
+    z-index: 25 !important;
+    margin-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+  .curriculum-v14-reader-navigation .primary { min-width: 112px; }
+  .curriculum-v14-directory { width: min(92vw, 390px) !important; }
+
+  .learning-resume-card { border-radius: 18px; }
+  .member-dashboard { gap: 10px; }
+}
+
+@media (max-width: 420px) {
+  .curriculum-v14-reader-navigation {
+    grid-template-columns: minmax(82px, auto) auto minmax(112px, auto) !important;
+    gap: 6px !important;
+    padding-inline: 8px !important;
+  }
+  .curriculum-v14-reader-navigation button { padding-inline: 9px !important; }
+}

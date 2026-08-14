@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   getCurriculumRouteOptions,
   getCurriculumTrack,
@@ -13,6 +13,7 @@ type SideDrawerProps = {
   language: Language
   open: boolean
   loggedIn: boolean
+  courseBrowserRequest: number
   onToggle: () => void
   onClose: () => void
   onOpenSettings: () => void
@@ -43,7 +44,7 @@ function gradeLabel(grade: number, language: Language) {
   return `高${['一', '二', '三'][grade - 10]}`
 }
 
-export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpenSettings, onOpenAuth, onOpenDesktopApp, onOpenCourse }: SideDrawerProps) {
+export function SideDrawer({ language, open, loggedIn, courseBrowserRequest, onToggle, onClose, onOpenSettings, onOpenAuth, onOpenDesktopApp, onOpenCourse }: SideDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanel>(null)
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null)
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
@@ -53,7 +54,7 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
     ? {
         menu: '主要選單', close: '關閉選單', workspace: '工作視窗', notes: '記事本', search: '新增搜尋視窗', searchHint: '可同時開啟多個',
         learning: '學習', learningHint: '國小・國中・高中', learningSubHint: '依年級顯示正式課程路線', guestNote: '登入後即可使用工作視窗、學習選單、月曆與待辦事項。',
-        login: '登入或註冊', settings: '設定', curriculum: '課程總覽', chooseGrade: '選擇年級', chooseGradeHint: '一年級到高三，直式排列',
+        login: '登入或註冊', settings: '設定', curriculum: '課程總覽', chooseGrade: '選擇年級', chooseGradeHint: '從國小、國中到高中選擇目前要學的年級',
         chooseSubject: '選擇課程', roadmap: '課程內容', roadmapHint: '選擇學期與單元，再進入正式教學',
         semesterOne: '上學期', semesterTwo: '下學期', sourceNote: '依十二年國教領域／科目結構整理，不綁定單一出版社版本。', startCourse: '開始上課 →', lessons: '觀念・示範・練習・解析',
         practice: '練習場', practiceHint: '測驗・題庫・單字・遊戲', practiceSubHint: '不綁學校年級的練習工具', practiceTitle: '練習場與學習工具',
@@ -62,7 +63,7 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
     : {
         menu: 'Main menu', close: 'Close menu', workspace: 'Work windows', notes: 'Notes', search: 'New search window', searchHint: 'Open multiple windows',
         learning: 'Learning', learningHint: 'Elementary · Junior · Senior', learningSubHint: 'Grade-correct curriculum routes', guestNote: 'Sign in to unlock work windows, learning, calendar, and to-dos.',
-        login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', chooseGrade: 'Choose grade', chooseGradeHint: 'Grades 1–12 in one vertical list',
+        login: 'Log in or register', settings: 'Settings', curriculum: 'Course browser', chooseGrade: 'Choose grade', chooseGradeHint: 'Choose the grade you want to study now',
         chooseSubject: 'Choose course', roadmap: 'Course content', roadmapHint: 'Choose semester and unit, then enter the formal lesson',
         semesterOne: 'Semester 1', semesterTwo: 'Semester 2', sourceNote: 'Aligned to Taiwan curriculum domains/subjects without binding to one publisher.', startCourse: 'Start course →', lessons: 'Concept · example · practice · explanation',
         practice: 'Practice lab', practiceHint: 'Tests · banks · words · games', practiceSubHint: 'Practice tools outside the school-grade path', practiceTitle: 'Practice lab and learning tools',
@@ -81,6 +82,12 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
     setSelectedRouteId(null)
     setSelectedSemester(1)
   }
+
+  useEffect(() => {
+    if (!courseBrowserRequest || !loggedIn) return
+    resetCoursePath()
+    setPanel('curriculum')
+  }, [courseBrowserRequest, loggedIn])
 
   const closeAll = () => {
     setPanel(null)

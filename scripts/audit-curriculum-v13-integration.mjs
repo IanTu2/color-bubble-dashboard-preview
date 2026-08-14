@@ -49,15 +49,15 @@ for (const route of [
 if (!drawer.includes('onOpenCourse(grade, subject, pathway)')) failures.push('SideDrawer drops pathway before course request')
 if (!app.includes('course: { grade, subject, pathway }')) failures.push('App drops pathway in desktop request')
 if (!desktop.includes('pathway={item.course.pathway}')) failures.push('DesktopWorkspace drops pathway before player render')
-if (!activePlayer.includes('getCurriculumCourseBundleV13(grade, subject, pathway)')) failures.push('V17 active player does not load the selected V13 route model')
-if (!activePlayer.includes('getTextbookUnitContentV17(unit.id)')) failures.push('V17 active player does not load the selected unit through pedagogy gate')
+if (!activePlayer.includes('getCurriculumCourseBundleV13(grade, subject, pathway)')) failures.push('active player does not load the selected V13 route model')
+if (!activePlayer.includes('getTextbookUnitContentV18(unit.id)')) failures.push('active player does not load the selected unit through V18 learner-content gate')
 if (!legacyV13.includes('getCurriculumCourseBundleV13(grade, subject, pathway)')) failures.push('legacy V13 route reader lost pathway support')
 
-if (!activeWrapper.includes("const routeKey = `${props.grade}-${props.subject}-${props.pathway ?? 'base'}-pedagogy-v17`")) failures.push('active curriculum wrapper does not build the V17 route-specific remount key')
+if (!activeWrapper.includes("const routeKey = `${props.grade}-${props.subject}-${props.pathway ?? 'base'}-user-audit-v18`")) failures.push('active curriculum wrapper does not build the V18 route-specific remount key')
 if (!activeWrapper.includes('key={routeKey}')) failures.push('active curriculum wrapper does not remount the player on route changes')
 
 for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級']) {
-  if (activePlayer.includes(forbidden) || activeWrapper.includes(forbidden)) failures.push(`active V17 reader path contains reader-forbidden token: ${forbidden}`)
+  if (activePlayer.includes(forbidden) || activeWrapper.includes(forbidden)) failures.push(`active learner reader path contains reader-forbidden token: ${forbidden}`)
 }
 
 if (failures.length) {
@@ -66,4 +66,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-v13-integration] route identity + Life integration + HS splits + V17 propagation + route-change remount passed')
+console.log('[curriculum-v13-integration] route identity + Life integration + HS splits + V18 propagation + route-change remount passed')

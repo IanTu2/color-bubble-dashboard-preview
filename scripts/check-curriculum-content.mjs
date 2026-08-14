@@ -34,7 +34,7 @@ for (const token of ['buildFoundationSubjectQuestions','upgradeFoundationUnitV12
   if (!foundationV12.includes(token)) failures.push(`v12 subject question bank missing ${token}`)
 }
 
-// Keep the older reviewed-content and visual chain healthy because V14/V17 still reuse its subject-specific base content.
+// Keep the older reviewed-content and visual chain healthy because V14/V17/V18 reuse its subject-specific base content.
 const v12 = read('src/components/CurriculumCourseAppV12.tsx')
 for (const token of ['splitQuestionBank','groups.guided','groups.practice','groups.assessment','QuestionMedia','AudioPrompt','optionFeedback','curriculum-response-rubric','CURRICULUM_VETTED_MEDIA']) {
   if (!v12.includes(token)) failures.push(`V12 reader missing ${token}`)
@@ -49,22 +49,25 @@ if (!v8.includes('useLayoutEffect') || v8.includes('requestAnimationFrame')) fai
 if (!v8.includes('observer?.disconnect()')) failures.push('V8 observer mutation guard regressed')
 if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('V8 media aspect-ratio reservation missing')
 
-// V17 is the active formal-course reader. V14 remains the structural/textbook base and validator.
+// V18 is the active learner overlay. V17 remains the pedagogy base; V14 remains structural/textbook validation.
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
 const v14 = read('src/components/CurriculumCourseAppV14.tsx')
-const v17 = read('src/components/CurriculumCourseAppV17.tsx')
+const activeReader = read('src/components/CurriculumCourseAppV17.tsx')
 const v14Css = read('src/curriculum-course-v14.css')
 const v17Css = read('src/curriculum-course-v17.css')
 const textbookV14 = read('src/curriculum-textbook-v14.ts')
 const pedagogyV17 = read('src/curriculum-pedagogy-v17.ts')
+const pedagogyV18 = read('src/curriculum-pedagogy-v18.ts')
 const pedagogyVisualV17 = read('src/components/CurriculumPedagogyVisualV17.tsx')
-if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active curriculum export must route through Pedagogy V17')
-if (!activeExport.includes("-pedagogy-v17`")) failures.push('active reader route key must remount on V17 route changes')
-for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV17','getConceptChecksV17','quickCheck','renderQuestion(page.quickCheck)','CurriculumPedagogyVisualV17','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS']) {
-  if (!v17.includes(token)) failures.push(`V17 reader missing ${token}`)
+const pedagogyVisualV18 = read('src/components/CurriculumPedagogyVisualV18.tsx')
+const uxV18Css = read('src/user-experience-audit-v18.css')
+if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active curriculum export must keep the stable reader component entry')
+if (!activeExport.includes("-user-audit-v18`")) failures.push('active reader route key must remount on V18 route changes')
+for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV18','getConceptChecksV18','quickCheck','renderQuestion(page.quickCheck)','CurriculumPedagogyVisualV18','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS']) {
+  if (!activeReader.includes(token)) failures.push(`active V18 reader missing ${token}`)
 }
 for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級']) {
-  if (v17.includes(forbidden)) failures.push(`V17 reader contains forbidden internal/DOM token ${forbidden}`)
+  if (activeReader.includes(forbidden)) failures.push(`active reader contains forbidden internal/DOM token ${forbidden}`)
 }
 for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV14','unitContent.objectives','unitContent.workedExamples','unitContent.questions']) {
   if (!v14.includes(token)) failures.push(`V14 fallback reader missing ${token}`)
@@ -80,6 +83,15 @@ for (const token of ['CoordinateDiagram','GeometryDiagram','NumberLineDiagram','
 }
 for (const token of ['buildPedagogyQuestions','upgradeExamples','subjectSteps','-ped-v17-check-','validateTextbookUnitV14','getTextbookUnitContentV17','getConceptChecksV17']) {
   if (!pedagogyV17.includes(token)) failures.push(`V17 pedagogy content layer missing ${token}`)
+}
+for (const token of ['getTextbookUnitContentV17','concreteTask','mathTask','scienceTask','socialTask','englishTask','chineseTask','getTextbookUnitContentV18','getConceptChecksV18','validateTextbookUnitV14']) {
+  if (!pedagogyV18.includes(token)) failures.push(`V18 concrete learner layer missing ${token}`)
+}
+for (const token of ['ConcreteNumberLine','concrete-number-line','−3','+3','CurriculumPedagogyVisualV17']) {
+  if (!pedagogyVisualV18.includes(token)) failures.push(`V18 learner visual layer missing ${token}`)
+}
+for (const token of ['assistant-tool-hub','.curriculum-v14-reader-tools','.learning-resume-card','.auth-intro','.curriculum-layer.rail']) {
+  if (!uxV18Css.includes(token)) failures.push(`V18 UX override missing ${token}`)
 }
 for (const token of ['reviewStatus: \'textbook-ready\'','textbookVersion: \'v14\'','sourceRefs','objectives','misconceptions','visuals','vocabulary','ensureWorkedExamples','ensureQuestions','validateTextbookUnitV14','BANNED_MISSING_MATERIAL','optionFeedback','rubric']) {
   if (!textbookV14.includes(token)) failures.push(`V14 textbook structural layer missing ${token}`)
@@ -124,4 +136,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] Pedagogy V17 active reader + V14 structural textbook + legacy subject content + V13 route structure passed')
+console.log('[curriculum-qa] V18 learner overlay + V17 pedagogy base + V14 structural textbook + legacy subject content + V13 route structure passed')
