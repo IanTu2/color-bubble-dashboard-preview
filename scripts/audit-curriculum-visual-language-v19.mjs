@@ -10,6 +10,7 @@ try {
   const reader = await readFile(new URL('../src/components/CurriculumCourseAppV17.tsx', import.meta.url), 'utf8')
   const visual = await readFile(new URL('../src/components/CurriculumSubjectVisualV19.tsx', import.meta.url), 'utf8')
   const css = await readFile(new URL('../src/curriculum-course-v19.css', import.meta.url), 'utf8')
+  const browserFixCss = await readFile(new URL('../src/curriculum-course-v19-fixes.css', import.meta.url), 'utf8')
 
   const requiredReaderTokens = [
     'CurriculumLearningVisualV19',
@@ -33,6 +34,7 @@ try {
     'SocialLensVisual',
     'chinese-discourse-map',
     'english-dialogue-pattern',
+    'curriculum-course-v19-fixes.css',
   ]
   for (const token of requiredVisualTokens) if (!visual.includes(token)) findings.push(`visual system missing ${token}`)
 
@@ -46,6 +48,17 @@ try {
     '.curriculum-v19-model-steps',
   ]
   for (const token of requiredCssTokens) if (!css.replace(/\s+/g, ' ').includes(token.replace(/\s+/g, ' '))) findings.push(`visual-first CSS missing ${token}`)
+
+  const normalizedFix = browserFixCss.replace(/\s+/g, ' ')
+  for (const token of [
+    'grid-template-columns: 46px minmax(0, 1fr) 46px;',
+    '.v19-dialogue-stage > .v19-bubble.b',
+    'grid-column: 2;',
+    '.v19-dialogue-stage > .v19-avatar.b',
+    'grid-column: 3;',
+  ]) {
+    if (!normalizedFix.includes(token.replace(/\s+/g, ' '))) findings.push(`English dialogue browser fix missing ${token}`)
+  }
 
   for (let grade = 1; grade <= 12; grade += 1) {
     for (const route of plan.getCurriculumRouteOptions(grade)) {
@@ -79,4 +92,4 @@ if (
   console.error('[curriculum-visual-language-v19] FAILED: learner pages are not consistently visual-first by subject')
   process.exit(1)
 }
-console.log('[curriculum-visual-language-v19] PASSED: all five subjects have explicit visual languages and teaching pages are visual-first')
+console.log('[curriculum-visual-language-v19] PASSED: all five subjects have explicit visual languages, English dialogue remains readable, and teaching pages are visual-first')
