@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { AuthDialog } from './components/AuthDialog'
 import { Background } from './components/Background'
+import { ContinueLearningCard } from './components/ContinueLearningCard'
 import { DesktopWorkspace, type DesktopAppKind, type DesktopRequest } from './components/DesktopWorkspace'
 import { HomeDashboard } from './components/HomeDashboard'
 import { PersistentMusicPlayer } from './components/PersistentMusicPlayer'
@@ -117,6 +118,7 @@ function App() {
   }
 
   const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => {
+    setDrawerOpen(false)
     setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject, pathway } })
   }
 
@@ -147,6 +149,7 @@ function App() {
       />
       <Topbar language={language} user={user} authLoading={authLoading} onOpenAuth={openAuth} onLogout={logout} />
       <HomeDashboard language={language} loggedIn={Boolean(user)} userId={user?.id} onNotice={setToast} />
+      {user ? <ContinueLearningCard language={language} userId={user.id} onBrowse={() => setDrawerOpen(true)} onOpenCourse={requestCurriculumCourse} /> : null}
       {user ? <DesktopWorkspace language={language} userId={user.id} request={desktopRequest} rememberWindows={preferences.rememberWindows} /> : null}
       {user ? <PersistentMusicPlayer language={language} userId={user.id} enabled={preferences.musicEnabled} onNotice={setToast} /> : null}
       <SettingsDialog
