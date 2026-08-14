@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ContinueLearningCard } from './ContinueLearningCard'
 import { DashboardDetailDialog } from './DashboardDetailDialog'
 import { supabase } from '../lib/supabase'
+import type { CurriculumPathwayId, CurriculumSubjectId } from '../curriculum-plan-v5'
 import { loadTodos, type Todo, type TodoSchema } from '../services/todos'
 import type { Language } from '../types'
 
@@ -9,6 +11,8 @@ type HomeDashboardProps = {
   loggedIn: boolean
   userId?: string
   onNotice: (message: string) => void
+  onBrowseCourses: () => void
+  onOpenCourse: (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => void
 }
 
 type DetailMode = 'calendar' | 'todo' | null
@@ -36,7 +40,7 @@ function todoTargetDate(todo: Todo) {
   return todo.due_date || todo.planned_date
 }
 
-export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDashboardProps) {
+export function HomeDashboard({ language, loggedIn, userId, onNotice, onBrowseCourses, onOpenCourse }: HomeDashboardProps) {
   const [now, setNow] = useState(() => new Date())
   const [todos, setTodos] = useState<Todo[]>([])
   const [todoLoading, setTodoLoading] = useState(false)
@@ -148,6 +152,7 @@ export function HomeDashboard({ language, loggedIn, userId, onNotice }: HomeDash
 
       {loggedIn ? (
         <aside className="member-dashboard" aria-label={copy.dashboard}>
+          {userId ? <ContinueLearningCard language={language} userId={userId} onBrowse={onBrowseCourses} onOpenCourse={onOpenCourse} /> : null}
           <button
             className="dashboard-card dashboard-card-button calendar-card"
             type="button"
