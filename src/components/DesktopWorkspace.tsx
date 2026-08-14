@@ -240,6 +240,10 @@ export function DesktopWorkspace({
     return <SearchApp language={language} userId={userId} instanceId={item.id} />
   }
 
+  const visibleWindows = windows.filter((item) => !item.minimized)
+  const foregroundWindow = visibleWindows.reduce<ManagedWindow | null>((top, item) => (!top || item.zIndex > top.zIndex ? item : top), null)
+  const immersiveCourseOpen = foregroundWindow?.app === 'course'
+
   return (
     <>
       {windows.map((item) => (
@@ -253,6 +257,7 @@ export function DesktopWorkspace({
             icon={appIcon(item.app)}
             geometry={item.geometry}
             maximized={item.maximized}
+            immersive={item.app === 'course'}
             zIndex={item.zIndex}
             onFocus={() => focusWindow(item.id)}
             onMinimize={() => updateWindow(item.id, { minimized: true })}
@@ -265,7 +270,7 @@ export function DesktopWorkspace({
         </div>
       ))}
 
-      <nav className="desktop-dock" aria-label={copy.launch}>
+      <nav className={`desktop-dock${immersiveCourseOpen ? ' desktop-dock-hidden' : ''}`} aria-label={copy.launch}>
         <div className="desktop-dock-launchers">
           <button type="button" title={copy.notes} onClick={() => openApp('notes')}><span>✎</span><small>{copy.notes}</small></button>
           <button type="button" title={copy.newSearch} onClick={() => openApp('search')}><span>⌕＋</span><small>{copy.search}</small></button>
