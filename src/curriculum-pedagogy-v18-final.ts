@@ -83,9 +83,9 @@ function replaceMetaMisconceptions(unit: TextbookUnitContentV14) {
     return {
       ...misconception,
       title: `容易搞混 ${index + 1}｜用實際題目辨認`,
-      claim: `讀到「${contextClue(question, 62)}」時，有人選了「${wrong}」。`,
-      correction: `應改成「${correct}」。`,
-      reason: `回到題目「${question.prompt}」逐項核對：${question.explanation}`,
+      claim: `讀到「${contextClue(question, 62)}」時，有人選了「${wrong}」，並把這個選項當成最後答案。`,
+      correction: `應改成「${correct}」，因為這個答案才同時符合題目給出的實際資料、單位或文字證據，以及這一題真正詢問的條件。`,
+      reason: `回到題目「${question.prompt}」逐項核對：${question.explanation} 這樣可以看出錯誤不是單純記錯答案，而是沒有讓結論和題目中的具體證據一致。`,
     }
   })
   return { ...unit, misconceptions }
