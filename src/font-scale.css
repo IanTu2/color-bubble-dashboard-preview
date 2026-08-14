@@ -1,0 +1,17 @@
+:root {
+  --bubble-font-scale: 1;
+  --bubble-font-scale-inverse: 100%;
+}
+
+/*
+ * Most of Bubble Space uses rem-based typography and therefore follows the
+ * root font-size setting automatically. The immersive curriculum reader was
+ * intentionally authored with fixed px sizes, so it needs an explicit scale.
+ * Compensating width/height keeps the reader filling its desktop window after
+ * zooming instead of leaving unused space at smaller settings.
+ */
+.curriculum-v14 {
+  width: var(--bubble-font-scale-inverse);
+  height: var(--bubble-font-scale-inverse);
+  zoom: var(--bubble-font-scale);
+}
