@@ -1,6 +1,7 @@
 import type { CurriculumSubjectId } from '../curriculum-plan-v5'
 import type { TextbookVisual } from '../curriculum-textbook-v14'
 import { CurriculumPedagogyVisualV18 } from './CurriculumPedagogyVisualV18'
+import '../curriculum-course-v19-fixes.css'
 
 type BaseProps = {
   subject: CurriculumSubjectId
