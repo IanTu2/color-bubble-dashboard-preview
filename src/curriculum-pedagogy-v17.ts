@@ -17,18 +17,16 @@ type EnhancedChoice = ReviewedChoiceQuestion & CurriculumQuestionEnhancement
 type EnhancedResponse = ReviewedResponseQuestion & CurriculumQuestionEnhancement
 type UnitContext = NonNullable<ReturnType<typeof resolveCurriculumUnit>>
 
-const oldTemplatePrompt = [
-  /^下列哪個敘述最符合「/,
-  /^哪個例子最能直接說明「/,
-  /^同學說：「.+」哪個修正最完整？$/,
-  /^這個情境如何呈現「/,
-  /^針對「.+」，請說明你會先檢查什麼/,
-]
-
-const compact = (value: string, max = 130) => {
+const compact = (value: string, max = 150) => {
   const clean = value.replace(/\s+/g, ' ').trim()
   if (clean.length <= max) return clean
   return `${clean.slice(0, max - 1).replace(/[，、；：,.!?。！？\s]+$/g, '')}…`
+}
+
+const ensureLength = (value: string | undefined, minimum: number, fallback: string) => {
+  const clean = (value ?? '').replace(/\s+/g, ' ').trim()
+  if (clean.length >= minimum) return clean
+  return `${clean}${clean ? ' ' : ''}${fallback}`.trim()
 }
 
 function unique(values: string[]) {
@@ -47,70 +45,127 @@ function rotate<T>(values: T[], offset: number) {
   return [...values.slice(n), ...values.slice(0, n)]
 }
 
+function focusPhrases(context: UnitContext) {
+  return unique(`${context.unit.title}。${context.unit.focus}`
+    .split(/[。；，、：:（）()／/]|以及|並且|並|與|和/)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2 && item.length <= 32))
+}
+
 function concreteScenario(context: UnitContext, concept: ReviewedConcept, index: number) {
-  const example = compact(concept.example ?? '', 190)
-  if (example.length >= 18 && !/新情境|先找出和|再用本單元方法/.test(example)) return example
-  const focus = compact(context.unit.focus, 150)
-  const subjectFallback = context.subject === 'math'
-    ? `在「${context.unit.title}」中，把題目給的量、單位與關係整理成可以計算或畫圖檢查的資料。`
-    : context.subject === 'science'
-      ? `在「${context.unit.title}」中，針對「${focus}」安排一次可觀察、可比較且能留下證據的探究。`
-      : context.subject === 'social'
-        ? `在「${context.unit.title}」中，比較和「${focus}」有關的來源、時間、地點或不同群體資料。`
-        : context.subject === 'english'
-          ? `In the unit “${context.unit.title}”, use “${concept.title}” in a complete situation related to ${focus}.`
-          : `在「${context.unit.title}」的文本或表達情境中，利用「${concept.title}」處理「${focus}」。`
-  return `${subjectFallback}（情境 ${index + 1}）`
+  const existing = compact(concept.example ?? '', 200)
+  const unitPhrase = focusPhrases(context).find((phrase) => existing.includes(phrase))
+  if (existing.length >= 22 && unitPhrase && !/新情境|本單元方法|先找出和/.test(existing)) return existing
+
+  const focus = compact(context.unit.focus, 155)
+  if (context.subject === 'math') {
+    return `在「${context.unit.title}」的「${focus}」情境中，先整理題目給的數量、單位與限制，再把「${concept.title}」表示成可以計算、列表、畫圖或估算檢查的關係。（情境 ${index + 1}）`
+  }
+  if (context.subject === 'science') {
+    return `在「${context.unit.title}」探究「${focus}」時，學生留下可比較的觀察或量測紀錄，接著要用「${concept.title}」解釋現象，並區分直接證據和推測。（情境 ${index + 1}）`
+  }
+  if (context.subject === 'social') {
+    return `在「${context.unit.title}」討論「${focus}」時，手上有不同時間、地點、來源或群體的資料，需要利用「${concept.title}」比較證據後再形成有限度結論。（情境 ${index + 1}）`
+  }
+  if (context.subject === 'english') {
+    return `In “${context.unit.title}”, a learner communicates about ${focus}. The learner must use “${concept.title}” in a complete message and check the speaker, time, purpose, meaning, form, and register. (Situation ${index + 1})`
+  }
+  return `在「${context.unit.title}」處理「${focus}」的文本或表達任務時，學生要利用「${concept.title}」找出具體詞句、篇章結構或上下文線索，再說明這些線索如何支持判斷。（情境 ${index + 1}）`
 }
 
 function subjectSteps(context: UnitContext, concept: ReviewedConcept, scenario: string) {
   if (context.subject === 'math') return [
-    `先從「${compact(scenario, 90)}」標出已知量、未知量、單位與限制。`,
-    `把這些條件轉成和「${concept.title}」有關的式子、圖形、表格或數線表示。`,
-    `逐步推理或計算，每一步都能說明為什麼仍符合「${context.unit.title}」的條件。`,
-    `用代回、估算、圖形或極端情況檢查結果，再回答原本的問題。`,
+    `先從「${compact(scenario, 95)}」標出已知量、未知量、單位與限制。`,
+    `把條件轉成和「${concept.title}」有關的式子、圖形、表格、數線或其他數學表示。`,
+    `逐步完成推理或計算，確認每一步都仍符合「${context.unit.title}」的原始條件。`,
+    '最後用代回、估算、圖形、單位或合理範圍檢查結果，再回答原本情境。',
   ]
   if (context.subject === 'science') return [
-    `先把「${compact(scenario, 90)}」中真正觀察到或量到的現象與推測分開。`,
+    `先把「${compact(scenario, 95)}」中直接觀察或量到的結果，和原因推測分開。`,
     `找出和「${concept.title}」直接相關的變因、量測方式、模型或可比較條件。`,
-    `用資料或模型解釋結果，並比較是否還有其他可能造成相同現象的因素。`,
-    `最後限制結論範圍：指出證據能支持什麼，以及目前還不能宣稱什麼。`,
+    '用資料或模型說明結果，同時檢查是否還有其他條件可能造成相同現象。',
+    '最後限定結論範圍：指出證據目前支持什麼，以及還不能宣稱什麼。',
   ]
   if (context.subject === 'social') return [
-    `先確認「${compact(scenario, 90)}」的資料來源、時間、地點、尺度與觀察對象。`,
-    `把能直接看出的事實，和需要進一步推論的原因或價值判斷分開。`,
-    `利用「${concept.title}」比較至少兩項證據或觀點，避免只靠單一資料下結論。`,
-    `形成有限度結論，並說明若換時間、地區或群體，哪些部分可能需要重新檢查。`,
+    `先確認「${compact(scenario, 95)}」中的來源、時間、地點、尺度與觀察群體。`,
+    '把資料能直接支持的事實，和原因解釋、價值判斷或政策選擇分開。',
+    `利用「${concept.title}」比較至少兩項證據或觀點，不讓單一資料替整個議題下結論。`,
+    '形成有限度結論，並說明若換時間、地區、尺度或群體，哪些部分需要重新檢查。',
   ]
   if (context.subject === 'english') return [
-    `Identify who is speaking, the purpose, and the time or situation in “${compact(scenario, 90)}”.`,
-    `Use “${concept.title}” to connect meaning, word order, form, and the surrounding clues.`,
-    `Try the expression as a complete message and compare it with another possible wording.`,
-    `Check whether the final sentence is both grammatically possible and natural for this situation.`,
+    `Identify the speaker, purpose, time, and situation in “${compact(scenario, 95)}”.`,
+    `Use “${concept.title}” to connect meaning, form, word order, reference, and surrounding clues.`,
+    'Try the expression as a complete message and compare it with another possible wording.',
+    'Check that the final wording is both grammatically possible and natural for this situation.',
   ]
   return [
-    `先讀完整情境「${compact(scenario, 90)}」，確認人物、事件、語氣、段落或表達目的。`,
+    `先讀完整情境「${compact(scenario, 95)}」，確認人物、事件、語氣、段落或表達目的。`,
     `找出能支持「${concept.title}」的實際詞句、結構或上下文線索。`,
-    `把線索和判斷連起來，說明它如何影響意思、語氣、主旨或表達效果。`,
-    `最後回到全文檢查：是否有其他句子反駁這個解釋，或需要把結論說得更精確。`,
+    '把線索和判斷連起來，說明它如何影響意思、語氣、主旨或表達效果。',
+    '最後回到全文檢查：是否有其他線索反駁這個解釋，或需要把結論說得更精確。',
   ]
 }
 
-function upgradedConcept(context: UnitContext, concept: ReviewedConcept, index: number): ReviewedConcept {
-  const scenario = concreteScenario(context, concept, index)
-  const looksGeneric = /學習不能只背最後一句，而要依|例如遇到「.+」的新情境時，先找出|核心觀念(?:｜關係 \d+)?$/.test(`${concept.title} ${concept.explanation} ${concept.example ?? ''}`)
-  if (!looksGeneric) return concept
-  const focus = compact(context.unit.focus, 150)
-  const explanation = context.subject === 'math'
-    ? `在「${context.unit.title}」裡，「${concept.title}」要用來描述或處理「${focus}」中的量與關係。重點不是看到關鍵字就套公式，而是能把條件轉成式子、圖形、表格或數線，再用計算與檢查確認表示前後一致。`
-    : context.subject === 'science'
-      ? `在「${context.unit.title}」裡，「${concept.title}」用來解釋「${focus}」中的可觀察現象。學習時要分清楚觀察、模型與推論，並知道哪些變因或證據會讓原本的解釋需要修正。`
-      : context.subject === 'social'
-        ? `在「${context.unit.title}」裡，「${concept.title}」是理解「${focus}」的一個分析角度。必須連同資料來源、時間、空間尺度與不同群體觀點一起判讀，避免把單一資料直接當成唯一原因或唯一答案。`
-        : context.subject === 'english'
-          ? `In “${context.unit.title}”, “${concept.title}” is used to communicate about ${focus}. Learners should connect meaning, form, word order, time clues, and register so the language works in a complete situation rather than as an isolated rule.`
-          : `在「${context.unit.title}」裡，「${concept.title}」要和「${focus}」的完整文本或表達目的連在一起。判讀時要指出實際詞句、篇章結構或上下文線索，不能只靠一個關鍵字或個人感受下結論。`
-  return { ...concept, explanation, example: scenario }
+function upgradeConcepts(context: UnitContext, source: ReviewedConcept[]) {
+  const focus = compact(context.unit.focus, 155)
+  return source.map((concept, index): ReviewedConcept => {
+    const scenario = concreteScenario(context, concept, index)
+    const unitAnchor = context.subject === 'english'
+      ? `In “${context.unit.title}”, this idea is specifically used while learning ${focus}.`
+      : `在「${context.unit.title}」中，這個觀念要直接用來處理「${focus}」。`
+    const subjectExplanation = context.subject === 'math'
+      ? '學習重點是把條件轉成可檢查的數學表示，說明量與量的關係，再用計算、圖形或估算驗證。'
+      : context.subject === 'science'
+        ? '學習重點是把觀察、模型與推論分開，用可比較的證據支持解釋，並知道結論的適用範圍。'
+        : context.subject === 'social'
+          ? '學習重點是連同來源、時間、空間尺度與不同群體觀點判讀資料，不把單一證據誇大成唯一原因。'
+          : context.subject === 'english'
+            ? 'Learners connect meaning, form, word order, time clues, reference, and register so the language works as a complete message instead of an isolated rule.'
+            : '學習重點是回到完整語境，指出實際詞句、篇章結構或表達線索，再說明線索如何支持判斷。'
+    return {
+      ...concept,
+      explanation: ensureLength(`${unitAnchor} ${concept.explanation} ${subjectExplanation}`, 72, subjectExplanation),
+      example: ensureLength(scenario, 26, unitAnchor),
+    }
+  })
+}
+
+function correctAction(context: UnitContext, concept: ReviewedConcept) {
+  if (context.subject === 'math') return `先確認情境中的量、單位與限制，再把它們轉成和「${concept.title}」一致的數學表示，完成推理後主動驗算。`
+  if (context.subject === 'science') return `先找出和「${concept.title}」有關的可觀察證據、變因與控制條件，再用模型解釋並限制結論。`
+  if (context.subject === 'social') return `先用「${concept.title}」整理資料事實與脈絡，再比較來源和觀點，最後形成不超出證據的結論。`
+  if (context.subject === 'english') return `Use “${concept.title}” together with the speaker, purpose, meaning, form, time clues, and register before choosing the final message.`
+  return `先找出文本中能支持「${concept.title}」的具體詞句、篇章或語言線索，再說明這些線索如何支持判斷。`
+}
+
+function distractorActions(context: UnitContext, concept: ReviewedConcept, others: ReviewedConcept[]) {
+  const otherA = others[0]?.title ?? context.unit.title
+  const otherB = others[1]?.title ?? context.unit.focus
+  if (context.subject === 'math') return [
+    `只因題目出現「${concept.title}」就立刻套固定公式，不先確認量、單位與關係。`,
+    `直接搬用「${otherA}」的做法，即使新情境的條件和表示方式已經改變。`,
+    `算出一個數字就停止，不檢查它是否符合「${context.unit.title}」的單位、範圍或原問題。`,
+  ]
+  if (context.subject === 'science') return [
+    `只看到一次和「${concept.title}」相符的現象，就把同時發生直接當成因果。`,
+    `把「${otherA}」的模型當成實物本身，不檢查模型在這個尺度和條件下是否適用。`,
+    `先寫結論，再挑支持它的資料，不比較「${otherB}」等其他可能改變結果的條件。`,
+  ]
+  if (context.subject === 'social') return [
+    `只拿一份和「${concept.title}」有關的資料，就把它當成「${context.unit.title}」的唯一原因。`,
+    `把「${otherA}」的觀點當成所有群體都同意的事實，不檢查來源、時間與立場。`,
+    '還沒分清資料事實與價值選擇，就直接提出唯一政策答案。',
+  ]
+  if (context.subject === 'english') return [
+    `Choose a sentence only because it contains words related to “${concept.title}”, without checking the situation.`,
+    `Use the form connected with “${otherA}” even when the speaker, time, or purpose is different.`,
+    'Translate word by word and ignore whether the complete message sounds natural in this context.',
+  ]
+  return [
+    `只看到「${concept.title}」相關關鍵字，就直接決定意思或主旨，不讀完整前後文。`,
+    `把「${otherA}」的說法套進來，卻沒有指出任何實際文本證據。`,
+    `只寫個人感受，不說明「${otherB}」或其他篇章線索如何支持判斷。`,
+  ]
 }
 
 function makeChoice(
@@ -119,68 +174,33 @@ function makeChoice(
   level: ReviewedChoiceQuestion['level'],
   prompt: string,
   scenario: string,
-  correct: string,
+  concept: ReviewedConcept,
   distractors: string[],
-  explanation: string,
   rotation: number,
 ): EnhancedChoice {
+  const correct = correctAction(context, concept)
   const raw = unique([correct, ...distractors]).slice(0, 4)
-  while (raw.length < 4) raw.push(`在「${context.unit.title}」中仍缺少必要條件的判斷 ${raw.length + 1}`)
+  while (raw.length < 4) raw.push(`這個做法在「${context.unit.title}」中仍缺少一項必要條件或證據 ${raw.length + 1}`)
   const options = rotate(raw, rotation)
   const correctIndex = options.indexOf(correct)
-  const optionFeedback = options.map((option) => {
-    if (option === correct) return `這個選擇有把「${context.unit.title}」的實際情境和判斷條件連起來。${explanation}`
-    return `這個做法在「${context.unit.title}」的情境裡漏掉了條件、證據或表示關係。先回到題目中的具體線索，再和「${compact(correct, 82)}」比較。`
-  })
+  const explanation = ensureLength(
+    `${concept.explanation} 在這個情境中，重點是先確認概念成立條件，再把具體線索連到判斷，而不是只辨認關鍵字。`,
+    36,
+    `請回到「${context.unit.title}」的實際條件重新檢查。`,
+  )
   return {
     id,
     kind: 'choice',
     level,
-    context: scenario,
+    context: ensureLength(scenario, 24, `本題屬於「${context.unit.title}」：${context.unit.focus}`),
     prompt,
     options,
     correctIndex,
     explanation,
-    optionFeedback,
+    optionFeedback: options.map((option) => option === correct
+      ? `正確。這個做法先確認「${concept.title}」成立的條件，再用「${context.unit.title}」中的具體線索完成判斷。`
+      : `這個選項在目前情境中漏掉了條件、證據、表示方式或語境檢查。請先比較題目線索，再回頭確認「${concept.title}」是否真的適用。`),
   } as EnhancedChoice
-}
-
-function correctAction(context: UnitContext, concept: ReviewedConcept) {
-  if (context.subject === 'math') return `先把題目條件轉成和「${concept.title}」一致的數學表示，再完成推理並驗算。`
-  if (context.subject === 'science') return `先找出和「${concept.title}」有關的可觀察證據與控制條件，再用模型解釋。`
-  if (context.subject === 'social') return `先用「${concept.title}」整理資料事實，再比較來源與觀點後形成有限度結論。`
-  if (context.subject === 'english') return `Use “${concept.title}” together with the situation, meaning, form, and register before choosing the final expression.`
-  return `先找出文本中能支持「${concept.title}」的具體詞句或結構，再說明它如何支持判斷。`
-}
-
-function distractorActions(context: UnitContext, concept: ReviewedConcept, others: ReviewedConcept[]) {
-  const otherA = others[0]?.title ?? context.unit.title
-  const otherB = others[1]?.title ?? context.unit.focus
-  if (context.subject === 'math') return [
-    `只因題目出現「${concept.title}」就立刻套用一個固定公式，不先確認量與關係。`,
-    `把「${otherA}」的方法直接搬過來，即使題目條件和表示方式不同。`,
-    `算出數字就停止，不檢查單位、範圍或是否符合「${context.unit.title}」的原情境。`,
-  ]
-  if (context.subject === 'science') return [
-    `只看到一次和「${concept.title}」相符的現象，就直接把相關當成因果。`,
-    `把「${otherA}」的模型當成實物本身，不檢查模型在這個尺度是否適用。`,
-    `先寫結論，再挑選支持結論的資料，而不比較「${otherB}」等其他可能條件。`,
-  ]
-  if (context.subject === 'social') return [
-    `只拿一份和「${concept.title}」有關的資料，就把它當成「${context.unit.title}」的唯一原因。`,
-    `把「${otherA}」的觀點當成所有群體都同意的事實，不檢查來源與立場。`,
-    `直接提出政策或價值結論，卻沒有先說資料能直接支持哪些事實。`,
-  ]
-  if (context.subject === 'english') return [
-    `Choose a sentence only because it contains the words “${concept.title}”, without checking the situation.`,
-    `Use the form connected with “${otherA}” even when the time, speaker, or purpose is different.`,
-    `Translate word by word and ignore whether the complete message sounds natural in this context.`,
-  ]
-  return [
-    `只看到「${concept.title}」相關關鍵字，就直接決定主旨或語意，不讀前後文。`,
-    `把「${otherA}」的說法套到這一段，卻沒有指出任何實際文本證據。`,
-    `只寫自己的感受，不說明「${otherB}」或其他篇章線索如何支持判斷。`,
-  ]
 }
 
 function makeResponse(
@@ -193,102 +213,139 @@ function makeResponse(
 ): EnhancedResponse {
   const steps = subjectSteps(context, concept, scenario)
   const prompt = context.subject === 'math'
-    ? `請處理上面的情境：寫出你會如何用「${concept.title}」建立表示、完成推理，並說明最後怎麼檢查答案。`
+    ? `請處理上面的「${context.unit.title}」情境：用「${concept.title}」建立表示、完成推理，並說明最後如何檢查答案。`
     : context.subject === 'science'
-      ? `根據上面的情境，請用「${concept.title}」提出一個可檢查的解釋；至少寫出兩項證據或控制條件，以及結論的限制。`
+      ? `根據上面的「${context.unit.title}」情境，用「${concept.title}」提出可檢查的解釋；至少寫出兩項證據或控制條件，以及結論限制。`
       : context.subject === 'social'
-        ? `根據上面的情境，請用「${concept.title}」區分資料事實與解釋，再寫出一個不超出證據範圍的結論。`
+        ? `根據上面的「${context.unit.title}」資料情境，用「${concept.title}」區分事實與解釋，再寫出不超出證據的結論。`
         : context.subject === 'english'
-          ? `Use “${concept.title}” to respond to the situation above. Explain two clues that guide your wording and why your final message fits the context.`
-          : `根據上面的情境，請用「${concept.title}」提出判斷，至少引用兩個文本或表達線索，並說明線索如何支持結論。`
+          ? `Use “${concept.title}” to respond to the “${context.unit.title}” situation above. Explain two clues that guide your wording and why the final message fits the context.`
+          : `根據上面的「${context.unit.title}」文本情境，用「${concept.title}」提出判斷，至少引用兩個具體線索，並說明線索如何支持結論。`
   return {
     id,
     kind: 'response',
     level,
-    context: scenario,
+    context: ensureLength(scenario, 28, `本單元範圍：${context.unit.focus}`),
     prompt,
-    sampleAnswer: `${steps.join(' ')} 因此完整答案不只寫結論，也要讓別人能沿著證據、條件或表示方式重新檢查。`,
-    explanation: `這題檢查的是能否把「${concept.title}」真正用在「${context.unit.title}」的完整情境，而不是只背定義。`,
+    sampleAnswer: ensureLength(
+      `${steps.join(' ')} 因此完整答案不只寫結論，也要讓別人能沿著證據、條件或表示方式重新檢查。`,
+      60,
+      `最後要回到「${context.unit.title}」的原始問題確認結論。`,
+    ),
+    explanation: ensureLength(
+      `這題檢查能否把「${concept.title}」真正用在「${context.unit.title}」的新情境，而不是只背定義或重複例題。`,
+      32,
+      `請重新核對「${context.unit.focus}」。`,
+    ),
     rubric: context.subject === 'math'
-      ? ['有把已知量、未知量、單位或限制整理清楚', `有正確使用「${concept.title}」建立數學表示並完成推理`, '有用代回、估算、圖形或範圍檢查答案是否合理']
+      ? ['有整理已知量、未知量、單位或限制', `有正確使用「${concept.title}」建立表示並完成推理`, '有用代回、估算、圖形或範圍檢查答案']
       : context.subject === 'science'
-        ? ['有區分直接觀察或量測與推論', `有使用「${concept.title}」連結至少兩項證據或控制條件`, '有說明結論能支持到哪裡，以及還有哪些限制']
+        ? ['有區分直接觀察或量測與推論', `有使用「${concept.title}」連結至少兩項證據或控制條件`, '有說明結論能支持到哪裡及目前限制']
         : context.subject === 'social'
-          ? ['有交代來源、時間、地點、尺度或群體脈絡', `有使用「${concept.title}」比較至少兩項證據或觀點`, '結論沒有把局部資料誇大成唯一原因或唯一答案']
+          ? ['有交代來源、時間、地點、尺度或群體脈絡', `有使用「${concept.title}」比較至少兩項證據或觀點`, '結論沒有把局部資料誇大成唯一原因或答案']
           : context.subject === 'english'
-            ? ['The response fits the speaker, purpose, and situation', `The response uses “${concept.title}” accurately in meaning and form`, 'The explanation points to at least two concrete language or context clues']
-            : ['有指出至少兩個具體文本、結構或語言線索', `有用「${concept.title}」說明線索和判斷之間的關係`, '結論能回到完整語境檢查，而不是只靠關鍵字或個人感受'],
+            ? ['The response fits the speaker, purpose, time, and situation', `The response uses “${concept.title}” accurately in meaning and form`, 'The explanation points to at least two concrete language or context clues']
+            : ['有指出至少兩個具體文本、結構或語言線索', `有用「${concept.title}」說明線索和判斷之間的關係`, '結論能回到完整語境檢查，不只靠關鍵字或感受'],
   } as EnhancedResponse
 }
 
+function normalizeValuableSourceQuestion(context: UnitContext, question: ReviewedQuestion, index: number): ReviewedQuestion | null {
+  const extra = question as ReviewedQuestion & CurriculumQuestionEnhancement
+  if (!extra.mediaAssetId && !extra.audioText) return null
+  const concept = ({
+    title: context.unit.title,
+    explanation: `本題的圖片或聽力素材要和「${context.unit.focus}」一起判讀，不能只看單一關鍵字。`,
+    example: question.context,
+  }) as ReviewedConcept
+  const scenario = ensureLength(
+    question.context,
+    28,
+    `這是一題屬於「${context.unit.title}」的媒體或聽力情境，作答時要同時使用素材與「${context.unit.focus}」中的相關線索。`,
+  )
+  if (question.kind === 'choice' && question.options.length === 4 && new Set(question.options.map((item) => item.trim())).size === 4) {
+    const correct = question.options[question.correctIndex]
+    if (!correct) return null
+    const explanation = ensureLength(question.explanation, 32, `請把素材線索和「${context.unit.title}」的學習重點逐項對照。`)
+    return {
+      ...question,
+      id: `${context.unit.id}-ped-v17-media-choice-${index + 1}`,
+      context: scenario,
+      prompt: question.prompt,
+      explanation,
+      optionFeedback: question.options.map((option) => option === correct
+        ? `正確。這個選項同時符合素材中的具體線索和「${context.unit.title}」的判斷條件。`
+        : `這個選項和目前素材中的部分線索或「${context.unit.title}」的條件不一致；請指出衝突位置再重新選擇。`),
+    } as EnhancedChoice
+  }
+  if (question.kind === 'response') {
+    return {
+      ...question,
+      id: `${context.unit.id}-ped-v17-media-response-${index + 1}`,
+      context: scenario,
+      explanation: ensureLength(question.explanation, 32, `請把素材線索和「${context.unit.title}」的重點連起來。`),
+      sampleAnswer: ensureLength(question.sampleAnswer, 55, `完整答案要指出素材中的具體證據，再用「${context.unit.focus}」說明證據如何支持結論。`),
+      rubric: unique([
+        ...(extra.rubric ?? []),
+        '有指出素材中的具體線索或證據。',
+        '有把素材線索和本單元核心觀念正確連接。',
+        '結論沒有超出素材與題目條件能支持的範圍。',
+      ]).slice(0, 5),
+    } as EnhancedResponse
+  }
+  void concept
+  return null
+}
+
 function buildPedagogyQuestions(context: UnitContext, concepts: ReviewedConcept[], source: ReviewedQuestion[]) {
-  const preserved = source.filter((question) => {
-    if (/-tb-v14-|v14-final/.test(question.id)) return false
-    return !oldTemplatePrompt.some((pattern) => pattern.test(question.prompt))
-  }).slice(0, 5)
+  const questions: ReviewedQuestion[] = []
+  const selected = concepts.slice(0, Math.min(6, concepts.length))
 
-  const generated: ReviewedQuestion[] = []
-  const selectedConcepts = concepts.slice(0, Math.min(6, concepts.length))
-
-  selectedConcepts.forEach((concept, index) => {
-    const scenario = concreteScenario(context, concept, index)
-    const others = selectedConcepts.filter((_, itemIndex) => itemIndex !== index)
-    const correct = correctAction(context, concept)
-    const distractors = distractorActions(context, concept, others)
+  selected.forEach((concept, index) => {
+    const others = selected.filter((_, itemIndex) => itemIndex !== index)
     const prompts = context.subject === 'english'
       ? [
-          `Which action best uses “${concept.title}” in this situation?`,
-          `What should the learner check first before applying “${concept.title}”?`,
-          `Which explanation keeps the meaning of “${concept.title}” connected to the full context?`,
-          `Which choice would give the strongest evidence that “${concept.title}” was used appropriately?`,
+          `Which action best uses “${concept.title}” in this “${context.unit.title}” situation?`,
+          `What should the learner check first before applying “${concept.title}” here?`,
+          `Which explanation keeps “${concept.title}” connected to the full context?`,
+          `Which check gives the strongest evidence that “${concept.title}” was used appropriately?`,
         ]
       : [
-          `面對這個情境，哪一個做法最能正確使用「${concept.title}」？`,
-          `如果要避免只背結論，處理「${concept.title}」時最應先檢查哪件事？`,
-          `針對「${context.unit.title}」這個情境，哪個說明最能把「${concept.title}」和實際條件連起來？`,
+          `面對這個「${context.unit.title}」情境，哪一個做法最能正確使用「${concept.title}」？`,
+          `如果不想只背結論，處理這個「${concept.title}」情境時最應先檢查哪件事？`,
+          `在「${context.unit.title}」裡，哪個說明最能把「${concept.title}」和實際條件連起來？`,
           `要確認自己真的會用「${concept.title}」，下面哪個檢查最有意義？`,
         ]
-    generated.push(makeChoice(
+    questions.push(makeChoice(
       context,
       `${context.unit.id}-ped-v17-check-${index + 1}`,
       index < 2 ? '理解' : '應用',
       prompts[index % prompts.length],
-      scenario,
-      correct,
-      distractors,
-      concept.explanation,
+      concreteScenario(context, concept, index),
+      concept,
+      distractorActions(context, concept, others),
       index,
     ))
   })
 
-  selectedConcepts.slice(0, 4).forEach((concept, index) => {
-    const scenario = concreteScenario(context, concept, index + 7)
-    const misconception = `把「${concept.title}」當成看到關鍵字就能直接使用的固定結論。`
-    const correct = context.subject === 'english'
-      ? `Return to the complete situation and use “${concept.title}” only after checking meaning, form, time, and register.`
-      : `回到「${context.unit.title}」的完整情境，重新檢查「${concept.title}」成立所需要的條件、證據或表示方式。`
-    const distractors = [
-      misconception,
-      `只把「${concept.title}」的定義再抄一次，但不處理情境中的任何具體線索。`,
-      `因為題目和課本例子看起來相似，所以不需要重新檢查「${context.unit.focus}」的條件。`,
-    ]
-    generated.push(makeChoice(
+  selected.slice(0, 4).forEach((concept, index) => {
+    const others = selected.filter((item) => item !== concept)
+    const prompt = context.subject === 'english'
+      ? `A learner misuses “${concept.title}” in this “${context.unit.title}” situation. Which correction fixes the reasoning rather than only replacing the answer?`
+      : `有同學在這個「${context.unit.title}」情境中誤用了「${concept.title}」。哪個修正最能指出問題發生在哪個條件或推理步驟？`
+    questions.push(makeChoice(
       context,
       `${context.unit.id}-ped-v17-diagnose-${index + 1}`,
       '檢核',
-      context.subject === 'english'
-        ? `A learner misuses “${concept.title}” in the situation above. Which correction is most useful?`
-        : `有同學在上面的情境中誤用了「${concept.title}」。哪個修正最能真正解決問題？`,
-      scenario,
-      correct,
-      distractors,
-      `修正錯誤時要指出錯在哪一個條件或推理步驟，而不只是把正確答案重說一次。`,
+      prompt,
+      concreteScenario(context, concept, index + 7),
+      concept,
+      distractorActions(context, concept, others),
       index + 1,
     ))
   })
 
-  selectedConcepts.slice(0, 4).forEach((concept, index) => {
-    generated.push(makeResponse(
+  selected.slice(0, 4).forEach((concept, index) => {
+    questions.push(makeResponse(
       context,
       `${context.unit.id}-ped-v17-response-${index + 1}`,
       index === 0 ? '理解' : index === 3 ? '檢核' : '應用',
@@ -298,9 +355,28 @@ function buildPedagogyQuestions(context: UnitContext, concepts: ReviewedConcept[
     ))
   })
 
-  const all = [...preserved, ...generated]
+  const synthesisConcept = selected[0]
+  if (synthesisConcept) {
+    questions.push(makeResponse(
+      context,
+      `${context.unit.id}-ped-v17-synthesis`,
+      '檢核',
+      synthesisConcept,
+      context.subject === 'english'
+        ? `Create a different complete situation for “${context.unit.title}” that still belongs to this focus: ${context.unit.focus}.`
+        : `請自行換一個和課本例題不同、但仍屬於「${context.unit.title}」範圍「${context.unit.focus}」的完整情境。`,
+      20,
+    ))
+  }
+
+  source.forEach((question, index) => {
+    if (questions.length >= 18) return
+    const normalized = normalizeValuableSourceQuestion(context, question, index)
+    if (normalized) questions.push(normalized)
+  })
+
   const seen = new Set<string>()
-  return all.filter((question) => {
+  return questions.filter((question) => {
     const key = question.prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, '')
     if (!key || seen.has(key)) return false
     seen.add(key)
@@ -309,43 +385,58 @@ function buildPedagogyQuestions(context: UnitContext, concepts: ReviewedConcept[
 }
 
 function upgradeExamples(context: UnitContext, concepts: ReviewedConcept[], source: ReviewedWorkedExample[]) {
-  const specific = source.filter((example) => {
-    const text = `${example.title} ${example.context} ${example.prompt} ${example.answer}`
-    return !/^完整示範/.test(example.title) && (text.includes(context.unit.title) || context.unit.focus.split(/[，、。；]/).some((phrase) => phrase.trim().length >= 3 && text.includes(phrase.trim())))
-  }).slice(0, 2)
-
   const generated = concepts.slice(0, 4).map((concept, index): ReviewedWorkedExample => {
-    const scenario = concreteScenario(context, concept, index)
+    const scenario = concreteScenario(context, concept, index + 30)
     const steps = subjectSteps(context, concept, scenario)
     const prompt = context.subject === 'math'
-      ? `在這個具體情境裡，如何用「${concept.title}」建立數學表示並得到可檢查的結果？`
+      ? `在這個「${context.unit.title}」具體情境裡，如何用「${concept.title}」建立數學表示並得到可檢查的結果？`
       : context.subject === 'science'
-        ? `這個現象可以如何用「${concept.title}」提出證據導向的解釋？`
+        ? `這個「${context.unit.title}」現象可以如何用「${concept.title}」提出證據導向的解釋？`
         : context.subject === 'social'
-          ? `如何利用「${concept.title}」從這份情境形成不超出證據的社會判斷？`
+          ? `如何利用「${concept.title}」從這個「${context.unit.title}」資料情境形成不超出證據的判斷？`
           : context.subject === 'english'
-            ? `How would you use “${concept.title}” to understand or respond to this complete situation?`
-            : `如何用「${concept.title}」從這個情境找出可被文本檢查的判斷？`
+            ? `How would you use “${concept.title}” to understand or respond to this complete “${context.unit.title}” situation?`
+            : `如何用「${concept.title}」從這個「${context.unit.title}」文本情境形成可以回到文本檢查的判斷？`
     const answer = context.subject === 'english'
-      ? `A strong answer follows the context clues, applies “${concept.title}” to the complete message, and then checks whether the wording remains natural and accurate.`
-      : `完整答案必須把「${concept.title}」和「${context.unit.title}」的具體條件連起來，依步驟完成判斷，並在最後主動檢查結論是否超出題目可支持的範圍。`
+      ? `A strong answer follows the situation clues, applies “${concept.title}” to the complete message, and checks whether the wording remains accurate and natural within the focus of “${context.unit.title}”.`
+      : `完整答案要把「${concept.title}」和「${context.unit.title}」的具體條件連起來，依步驟完成判斷，最後主動檢查答案、證據或結論是否超出「${context.unit.focus}」能支持的範圍。`
     return {
       title: `${context.unit.title}｜情境例題 ${index + 1}：${concept.title}`,
-      context: scenario,
-      prompt,
+      context: ensureLength(scenario, 32, `本題屬於「${context.unit.title}」：${context.unit.focus}`),
+      prompt: ensureLength(prompt, 24, `請完整寫出處理「${concept.title}」的過程。`),
       steps,
-      answer,
-      explanation: `這個例題不是示範固定句型，而是把「${context.unit.focus}」轉成一條可以重做的思考流程；換數值、文本、資料或情境後，仍應能重新判斷。`,
+      answer: ensureLength(answer, 36, `最後要回到「${context.unit.title}」原始條件檢查。`),
+      explanation: ensureLength(
+        `這個例題刻意把「${context.unit.focus}」轉成一條可重做的思考流程。學會後，即使數值、文本、資料或情境改變，也要能重新判斷，而不是複製最後答案。`,
+        45,
+        '每一步都要能說明理由。',
+      ),
     }
   })
 
-  return [...specific, ...generated].slice(0, 5)
+  const mediaExample = source.find((example) => {
+    const text = `${example.title} ${example.context} ${example.prompt}`
+    return focusPhrases(context).some((phrase) => text.includes(phrase))
+  })
+  if (!mediaExample || generated.length >= 5) return generated
+
+  const concept = concepts[generated.length % concepts.length]
+  const fallbackScenario = concreteScenario(context, concept, 40)
+  return [...generated, {
+    ...mediaExample,
+    title: ensureLength(mediaExample.title, 8, `${context.unit.title}｜補充例題`),
+    context: ensureLength(mediaExample.context, 32, fallbackScenario),
+    prompt: ensureLength(mediaExample.prompt, 24, `請依「${context.unit.title}」的條件完整說明判斷。`),
+    steps: mediaExample.steps.length >= 4 ? mediaExample.steps : subjectSteps(context, concept, fallbackScenario),
+    answer: ensureLength(mediaExample.answer, 36, `答案要能回到「${context.unit.title}」的實際條件驗證。`),
+    explanation: ensureLength(mediaExample.explanation, 45, `這個補充例題用來比較不同情境下「${concept.title}」是否仍適用，不能只記最後答案。`),
+  }].slice(0, 5)
 }
 
 function transform(unit: TextbookUnitContentV14): TextbookUnitContentV14 {
   const context = resolveCurriculumUnit(unit.unitId)
   if (!context) return unit
-  const concepts = unit.concepts.map((concept, index) => upgradedConcept(context, concept, index))
+  const concepts = upgradeConcepts(context, unit.concepts)
   const workedExamples = upgradeExamples(context, concepts, unit.workedExamples)
   const questions = buildPedagogyQuestions(context, concepts, unit.questions)
   return {
@@ -355,7 +446,7 @@ function transform(unit: TextbookUnitContentV14): TextbookUnitContentV14 {
     questions,
     researchBasis: Array.from(new Set([
       ...unit.researchBasis,
-      'Bubble Space V17 pedagogy：以單元具體情境重建題庫與例題，降低通用模板比例，並支援概念後立即檢索練習。',
+      'Bubble Space V17 pedagogy：用單元具體情境重建題庫、例題與回饋，降低通用模板依賴，並支援概念後立即檢索練習。',
     ])),
   }
 }
