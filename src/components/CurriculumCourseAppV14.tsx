@@ -36,6 +36,7 @@ type Props = CurriculumCourseSelection & {
 
 type AnswerState = { selectedIndex?: number; text?: string; checked?: boolean }
 type ReportKind = 'confusing' | 'possible-error' | 'answer-question' | 'unclear' | 'other'
+type CourseView = 'overview' | 'lesson'
 type Page =
   | { id: string; kind: 'intro'; title: string; body: string; objectives?: string[] }
   | { id: string; kind: 'visual'; title: string; visual: TextbookVisual }
@@ -45,12 +46,12 @@ type Page =
   | { id: string; kind: 'recap'; title: string; items: string[] }
 
 const LESSON_LABEL: Record<CurriculumLessonPlan['kind'], string> = {
-  launch: '導入',
+  launch: '開始認識',
   concept: '核心觀念',
-  example: '完整示範',
-  guided: '引導練習',
-  practice: '獨立練習',
-  assessment: '單元檢核',
+  example: '完整例題',
+  guided: '跟著練習',
+  practice: '自己試試',
+  assessment: '學習檢核',
 }
 
 const REPORT_OPTIONS: Array<{ id: ReportKind; label: string }> = [
@@ -93,11 +94,11 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
     {
       id: `${lesson.id}-intro`,
       kind: 'intro',
-      title: `${label}｜這一單元要學到什麼？`,
+      title: '這一單元要學什麼？',
       body: unitContent.overview,
       objectives: unitContent.objectives,
     },
-    { id: `${lesson.id}-visual`, kind: 'visual', title: '先看整體概念地圖', visual: conceptVisual },
+    { id: `${lesson.id}-visual`, kind: 'visual', title: '先看整體概念', visual: conceptVisual },
     { id: `${lesson.id}-recap`, kind: 'recap', title: '開始前先記住', items: unitContent.takeaway.slice(0, 5) },
   ]
 
@@ -105,10 +106,10 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
     {
       id: `${lesson.id}-intro`,
       kind: 'intro',
-      title: `${label}｜一頁只處理一個觀念`,
-      body: '先讀完整解釋，再看自足例子與常見迷思。每一頁都要能說出「為什麼」，不是只記標題。',
+      title: '先理解，再記住',
+      body: '接下來一次只處理一個觀念。讀完解釋後，看例子與常見迷思，確認自己能說出「為什麼」，而不是只背下一個答案。',
     },
-    { id: `${lesson.id}-visual`, kind: 'visual', title: '概念之間怎麼連在一起？', visual: conceptVisual },
+    { id: `${lesson.id}-visual`, kind: 'visual', title: '觀念之間怎麼連在一起？', visual: conceptVisual },
     ...unitContent.concepts.map((concept, index): Page => ({
       id: `${lesson.id}-concept-${index}`,
       kind: 'concept',
@@ -125,10 +126,10 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
     {
       id: `${lesson.id}-intro`,
       kind: 'intro',
-      title: `${label}｜看完整思考，不只看答案`,
-      body: '每個示範都會寫出情境、問題、步驟、答案與為什麼這樣做；下一個 Lesson 會換情境讓你自己做。',
+      title: '看完整思考，不只看答案',
+      body: '每個例題都會保留情境、問題、步驟、答案和理由。先理解每一步為什麼成立，等一下再換一個情境自己做。',
     },
-    { id: `${lesson.id}-process`, kind: 'visual', title: '本單元的解題／探究流程', visual: processVisual },
+    { id: `${lesson.id}-process`, kind: 'visual', title: '這類題目可以怎麼想？', visual: processVisual },
     ...unitContent.workedExamples.map((model, index): Page => ({
       id: `${lesson.id}-model-${index}`,
       kind: 'model',
@@ -140,8 +141,8 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
       explanation: model.explanation,
       index,
     })),
-    { id: `${lesson.id}-misconception`, kind: 'visual', title: '示範後再看常見錯誤', visual: misconceptionVisual },
-    { id: `${lesson.id}-recap`, kind: 'recap', title: '示範完成', items: ['先辨認問題與條件', '選擇方法或證據', '逐步完成推理', '檢查答案與證據範圍', '換情境仍能重做一次'] },
+    { id: `${lesson.id}-misconception`, kind: 'visual', title: '做完例題，再看常見錯誤', visual: misconceptionVisual },
+    { id: `${lesson.id}-recap`, kind: 'recap', title: '例題學完了', items: ['先辨認問題與條件', '選擇適合的方法或證據', '把推理步驟寫完整', '檢查答案與證據範圍', '換一個情境仍然能重新做一次'] },
   ]
 
   const groups = questionGroups(unitContent.questions)
@@ -150,14 +151,14 @@ function buildPages(unitContent: TextbookUnitContentV14, lesson: CurriculumLesso
     {
       id: `${lesson.id}-intro`,
       kind: 'intro',
-      title: `${label}｜一頁一題`,
+      title: `${label}，確認真的會了`,
       body: lesson.kind === 'guided'
-        ? '先從能直接連到教材觀念的題目開始；每題作答後都會看到選項診斷或評分焦點。'
+        ? '先從和教材觀念直接相關的題目開始。每題作答後都會看到提示與解析，不需要一次把所有題目做完才知道問題在哪裡。'
         : lesson.kind === 'practice'
-          ? '題目會換例子、資料或問法，確認你不是只記住示範。'
-          : '最後一組使用不同題幹做獨立檢核；開放題會提供 rubric，而不是假裝能自動判斷所有答案。',
+          ? '題目會換例子、資料或問法，確認你不是只記住剛才的例題。'
+          : '最後用不同題幹做一次獨立檢核。開放題會提供評分焦點，讓你能自己對照答案是否完整。',
     },
-    ...(lesson.kind === 'assessment' ? [{ id: `${lesson.id}-misconception`, kind: 'visual' as const, title: '作答前快速掃描迷思', visual: misconceptionVisual }] : []),
+    ...(lesson.kind === 'assessment' ? [{ id: `${lesson.id}-misconception`, kind: 'visual' as const, title: '作答前，快速掃過容易錯的地方', visual: misconceptionVisual }] : []),
     ...questions.map((question, index): Page => ({
       id: `${lesson.id}-${question.id}`,
       kind: 'question',
@@ -194,6 +195,7 @@ function QuestionMedia({ question }: { question: ReviewedQuestion }) {
 function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
   const course = useMemo(() => getCurriculumCourseBundleV13(grade, subject, pathway), [grade, subject, pathway])
   const meta = getCurriculumCourseMeta(subject, pathway)
+  const [view, setView] = useState<CourseView>('overview')
   const [semester, setSemester] = useState<CurriculumSemester>(1)
   const [unitIndex, setUnitIndex] = useState(0)
   const [lessonIndex, setLessonIndex] = useState(0)
@@ -207,6 +209,7 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
   const [reportSaved, setReportSaved] = useState(false)
 
   if (!course) return <div className="curriculum-course-empty">找不到這條課程路線。</div>
+
   const semesterPlan = course.semesters.find((item) => item.semester === semester) ?? course.semesters[0]
   const safeUnitIndex = Math.min(unitIndex, Math.max(0, semesterPlan.units.length - 1))
   const unit: CurriculumUnitBundle = semesterPlan.units[safeUnitIndex]
@@ -227,7 +230,8 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
   const safePageIndex = Math.min(pageIndex, Math.max(0, pages.length - 1))
   const page = pages[safePageIndex]
   const allLessons = course.semesters.flatMap((item) => item.units.flatMap((entry) => entry.lessons))
-  const overall = allLessons.length ? Math.round((allLessons.filter((entry) => completed.includes(entry.id)).length / allLessons.length) * 100) : 0
+  const completedInCourse = allLessons.filter((entry) => completed.includes(entry.id)).length
+  const overall = allLessons.length ? Math.round((completedInCourse / allLessons.length) * 100) : 0
   const isLastLesson = semester === 2 && safeUnitIndex === semesterPlan.units.length - 1 && safeLessonIndex === unit.lessons.length - 1
 
   const markComplete = () => {
@@ -236,12 +240,42 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
     writeCurriculumProgress(userId, next)
   }
 
+  const openLesson = (nextSemester: CurriculumSemester, nextUnitIndex: number, nextLessonIndex: number) => {
+    setSemester(nextSemester)
+    setUnitIndex(nextUnitIndex)
+    setLessonIndex(nextLessonIndex)
+    setPageIndex(0)
+    setAnswers({})
+    setDirectoryOpen(false)
+    setView('lesson')
+  }
+
   const selectSemester = (next: CurriculumSemester) => {
     setSemester(next)
     setUnitIndex(0)
     setLessonIndex(0)
     setPageIndex(0)
     setAnswers({})
+  }
+
+  const continueCourse = () => {
+    for (const semesterEntry of course.semesters) {
+      for (let nextUnitIndex = 0; nextUnitIndex < semesterEntry.units.length; nextUnitIndex += 1) {
+        const nextUnit = semesterEntry.units[nextUnitIndex]
+        const nextLessonIndex = nextUnit.lessons.findIndex((entry) => !completed.includes(entry.id))
+        if (nextLessonIndex >= 0) {
+          openLesson(semesterEntry.semester, nextUnitIndex, nextLessonIndex)
+          return
+        }
+      }
+    }
+    openLesson(1, 0, 0)
+  }
+
+  const openUnit = (nextUnitIndex: number) => {
+    const nextUnit = semesterPlan.units[nextUnitIndex]
+    const pendingLessonIndex = nextUnit.lessons.findIndex((entry) => !completed.includes(entry.id))
+    openLesson(semester, nextUnitIndex, pendingLessonIndex >= 0 ? pendingLessonIndex : 0)
   }
 
   const nextLesson = () => {
@@ -390,65 +424,146 @@ function TextbookCourse({ language, userId, grade, subject, pathway }: Props) {
 
   const renderPage = () => {
     if (page.kind === 'intro') return (
-      <div className="curriculum-v14-card intro">
-        <span>{LESSON_LABEL[lesson.kind]}</span><h2>{page.title}</h2><p>{page.body}</p>
-        {page.objectives?.length ? <div className="curriculum-v14-objectives"><strong>完成這一單元後，你應該能：</strong>{page.objectives.map((item, index) => <div key={item}><span>{index + 1}</span><p>{item}</p></div>)}</div> : null}
-      </div>
+      <article className="curriculum-v14-card intro">
+        <span className="curriculum-v14-eyebrow">{LESSON_LABEL[lesson.kind]}</span>
+        <h2>{page.title}</h2>
+        <p>{page.body}</p>
+        {page.objectives?.length ? <div className="curriculum-v14-objectives"><strong>學完這一單元，你會做到：</strong>{page.objectives.map((item, index) => <div key={item}><span>{index + 1}</span><p>{item}</p></div>)}</div> : null}
+      </article>
     )
-    if (page.kind === 'visual') return <div className="curriculum-v14-card visual"><span>TEACHING VISUAL</span><h2>{page.visual.title}</h2><p>{page.visual.caption}</p>{renderVisual(page.visual)}</div>
+    if (page.kind === 'visual') return (
+      <article className="curriculum-v14-card visual">
+        <span className="curriculum-v14-eyebrow">觀念圖解</span><h2>{page.visual.title}</h2><p>{page.visual.caption}</p>{renderVisual(page.visual)}
+      </article>
+    )
     if (page.kind === 'concept') return (
-      <div className="curriculum-v14-card concept">
-        <span>CONCEPT {page.index + 1}</span><h2>{page.title}</h2><p>{page.explanation}</p>
-        {page.example ? <div className="curriculum-v14-example"><strong>具體例子</strong><p>{page.example}</p></div> : null}
-        {page.misconception ? <div className="curriculum-v14-misconception"><strong>常見迷思</strong><p className="claim">× {page.misconception.claim}</p><p className="correction">✓ {page.misconception.correction}</p><small>{page.misconception.reason}</small></div> : null}
-      </div>
+      <article className="curriculum-v14-card concept">
+        <span className="curriculum-v14-eyebrow">重點 {page.index + 1}</span><h2>{page.title}</h2><p>{page.explanation}</p>
+        {page.example ? <div className="curriculum-v14-example"><strong>看一個例子</strong><p>{page.example}</p></div> : null}
+        {page.misconception ? <div className="curriculum-v14-misconception"><strong>容易搞混的地方</strong><p className="claim">× {page.misconception.claim}</p><p className="correction">✓ {page.misconception.correction}</p><small>{page.misconception.reason}</small></div> : null}
+      </article>
     )
     if (page.kind === 'model') return (
-      <div className="curriculum-v14-card model">
-        <span>WORKED EXAMPLE {page.index + 1}</span><h2>{page.title}</h2><div className="curriculum-v14-context">{page.context}</div><h3>{page.prompt}</h3>
+      <article className="curriculum-v14-card model">
+        <span className="curriculum-v14-eyebrow">例題 {page.index + 1}</span><h2>{page.title}</h2><div className="curriculum-v14-context">{page.context}</div><h3>{page.prompt}</h3>
         <ol>{page.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-        <div className="curriculum-v14-answer"><strong>結論／答案</strong><p>{page.answer}</p><small>{page.explanation}</small></div>
-      </div>
+        <div className="curriculum-v14-answer"><strong>答案與檢查</strong><p>{page.answer}</p><small>{page.explanation}</small></div>
+      </article>
     )
-    if (page.kind === 'question') return <div className="curriculum-v14-card question"><span>{page.title}</span>{renderQuestion(page.question)}</div>
-    return <div className="curriculum-v14-card recap"><span>RECAP</span><h2>{page.title}</h2><div className="curriculum-v14-takeaway">{page.items.map((item) => <div key={item}>✓ {item}</div>)}</div>{lesson.kind === 'assessment' ? <button className="curriculum-v14-check" type="button" onClick={markComplete}>{completed.includes(lesson.id) ? '✓ 已完成目前檢核' : '完成目前檢核'}</button> : null}</div>
+    if (page.kind === 'question') return <article className="curriculum-v14-card question"><span className="curriculum-v14-eyebrow">{page.title}</span>{renderQuestion(page.question)}</article>
+    return (
+      <article className="curriculum-v14-card recap">
+        <span className="curriculum-v14-eyebrow">重點整理</span><h2>{page.title}</h2><div className="curriculum-v14-takeaway">{page.items.map((item) => <div key={item}>✓ {item}</div>)}</div>{lesson.kind === 'assessment' ? <button className="curriculum-v14-check" type="button" onClick={markComplete}>{completed.includes(lesson.id) ? '✓ 已完成這次檢核' : '完成這次檢核'}</button> : null}
+      </article>
+    )
   }
 
   const atCourseStart = semester === 1 && safeUnitIndex === 0 && safeLessonIndex === 0 && safePageIndex === 0
   const finalPage = isLastLesson && safePageIndex === pages.length - 1
 
+  const renderDirectory = () => (
+    <aside className={`curriculum-v14-directory${directoryOpen ? ' open' : ''}`} aria-hidden={!directoryOpen}>
+      <header><div><small>學習目錄</small><h2>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn}</h2></div><button type="button" onClick={() => setDirectoryOpen(false)}>×</button></header>
+      <div className="curriculum-v14-semesters"><button className={semester === 1 ? 'active' : ''} type="button" onClick={() => selectSemester(1)}>上學期</button><button className={semester === 2 ? 'active' : ''} type="button" onClick={() => selectSemester(2)}>下學期</button></div>
+      <div className="curriculum-v14-unit-list">{semesterPlan.units.map((entry, nextUnitIndex) => {
+        const unitCompleted = entry.lessons.filter((entryLesson) => completed.includes(entryLesson.id)).length
+        return (
+          <section key={entry.id} className={nextUnitIndex === safeUnitIndex ? 'active' : ''}>
+            <button type="button" onClick={() => openUnit(nextUnitIndex)}><strong>{entry.title}</strong><small>{entry.focus}</small><span>{unitCompleted}/{entry.lessons.length} 個步驟完成</span></button>
+            <div>{entry.lessons.map((entryLesson, nextLessonIndex) => <button key={entryLesson.id} type="button" className={nextUnitIndex === safeUnitIndex && nextLessonIndex === safeLessonIndex ? 'active' : ''} onClick={() => openLesson(semester, nextUnitIndex, nextLessonIndex)}><span>{completed.includes(entryLesson.id) ? '✓' : nextLessonIndex + 1}</span>{LESSON_LABEL[entryLesson.kind]}</button>)}</div>
+          </section>
+        )
+      })}</div>
+      <button className="curriculum-v14-directory-home" type="button" onClick={() => { setView('overview'); setDirectoryOpen(false) }}>回到課程首頁</button>
+    </aside>
+  )
+
+  const renderReport = () => (
+    <aside className={`curriculum-v14-report-curtain${reportOpen ? ' open' : ''}`} aria-hidden={!reportOpen}>
+      <header><div><small>內容回報</small><h2>這一頁哪裡需要調整？</h2></div><button type="button" onClick={() => setReportOpen(false)}>×</button></header>
+      <div><p><strong>{meta.labelZh}</strong> · {unit.title} · {LESSON_LABEL[lesson.kind]} · 第 {safePageIndex + 1} 頁</p>
+        <div className="curriculum-v14-report-kinds">{REPORT_OPTIONS.map((option) => <button key={option.id} type="button" className={reportKind === option.id ? 'active' : ''} onClick={() => { setReportKind(option.id); setReportSaved(false) }}>{option.label}</button>)}</div>
+        <textarea value={reportText} onChange={(event) => { setReportText(event.target.value); setReportSaved(false) }} placeholder="請描述看不懂、可能有錯或需要補充的地方。" />
+        <button className="curriculum-v14-check" type="button" onClick={submitReport}>送出問題</button>{reportSaved ? <strong className="curriculum-v14-report-saved">✓ 已記錄這一頁的位置與問題類型</strong> : null}
+      </div>
+    </aside>
+  )
+
+  if (view === 'overview') {
+    const semesterCompleted = semesterPlan.units.flatMap((entry) => entry.lessons).filter((entry) => completed.includes(entry.id)).length
+    const semesterLessons = semesterPlan.units.reduce((sum, entry) => sum + entry.lessons.length, 0)
+    const semesterProgress = semesterLessons ? Math.round((semesterCompleted / semesterLessons) * 100) : 0
+
+    return (
+      <div className={`curriculum-v14 curriculum-v14-overview course-${subject}`}>
+        <div className="curriculum-v14-overview-scroll">
+          <header className="curriculum-v14-course-topbar">
+            <div className="curriculum-v14-brand"><span>{meta.icon}</span><div><small>{gradeLabel(grade, language)}</small><strong>{language === 'zh' ? meta.labelZh : meta.labelEn}</strong></div></div>
+            <button type="button" className="curriculum-v14-quiet-button" onClick={() => setDirectoryOpen(true)}>學習目錄</button>
+          </header>
+
+          <main className="curriculum-v14-course-home">
+            <section className="curriculum-v14-course-hero">
+              <div>
+                <span className="curriculum-v14-eyebrow">你的學習路徑</span>
+                <h1>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn}</h1>
+                <p>不用一次看完整門課。照著單元一步一步學，觀念、例題與練習會接在同一條路徑上。</p>
+                <div className="curriculum-v14-hero-actions"><button type="button" className="curriculum-v14-primary" onClick={continueCourse}>{overall >= 100 ? '重新開始' : completedInCourse > 0 ? '繼續學習 →' : '開始學習 →'}</button><button type="button" className="curriculum-v14-secondary" onClick={() => setDirectoryOpen(true)}>查看全部單元</button></div>
+              </div>
+              <div className="curriculum-v14-overall-progress" aria-label={`整體進度 ${overall}%`}><strong>{overall}%</strong><span>整體進度</span><div><i style={{ width: `${overall}%` }} /></div><small>{completedInCourse} / {allLessons.length} 個學習步驟</small></div>
+            </section>
+
+            <section className="curriculum-v14-path-section">
+              <div className="curriculum-v14-section-heading"><div><span className="curriculum-v14-eyebrow">本學期</span><h2>照順序往前學</h2></div><div className="curriculum-v14-semester-tabs"><button type="button" className={semester === 1 ? 'active' : ''} onClick={() => selectSemester(1)}>上學期</button><button type="button" className={semester === 2 ? 'active' : ''} onClick={() => selectSemester(2)}>下學期</button></div></div>
+              <div className="curriculum-v14-semester-summary"><span>{semester === 1 ? '上學期' : '下學期'}進度</span><strong>{semesterProgress}%</strong><div><i style={{ width: `${semesterProgress}%` }} /></div></div>
+
+              <div className="curriculum-v14-learning-path">{semesterPlan.units.map((entry, nextUnitIndex) => {
+                const done = entry.lessons.filter((entryLesson) => completed.includes(entryLesson.id)).length
+                const progress = Math.round((done / entry.lessons.length) * 100)
+                const isCurrent = done > 0 && done < entry.lessons.length
+                return (
+                  <article key={entry.id} className={`${progress === 100 ? 'complete ' : ''}${isCurrent ? 'current' : ''}`.trim()}>
+                    <div className="curriculum-v14-path-marker"><span>{progress === 100 ? '✓' : nextUnitIndex + 1}</span></div>
+                    <div className="curriculum-v14-path-content"><div><small>第 {nextUnitIndex + 1} 單元 · {done}/{entry.lessons.length} 步驟</small><h3>{entry.title}</h3><p>{entry.focus}</p></div><div className="curriculum-v14-unit-progress"><span style={{ width: `${progress}%` }} /></div><div className="curriculum-v14-unit-lessons">{entry.lessons.map((entryLesson, index) => <span key={entryLesson.id} className={completed.includes(entryLesson.id) ? 'done' : ''}>{completed.includes(entryLesson.id) ? '✓' : index + 1} {LESSON_LABEL[entryLesson.kind]}</span>)}</div><button type="button" onClick={() => openUnit(nextUnitIndex)}>{progress === 100 ? '再學一次' : done > 0 ? '繼續這個單元 →' : '開始這個單元 →'}</button></div>
+                  </article>
+                )
+              })}</div>
+            </section>
+          </main>
+        </div>
+
+        {directoryOpen || reportOpen ? <button className="curriculum-v14-backdrop" type="button" aria-label="關閉" onClick={() => { setDirectoryOpen(false); setReportOpen(false) }} /> : null}
+        {renderDirectory()}
+        {renderReport()}
+      </div>
+    )
+  }
+
   return (
-    <div className={`curriculum-v14 course-${subject}`}>
-      <header className="curriculum-v14-header">
-        <div className="curriculum-v14-identity"><span>{meta.icon}</span><div><strong>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn}</strong><small>{unit.title}</small></div></div>
-        <div className="curriculum-v14-meta"><span>{semester === 1 ? '上學期' : '下學期'}</span><span>{LESSON_LABEL[lesson.kind]} {safeLessonIndex + 1}/{unit.lessons.length}</span><span>{overall}%</span><span>正式教材 V14</span><button type="button" onClick={() => setDirectoryOpen(true)}>☰ 課程目錄</button></div>
+    <div className={`curriculum-v14 curriculum-v14-reader course-${subject}`}>
+      <header className="curriculum-v14-reader-header">
+        <button type="button" className="curriculum-v14-reader-back" onClick={() => setView('overview')}>← 課程首頁</button>
+        <div className="curriculum-v14-reader-title"><small>{gradeLabel(grade, language)} · {language === 'zh' ? meta.labelZh : meta.labelEn} · {semester === 1 ? '上學期' : '下學期'}</small><strong>{unit.title}</strong></div>
+        <div className="curriculum-v14-reader-tools"><span>{overall}%</span><button type="button" onClick={() => setDirectoryOpen(true)}>☰ 目錄</button></div>
       </header>
+
+      <nav className="curriculum-v14-lesson-path" aria-label="本單元學習步驟">
+        {unit.lessons.map((entryLesson, nextLessonIndex) => <button key={entryLesson.id} type="button" className={`${nextLessonIndex === safeLessonIndex ? 'active ' : ''}${completed.includes(entryLesson.id) ? 'done' : ''}`.trim()} onClick={() => openLesson(semester, safeUnitIndex, nextLessonIndex)}><span>{completed.includes(entryLesson.id) ? '✓' : nextLessonIndex + 1}</span><strong>{LESSON_LABEL[entryLesson.kind]}</strong></button>)}
+      </nav>
 
       <main className="curriculum-v14-stage">
         <div className="curriculum-v14-progress"><span style={{ width: `${((safePageIndex + 1) / pages.length) * 100}%` }} /></div>
-        <section>{renderPage()}<button className="curriculum-v14-report" type="button" onClick={() => { setReportOpen(true); setReportSaved(false) }}>內容有問題？反映問題</button></section>
-        <footer><button type="button" disabled={atCourseStart} onClick={previousPage}>← 上一頁</button><span>{safePageIndex + 1} / {pages.length}</span><button type="button" onClick={nextPage}>{finalPage ? (completed.includes(lesson.id) ? '✓ 課程已完成' : '完成課程') : safePageIndex === pages.length - 1 ? '前往下一課 →' : '下一頁 →'}</button></footer>
+        <section className="curriculum-v14-reading-column">
+          <div className="curriculum-v14-reading-meta"><span>{LESSON_LABEL[lesson.kind]}</span><small>第 {safePageIndex + 1} / {pages.length} 頁</small></div>
+          {renderPage()}
+          <button className="curriculum-v14-report" type="button" onClick={() => { setReportOpen(true); setReportSaved(false) }}>這一頁有問題？</button>
+        </section>
+        <footer className="curriculum-v14-reader-navigation"><button type="button" className="secondary" disabled={atCourseStart} onClick={previousPage}>← 上一步</button><div><strong>{safePageIndex + 1}</strong><span>/ {pages.length}</span></div><button type="button" className="primary" onClick={nextPage}>{finalPage ? (completed.includes(lesson.id) ? '✓ 已完成' : '完成課程') : safePageIndex === pages.length - 1 ? '下一個學習步驟 →' : '繼續 →'}</button></footer>
       </main>
 
-      <aside className={`curriculum-v14-directory${directoryOpen ? ' open' : ''}`} aria-hidden={!directoryOpen}>
-        <header><div><small>COURSE MAP · V14</small><h2>{gradeLabel(grade, language)} · {meta.labelZh}</h2></div><button type="button" onClick={() => setDirectoryOpen(false)}>×</button></header>
-        <div className="curriculum-v14-semesters"><button className={semester === 1 ? 'active' : ''} type="button" onClick={() => selectSemester(1)}>上學期</button><button className={semester === 2 ? 'active' : ''} type="button" onClick={() => selectSemester(2)}>下學期</button></div>
-        <div className="curriculum-v14-unit-list">{semesterPlan.units.map((entry, nextUnitIndex) => (
-          <section key={entry.id} className={nextUnitIndex === safeUnitIndex ? 'active' : ''}>
-            <button type="button" onClick={() => { setUnitIndex(nextUnitIndex); setLessonIndex(0); setPageIndex(0); setAnswers({}); setDirectoryOpen(false) }}><strong>{entry.title}</strong><small>{entry.focus}</small></button>
-            <div>{entry.lessons.map((entryLesson, nextLessonIndex) => <button key={entryLesson.id} type="button" className={nextUnitIndex === safeUnitIndex && nextLessonIndex === safeLessonIndex ? 'active' : ''} onClick={() => { setUnitIndex(nextUnitIndex); setLessonIndex(nextLessonIndex); setPageIndex(0); setAnswers({}); setDirectoryOpen(false) }}>{completed.includes(entryLesson.id) ? '✓' : nextLessonIndex + 1} {LESSON_LABEL[entryLesson.kind]}</button>)}</div>
-          </section>
-        ))}</div>
-      </aside>
-
-      <aside className={`curriculum-v14-report-curtain${reportOpen ? ' open' : ''}`} aria-hidden={!reportOpen}>
-        <header><div><small>CONTENT SUPPORT</small><h2>內容有問題？反映問題</h2></div><button type="button" onClick={() => setReportOpen(false)}>×</button></header>
-        <div><p><strong>{meta.labelZh}</strong> · {unit.title} · {LESSON_LABEL[lesson.kind]} · 第 {safePageIndex + 1} 頁</p>
-          <div className="curriculum-v14-report-kinds">{REPORT_OPTIONS.map((option) => <button key={option.id} type="button" className={reportKind === option.id ? 'active' : ''} onClick={() => { setReportKind(option.id); setReportSaved(false) }}>{option.label}</button>)}</div>
-          <textarea value={reportText} onChange={(event) => { setReportText(event.target.value); setReportSaved(false) }} placeholder="請描述看不懂、可能有錯或需要補充的地方。" />
-          <button className="curriculum-v14-check" type="button" onClick={submitReport}>送出問題</button>{reportSaved ? <strong className="curriculum-v14-report-saved">✓ 已記錄年級、課程路線、單元、Lesson、頁面與問題類型</strong> : null}
-        </div>
-      </aside>
+      {directoryOpen || reportOpen ? <button className="curriculum-v14-backdrop" type="button" aria-label="關閉" onClick={() => { setDirectoryOpen(false); setReportOpen(false) }} /> : null}
+      {renderDirectory()}
+      {renderReport()}
     </div>
   )
 }

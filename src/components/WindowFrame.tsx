@@ -25,6 +25,7 @@ type WindowFrameProps = {
   zIndex: number
   children: ReactNode
   hideMaximize?: boolean
+  immersive?: boolean
   onFocus: () => void
   onMinimize: () => void
   onToggleMaximize: () => void
@@ -61,6 +62,7 @@ export function WindowFrame({
   zIndex,
   children,
   hideMaximize = false,
+  immersive = false,
   onFocus,
   onMinimize,
   onToggleMaximize,
@@ -115,28 +117,48 @@ export function WindowFrame({
   }, [dragState, onGeometryChange])
 
   useEffect(() => {
+    if (immersive) return
     const resize = () => onGeometryChange(clampWindowGeometry(geometry))
     window.addEventListener('resize', resize)
     return () => window.removeEventListener('resize', resize)
-  }, [geometry, onGeometryChange])
+  }, [geometry, immersive, onGeometryChange])
 
   const startDrag = (event: ReactPointerEvent<HTMLElement>, mode: DragMode) => {
-    if (maximized || window.innerWidth <= 760) return
+    if (immersive || maximized || window.innerWidth <= 760) return
     event.preventDefault()
     event.stopPropagation()
     onFocus()
     setDragState({ mode, startX: event.clientX, startY: event.clientY, geometry })
   }
 
-  const style = maximized
-    ? { inset: '8px', zIndex }
-    : {
-        left: `${geometry.x}px`,
-        top: `${geometry.y}px`,
-        width: `${geometry.width}px`,
-        height: `${geometry.height}px`,
-        zIndex,
-      }
+  const style = immersive
+    ? { inset: '0px', zIndex }
+    : maximized
+      ? { inset: '8px', zIndex }
+      : {
+          left: `${geometry.x}px`,
+          top: `${geometry.y}px`,
+          width: `${geometry.width}px`,
+          height: `${geometry.height}px`,
+          zIndex,
+        }
+
+  if (immersive) {
+    return (
+      <section
+        className="desktop-window desktop-window-immersive"
+        style={style}
+        onPointerDown={onFocus}
+        aria-label={title}
+      >
+        <div className="desktop-window-immersive-actions" onPointerDown={(event) => event.stopPropagation()}>
+          <button type="button" className="desktop-immersive-back" onClick={onMinimize}>← 回到桌面</button>
+          <button type="button" className="window-close-button" aria-label="關閉課程" title="關閉課程" onClick={onClose}>×</button>
+        </div>
+        <div className="desktop-window-content">{children}</div>
+      </section>
+    )
+  }
 
   return (
     <section
