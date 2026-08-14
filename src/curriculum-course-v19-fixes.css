@@ -1,0 +1,32 @@
+/* Browser-audit fixes for V19 subject visuals. */
+.v19-dialogue-stage {
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+}
+.v19-dialogue-stage > .v19-avatar:not(.b) {
+  grid-column: 1;
+  grid-row: 1;
+}
+.v19-dialogue-stage > .v19-bubble.a {
+  grid-column: 2;
+  grid-row: 1;
+}
+.v19-dialogue-stage > .v19-bubble.b {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  max-width: 80%;
+}
+.v19-dialogue-stage > .v19-avatar.b {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+}
+
+@media (max-width: 760px) {
+  .v19-dialogue-stage {
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+  }
+  .v19-dialogue-stage > .v19-bubble {
+    max-width: 94%;
+  }
+}
