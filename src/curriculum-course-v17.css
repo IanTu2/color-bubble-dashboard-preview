@@ -1,0 +1,32 @@
+.curriculum-v17-quick-check{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.11)}
+.curriculum-v17-quick-check>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.curriculum-v17-quick-check>header strong{font-size:15px}.curriculum-v17-quick-check>header span{font-size:12px;opacity:.64}
+.curriculum-v17-quick-check .curriculum-v14-question h3{margin-top:12px}
+.curriculum-v17-diagram{margin:20px 0 24px;border:1px solid rgba(255,255,255,.11);border-radius:22px;overflow:hidden;background:rgba(255,255,255,.035)}
+.curriculum-v17-diagram-canvas{padding:14px 16px 4px;background:radial-gradient(circle at 50% 0%,rgba(139,116,255,.09),transparent 60%)}
+.curriculum-v17-diagram svg{display:block;width:100%;height:auto;max-height:330px}
+.curriculum-v17-diagram figcaption{display:flex;gap:8px 14px;align-items:baseline;flex-wrap:wrap;padding:12px 16px 15px;border-top:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.55}
+.curriculum-v17-diagram figcaption span{opacity:.76}
+.curriculum-v17-diagram .v17-node,.curriculum-v17-diagram .v17-center,.curriculum-v17-diagram .v17-container{fill:rgba(139,116,255,.08);stroke:rgba(180,170,255,.38);stroke-width:2}
+.curriculum-v17-diagram .v17-center{fill:rgba(82,214,198,.10);stroke:rgba(82,214,198,.48)}
+.curriculum-v17-diagram .v17-line,.curriculum-v17-diagram .v17-guide,.curriculum-v17-diagram .v17-wire{fill:none;stroke:rgba(225,235,255,.38);stroke-width:2}
+.curriculum-v17-diagram .v17-line-strong,.curriculum-v17-diagram .v17-vector,.curriculum-v17-diagram .v17-trend{fill:none;stroke:rgba(82,214,198,.78);stroke-width:3}
+.curriculum-v17-diagram .v17-vector{marker-end:url(#v17-arrow)}
+.curriculum-v17-diagram .v17-trend{stroke-linejoin:round;stroke-linecap:round}
+.curriculum-v17-diagram .v17-axis,.curriculum-v17-diagram .v17-tick{stroke:rgba(225,235,255,.58);stroke-width:2}
+.curriculum-v17-diagram .v17-axis-fill,.curriculum-v17-diagram .v17-arrow{fill:rgba(225,235,255,.58)}
+.curriculum-v17-diagram .v17-point,.curriculum-v17-diagram .v17-object{fill:#52d6c6;stroke:rgba(255,255,255,.75);stroke-width:2}
+.curriculum-v17-diagram .v17-shape{fill:rgba(139,116,255,.06);stroke:rgba(139,116,255,.78);stroke-width:3}
+.curriculum-v17-diagram .v17-arc{fill:none;stroke:rgba(255,177,91,.78);stroke-width:3}
+.curriculum-v17-diagram .v17-wire-gap{stroke:transparent}.curriculum-v17-diagram .v17-battery{stroke:rgba(255,177,91,.88);stroke-width:4}
+.curriculum-v17-diagram .v17-component{fill:rgba(255,177,91,.08);stroke:rgba(255,177,91,.78);stroke-width:3}.curriculum-v17-diagram .v17-filament{fill:none;stroke:rgba(255,177,91,.9);stroke-width:3}
+.curriculum-v17-diagram .v17-particle{stroke:rgba(255,255,255,.72);stroke-width:2}.curriculum-v17-diagram .v17-particle.p0{fill:rgba(139,116,255,.82)}.curriculum-v17-diagram .v17-particle.p1{fill:rgba(82,214,198,.82)}.curriculum-v17-diagram .v17-particle.p2{fill:rgba(255,177,91,.82)}
+.curriculum-v17-diagram .v17-label{fill:currentColor;font-size:13px;font-weight:800}.curriculum-v17-diagram .v17-caption{fill:currentColor;font-size:10px;opacity:.65}.curriculum-v17-diagram .v17-number{fill:currentColor;font-size:10px;font-weight:900;opacity:.55}
+.curriculum-v17-reader-note{display:flex;align-items:center;gap:8px;margin:-3px 0 14px;font-size:12px;opacity:.7}.curriculum-v17-reader-note::before{content:'●';font-size:8px;color:#52d6c6}
+.curriculum-v17-completion{display:grid;gap:12px;margin-top:18px;padding:18px;border-radius:20px;background:rgba(82,214,198,.08);border:1px solid rgba(82,214,198,.18)}
+.curriculum-v17-completion strong{font-size:18px}.curriculum-v17-completion p{margin:0;line-height:1.7;opacity:.82}
+html[data-theme="light"] .curriculum-v17-diagram{background:rgba(91,105,143,.035);border-color:rgba(64,83,112,.13)}
+html[data-theme="light"] .curriculum-v17-diagram .v17-node,html[data-theme="light"] .curriculum-v17-diagram .v17-container{fill:rgba(91,105,143,.04);stroke:rgba(77,89,138,.35)}
+html[data-theme="light"] .curriculum-v17-diagram .v17-axis,html[data-theme="light"] .curriculum-v17-diagram .v17-tick,html[data-theme="light"] .curriculum-v17-diagram .v17-line,html[data-theme="light"] .curriculum-v17-diagram .v17-guide,html[data-theme="light"] .curriculum-v17-diagram .v17-wire{stroke:rgba(55,70,98,.48)}
+html[data-theme="light"] .curriculum-v17-diagram .v17-axis-fill,html[data-theme="light"] .curriculum-v17-diagram .v17-arrow{fill:rgba(55,70,98,.48)}
+@media(max-width:760px){.curriculum-v17-diagram-canvas{padding:8px 8px 0}.curriculum-v17-diagram svg{max-height:260px}.curriculum-v17-quick-check{margin-top:20px;padding-top:18px}}

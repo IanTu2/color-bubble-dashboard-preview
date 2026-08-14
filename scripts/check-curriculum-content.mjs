@@ -34,7 +34,7 @@ for (const token of ['buildFoundationSubjectQuestions','upgradeFoundationUnitV12
   if (!foundationV12.includes(token)) failures.push(`v12 subject question bank missing ${token}`)
 }
 
-// Keep the older reviewed-content and visual chain healthy because V14 still reuses its subject-specific base content.
+// Keep the older reviewed-content and visual chain healthy because V14/V17 still reuse its subject-specific base content.
 const v12 = read('src/components/CurriculumCourseAppV12.tsx')
 for (const token of ['splitQuestionBank','groups.guided','groups.practice','groups.assessment','QuestionMedia','AudioPrompt','optionFeedback','curriculum-response-rubric','CURRICULUM_VETTED_MEDIA']) {
   if (!v12.includes(token)) failures.push(`V12 reader missing ${token}`)
@@ -49,24 +49,40 @@ if (!v8.includes('useLayoutEffect') || v8.includes('requestAnimationFrame')) fai
 if (!v8.includes('observer?.disconnect()')) failures.push('V8 observer mutation guard regressed')
 if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('V8 media aspect-ratio reservation missing')
 
-// V14 is now the single active formal-course reader for base routes and pathway routes.
+// V17 is the active formal-course reader. V14 remains the structural/textbook base and validator.
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
 const v14 = read('src/components/CurriculumCourseAppV14.tsx')
+const v17 = read('src/components/CurriculumCourseAppV17.tsx')
 const v14Css = read('src/curriculum-course-v14.css')
+const v17Css = read('src/curriculum-course-v17.css')
 const textbookV14 = read('src/curriculum-textbook-v14.ts')
-if (!activeExport.includes("from './CurriculumCourseAppV14'")) failures.push('active curriculum export must route through Textbook V14')
-if (!activeExport.includes("-textbook-v14`")) failures.push('active reader route key must remount on V14 route changes')
-for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV14','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS','textbookVersion: \'v14\'']) {
-  if (!v14.includes(token)) failures.push(`V14 reader missing ${token}`)
+const pedagogyV17 = read('src/curriculum-pedagogy-v17.ts')
+const pedagogyVisualV17 = read('src/components/CurriculumPedagogyVisualV17.tsx')
+if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active curriculum export must route through Pedagogy V17')
+if (!activeExport.includes("-pedagogy-v17`")) failures.push('active reader route key must remount on V17 route changes')
+for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV17','getConceptChecksV17','quickCheck','renderQuestion(page.quickCheck)','CurriculumPedagogyVisualV17','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS']) {
+  if (!v17.includes(token)) failures.push(`V17 reader missing ${token}`)
 }
 for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級']) {
-  if (v14.includes(forbidden)) failures.push(`V14 reader contains forbidden internal/DOM token ${forbidden}`)
+  if (v17.includes(forbidden)) failures.push(`V17 reader contains forbidden internal/DOM token ${forbidden}`)
+}
+for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV14','unitContent.objectives','unitContent.workedExamples','unitContent.questions']) {
+  if (!v14.includes(token)) failures.push(`V14 fallback reader missing ${token}`)
 }
 for (const token of ['grid-template-columns','html[data-theme="light"]','.curriculum-v14-misconception','.curriculum-v14-visual-grid','.curriculum-v14-report-kinds']) {
-  if (!v14Css.includes(token)) failures.push(`V14 layout missing ${token}`)
+  if (!v14Css.includes(token)) failures.push(`V14 base layout missing ${token}`)
+}
+for (const token of ['curriculum-v17-quick-check','curriculum-v17-diagram','data-v17-rich-visual']) {
+  if (!`${v17Css}\n${pedagogyVisualV17}`.includes(token)) failures.push(`V17 pedagogy layout/visual missing ${token}`)
+}
+for (const token of ['CoordinateDiagram','GeometryDiagram','NumberLineDiagram','CircuitDiagram','ParticleDiagram','MotionDiagram','TimelineDiagram','EvidenceDiagram']) {
+  if (!pedagogyVisualV17.includes(token)) failures.push(`V17 rich visual renderer missing ${token}`)
+}
+for (const token of ['buildPedagogyQuestions','upgradeExamples','subjectSteps','-ped-v17-check-','validateTextbookUnitV14','getTextbookUnitContentV17','getConceptChecksV17']) {
+  if (!pedagogyV17.includes(token)) failures.push(`V17 pedagogy content layer missing ${token}`)
 }
 for (const token of ['reviewStatus: \'textbook-ready\'','textbookVersion: \'v14\'','sourceRefs','objectives','misconceptions','visuals','vocabulary','ensureWorkedExamples','ensureQuestions','validateTextbookUnitV14','BANNED_MISSING_MATERIAL','optionFeedback','rubric']) {
-  if (!textbookV14.includes(token)) failures.push(`V14 textbook layer missing ${token}`)
+  if (!textbookV14.includes(token)) failures.push(`V14 textbook structural layer missing ${token}`)
 }
 
 // Structural route model: active learner routes must reflect grade-specific official organization.
@@ -99,7 +115,6 @@ if (drawer.includes('查看五科課程')) failures.push('drawer must not claim 
 const desktop = read('src/components/DesktopWorkspace.tsx')
 for (const token of ['getCurriculumCourseMeta','getCurriculumTrack(course.grade, course.subject, course.pathway)','pathway={item.course.pathway}']) if (!desktop.includes(token)) failures.push(`desktop pathway persistence missing ${token}`)
 
-// Keep researched Grade 7 map protections while the runtime V14 audit covers every active unit.
 for (const chapter of ['二元一次聯立方程式','直角坐標與二元一次方程式圖形','一元一次不等式']) if (!plan.includes(chapter)) failures.push(`grade 7 math roadmap missing ${chapter}`)
 if (plan.includes('公民：民主與法律')) failures.push('grade 7 social roadmap regressed to politics/law unit')
 
@@ -109,4 +124,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] Textbook V14 active reader + legacy subject content + V13 route structure + feedback/media/rubric source gates passed')
+console.log('[curriculum-qa] Pedagogy V17 active reader + V14 structural textbook + legacy subject content + V13 route structure passed')
