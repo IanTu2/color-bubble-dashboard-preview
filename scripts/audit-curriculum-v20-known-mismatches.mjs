@@ -8,14 +8,14 @@ function expect(unit, label, required, forbidden = []) {
   if (!unit) { failures.push(`${label}: unit missing`); return }
   const example = unit.workedExamples?.[0]
   const check = unit.questions?.find((q) => q.id.includes('-ped-v17-check-')) ?? unit.questions?.[0]
-  const text = norm(`${example?.context} ${example?.prompt} ${example?.answer} ${example?.explanation} ${check?.context} ${check?.prompt} ${check?.kind === 'choice' ? check.options?.join(' ') : check?.sampleAnswer} ${(unit.takeaway ?? []).join(' ')} ${(unit.visuals ?? []).map((v) => `${v.title} ${v.caption} ${(v.items ?? []).map((i) => `${i.label} ${i.detail}`).join(' ')}`).join(' ')}`)
+  const text = norm(`${example?.context} ${example?.prompt} ${example?.answer} ${example?.explanation} ${check?.context} ${check?.prompt} ${check?.kind === 'choice' ? check.options?.join(' ') : check?.sampleAnswer} ${(unit.takeaway ?? []).join(' ')} ${(unit.visuals ?? []).map((v) => `${v.title} ${v.caption} ${(v.items ?? []).map((i) => `${i.label} ${i.detail}`).join(' ')}`).join(' ')} ${(unit.misconceptions ?? []).map((m) => `${m.claim} ${m.correction} ${m.reason}`).join(' ')}`)
   for (const pattern of required) if (!pattern.test(text)) failures.push(`${label}: required evidence missing: ${pattern}`)
   for (const pattern of forbidden) if (pattern.test(text)) failures.push(`${label}: forbidden stale task remains: ${pattern}`)
 }
 
 try {
-  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-final.ts')
-  const get = (id) => v20.getTextbookUnitContentV20Final(id)
+  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-editorial.ts')
+  const get = (id) => v20.getTextbookUnitContentV20Editorial(id)
 
   expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/100 以內|100以內/, /\d+\s*-\s*\d+|拿走/], [/150\s*-\s*36/, /科學記號/])
   expect(get('g5-math-s1-u1'), 'G5 Math 因數倍數', [/最大公因數|因數|倍數/], [/份材料.*用掉/, /科學記號/])
@@ -37,4 +37,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the V20 final layer.')
+console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the fully rebuilt V20 editorial layer.')
