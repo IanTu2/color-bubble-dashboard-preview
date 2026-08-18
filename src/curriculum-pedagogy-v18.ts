@@ -3,10 +3,10 @@ import {
   getTextbookUnitContentV18 as getLegacyV18,
   getConceptChecksV18 as getLegacyConceptChecksV18,
 } from './curriculum-pedagogy-v18-final'
-import { getCachedTextbookUnitContentV20Reviewed } from './curriculum-textbook-v20-reviewed'
+import { getCachedTextbookUnitContentV20ReviewedFinal } from './curriculum-textbook-v20-reviewed-final'
 import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 
-// V20 is now the learner-facing reviewed editorial layer. The recursion guard keeps
+// V20 is now the learner-facing final reviewed layer. The recursion guard keeps
 // the rebuild anchored to the validated legacy V18 source without re-entering itself.
 const resolvingV20 = new Set<string>()
 
@@ -14,13 +14,13 @@ export function getTextbookUnitContentV18(unitId: string) {
   if (resolvingV20.has(unitId)) return getLegacyV18(unitId)
   resolvingV20.add(unitId)
   try {
-    return getCachedTextbookUnitContentV20Reviewed(unitId)
+    return getCachedTextbookUnitContentV20ReviewedFinal(unitId)
   } finally {
     resolvingV20.delete(unitId)
   }
 }
 
-export { getTextbookUnitContentV20Reviewed as getTextbookUnitContentV20 } from './curriculum-textbook-v20-reviewed'
+export { getTextbookUnitContentV20ReviewedFinal as getTextbookUnitContentV20 } from './curriculum-textbook-v20-reviewed-final'
 export const inspectTextbookUnitV18 = inspectLegacyV18
 
 export function getConceptChecksV18(unit: TextbookUnitContentV14) {
