@@ -12,8 +12,8 @@ function expect(unit, label, required, forbidden = []) {
 }
 
 try {
-  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-reviewed.ts')
-  const get = (id) => v20.getTextbookUnitContentV20Reviewed(id)
+  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-reviewed-final.ts')
+  const get = (id) => v20.getTextbookUnitContentV20ReviewedFinal(id)
 
   expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/個十/, /個一/, /100 以內/], [/150\s*-\s*36/, /科學記號/, /3 個千/])
   expect(get('g2-math-s1-u1'), 'G2 Math 1000內', [/個百/, /個十/, /個一/], [/3 個千/, /3133/])
@@ -41,4 +41,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[curriculum-v20-known-mismatches] PASS: representative confirmed mismatch units now use title/focus-specific V20 reviewed tasks.')
+console.log('[curriculum-v20-known-mismatches] PASS: representative confirmed mismatch units now use title/focus-specific final reviewed V20 tasks.')
