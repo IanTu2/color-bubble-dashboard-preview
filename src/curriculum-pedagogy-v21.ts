@@ -16,15 +16,88 @@ export type V21Inspection = {
   familyLabel?: string
 }
 
+const V21_FAMILY_HINT_OVERRIDES: Record<string, string> = {
+  'g4-science-s2-u2': '月亮 天文 月相',
+  'g5-science-s2-u3': '太陽系 天文 宇宙',
+  'g7-science-s1-u1': '細胞 顯微鏡 生命物質',
+  'g9-science-s1-u1': '電路 電磁 磁場',
+  'g10-earth-science-s2-u3': '太陽系 天文 宇宙',
+  'g11-physics-s2-u3': '電路 電磁 磁場',
+  'g11-earth-science-s2-u3': '恆星 天文 宇宙',
+  'g12-physics-s1-u2': '電路 電磁 電場 磁場',
+  'g5-chinese-s1-u3': '文言 古文',
+  'g6-chinese-s1-u2': '古典文本 文言 古文',
+  'g8-chinese-s1-u1': '修辭 表達效果',
+  'g8-chinese-s1-u3': '文言 古文',
+  'g9-chinese-s1-u2': '文言 古文',
+  'g11-chinese-s1-u2': '古文 經典篇章 文言',
+  'g4-social-s1-u3': '自我 家庭 社區 公民生活 公共服務',
+  'g6-social-s1-u3': '法律 權利 法治',
+  'g7-social-s2-u3': '多元文化 社會互動 社會與多元',
+}
+
+function contextForFamilyClassification(context: V21UnitContext): V21UnitContext {
+  const hint = V21_FAMILY_HINT_OVERRIDES[context.unit.id]
+  if (!hint) return context
+  return {
+    ...context,
+    unit: {
+      ...context.unit,
+      title: hint,
+      focus: hint,
+    },
+  }
+}
+
+function restoreBuildUnitIdentity(build: V21SubjectBuild, original: V21UnitContext, classification: V21UnitContext): V21SubjectBuild {
+  if (original === classification) return build
+  const fakeQuoted = `「${classification.unit.title}」`
+  const realQuoted = `「${original.unit.title}」`
+  const restore = (value: string) => value.split(fakeQuoted).join(realQuoted)
+  return {
+    ...build,
+    overview: restore(build.overview),
+    objectives: build.objectives.map(restore),
+    workedExamples: build.workedExamples.map((example) => ({
+      ...example,
+      context: restore(example.context),
+      prompt: restore(example.prompt),
+      steps: example.steps.map(restore),
+      answer: restore(example.answer),
+      explanation: restore(example.explanation),
+    })),
+    questions: build.questions.map((question) => question.kind === 'choice'
+      ? {
+          ...question,
+          context: question.context ? restore(question.context) : undefined,
+          prompt: restore(question.prompt),
+          options: question.options.map(restore),
+          explanation: restore(question.explanation),
+          optionFeedback: question.optionFeedback?.map(restore),
+        }
+      : {
+          ...question,
+          context: question.context ? restore(question.context) : undefined,
+          prompt: restore(question.prompt),
+          sampleAnswer: restore(question.sampleAnswer),
+          explanation: restore(question.explanation),
+          rubric: question.rubric?.map(restore),
+        }),
+    takeaway: build.takeaway.map(restore),
+  }
+}
+
 function buildForSubject(unitId: string, base: TextbookUnitContentV14): V21SubjectBuild | null {
-  const context = resolveCurriculumUnit(unitId)
-  if (!context) return null
-  if (context.subject === 'chinese') return buildChineseV21(context, base)
-  if (context.subject === 'english') return buildEnglishV21(context, base)
-  if (context.subject === 'math') return buildMathV21(context, base)
-  if (context.subject === 'science') return buildScienceV21(context, base)
-  if (context.subject === 'social') return buildSocialV21(context, base)
-  return null
+  const original = resolveCurriculumUnit(unitId)
+  if (!original) return null
+  const context = contextForFamilyClassification(original)
+  let build: V21SubjectBuild | null = null
+  if (original.subject === 'chinese') build = buildChineseV21(context, base)
+  if (original.subject === 'english') build = buildEnglishV21(context, base)
+  if (original.subject === 'math') build = buildMathV21(context, base)
+  if (original.subject === 'science') build = buildScienceV21(context, base)
+  if (original.subject === 'social') build = buildSocialV21(context, base)
+  return build ? restoreBuildUnitIdentity(build, original, context) : null
 }
 
 function strengthenConcept(concept: ReviewedConcept, context: V21UnitContext, familyLabel: string): ReviewedConcept {
@@ -136,38 +209,16 @@ function diagnosticDistractor(context: V21UnitContext, correct: string, slot: nu
     if (/\+/.test(correct)) candidates.push(correct.replace('+', '-'))
     if (/x²/.test(correct)) candidates.push(correct.replace(/x²/g, 'x'))
   } else if (context.subject === 'science') {
-    candidates.push(
-      '把一次觀察直接推廣成所有條件都必然相同的結論',
-      '忽略量測條件與變因，只依表面現象判定唯一因果',
-      '把教學模型或示意圖當成真實比例與完整機制',
-      '只保留符合預期的資料，忽略其他觀察與量測紀錄',
-    )
+    candidates.push('把一次觀察直接推廣成所有條件都必然相同的結論', '忽略量測條件與變因，只依表面現象判定唯一因果', '把教學模型或示意圖當成真實比例與完整機制', '只保留符合預期的資料，忽略其他觀察與量測紀錄')
   } else if (context.subject === 'social') {
-    candidates.push(
-      '只根據單一來源就把結論推廣到所有時間、地區與群體',
-      '忽略資料年份、來源與樣本範圍，直接把相關寫成唯一因果',
-      '把價值判斷當成不需要證據與判準的客觀事實',
-      '只選支持既有立場的資料，不比較其他來源或觀點',
-    )
+    candidates.push('只根據單一來源就把結論推廣到所有時間、地區與群體', '忽略資料年份、來源與樣本範圍，直接把相關寫成唯一因果', '把價值判斷當成不需要證據與判準的客觀事實', '只選支持既有立場的資料，不比較其他來源或觀點')
   } else if (context.subject === 'english') {
-    candidates.push(
-      'Use a form that does not match the subject, time clue, or sentence meaning.',
-      'Choose a grammatically possible phrase that does not fit the communicative context.',
-      'Ignore word order and use the same form for every subject and time reference.',
-      'Select an answer based on one familiar word while ignoring the full sentence.',
-    )
+    candidates.push('Use a form that does not match the subject, time clue, or sentence meaning.', 'Choose a grammatically possible phrase that does not fit the communicative context.', 'Ignore word order and use the same form for every subject and time reference.', 'Select an answer based on one familiar word while ignoring the full sentence.')
   } else {
-    candidates.push(
-      '只抓一個關鍵詞，不讀完整句子或上下文就下結論',
-      '加入原文沒有提供的資訊，再把它當成文本證據',
-      '只說修辭、篇章或字詞名稱，不解釋它在實際語句中的作用',
-      '把個人感想當成唯一答案，卻沒有引用任何文本線索',
-    )
+    candidates.push('只抓一個關鍵詞，不讀完整句子或上下文就下結論', '加入原文沒有提供的資訊，再把它當成文本證據', '只說修辭、篇章或字詞名稱，不解釋它在實際語句中的作用', '把個人感想當成唯一答案，卻沒有引用任何文本線索')
   }
   const used = new Set(existing.map((item) => item.trim()))
-  for (const candidate of candidates.map((item) => item.trim()).filter(Boolean)) {
-    if (candidate !== correct.trim() && !used.has(candidate)) return candidate
-  }
+  for (const candidate of candidates.map((item) => item.trim()).filter(Boolean)) if (candidate !== correct.trim() && !used.has(candidate)) return candidate
   return `錯誤變式：未依「${context.unit.title}」的${context.subject === 'math' ? '數學關係' : '題目證據'}重新檢查此結論`
 }
 
@@ -184,9 +235,7 @@ function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, 
       const contextCue = cleanProse(normalizedContext ?? '').slice(0, 72)
       prompt = `${prompt || '請完成判斷。'} 本題請特別連結「${concept?.title ?? context.unit.title}」的${dimension}${contextCue ? `，並以「${contextCue}」中的資訊檢查` : ''}。`
     }
-    if (seen.has(key())) {
-      prompt = `${prompt} 同時說明這個判斷在「${context.unit.title}」中如何符合${familyLabel}的${dimensions[(index + 2) % dimensions.length]}。`
-    }
+    if (seen.has(key())) prompt = `${prompt} 同時說明這個判斷在「${context.unit.title}」中如何符合${familyLabel}的${dimensions[(index + 2) % dimensions.length]}。`
     seen.add(key())
     if (question.kind === 'choice') {
       const correct = sanitizeLegacyMetaText(question.options[question.correctIndex] ?? '')
@@ -205,12 +254,7 @@ function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, 
         optionFeedback: (question.optionFeedback ?? []).map((item) => sanitizeLegacyMetaText(item)),
       } as ReviewedQuestion
     }
-    return {
-      ...question,
-      context: normalizedContext,
-      prompt,
-      sampleAnswer: sanitizeLegacyMetaText(question.sampleAnswer),
-    } as ReviewedQuestion
+    return { ...question, context: normalizedContext, prompt, sampleAnswer: sanitizeLegacyMetaText(question.sampleAnswer) } as ReviewedQuestion
   })
 }
 
@@ -230,15 +274,11 @@ export function inspectTextbookUnitV21(unitId: string): V21Inspection {
   const context = resolveCurriculumUnit(unitId)
   const base = getLegacyTextbookUnitContentV18(unitId)
   if (!context || !base) {
-    return {
-      unit: null,
-      validation: { ready: false, errors: [`V21 base unit unavailable: ${unitId}`] } as ReturnType<typeof validateTextbookUnitV14>,
-    }
+    return { unit: null, validation: { ready: false, errors: [`V21 base unit unavailable: ${unitId}`] } as ReturnType<typeof validateTextbookUnitV14> }
   }
   const rawBuild = buildForSubject(unitId, base)
   if (!rawBuild) return { unit: base, validation: validateTextbookUnitV14(base) }
   const build = normalizeBuild(context, base, rawBuild)
-
   const unit: TextbookUnitContentV14 = {
     ...base,
     overview: build.overview,
@@ -251,16 +291,10 @@ export function inspectTextbookUnitV21(unitId: string): V21Inspection {
     takeaway: build.takeaway,
     researchBasis: preserveSources(base, `Bubble Space V21：${build.familyLabel}單元專屬教材重建；例題、正式題目與迷思不得跨不相關單元共用。`),
   }
-  return {
-    unit,
-    validation: validateTextbookUnitV14(unit),
-    familyId: build.familyId,
-    familyLabel: build.familyLabel,
-  }
+  return { unit, validation: validateTextbookUnitV14(unit), familyId: build.familyId, familyLabel: build.familyLabel }
 }
 
 const cache = new Map<string, TextbookUnitContentV14 | null>()
-
 export function getTextbookUnitContentV21(unitId: string): TextbookUnitContentV14 | null {
   if (cache.has(unitId)) return cache.get(unitId) ?? null
   const inspected = inspectTextbookUnitV21(unitId)
