@@ -159,19 +159,19 @@ function englishCase(context: V21UnitContext, family: EnglishFamily, index: numb
     const third = n(0, 1, 1) === 1
     const subject = third ? name : 'They'
     const verb = 'walk'
-    const form = third ? 'walks' : 'walk'
+    const form = third ? 'walks' : verb
     return {
       context: `Every school day, ${subject} ___ to school after breakfast.`,
       prompt: 'Choose the correct simple-present form.',
       answer: form,
-      distractors: ['walking', 'walked', third ? 'walk' : 'walks'],
+      distractors: ['walking', 'walked', third ? verb : 'walks'],
       steps: ['Notice the routine clue “Every school day”', 'Find the subject', 'Apply subject–verb agreement', 'Check that the verb is not marked as past or progressive'],
-      explanation: `The simple present describes routines. With ${subject}, the correct form is “${form}.”`,
+      explanation: `The base verb is “${verb}.” The simple present describes routines. With ${subject}, the correct form is “${form}.”`,
     }
   }
 
   if (family === 'questions') {
-    const target = seededPick(['time', 'place', 'person', 'reason'], seed + 4)
+    const target = seededPick(['time', 'place', 'person', 'reason'] as const, seed + 4)
     const data = {
       time: { answer: 'When', prompt: `${name} wants to ask what time the club meets.` },
       place: { answer: 'Where', prompt: `${name} wants to ask the location of the ${place}.` },
