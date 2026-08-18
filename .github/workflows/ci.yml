@@ -35,6 +35,18 @@ jobs:
         continue-on-error: true
         run: npm run build > build.log 2>&1
 
+      - name: Export V20 review dataset
+        if: steps.compile.outcome == 'success'
+        run: node scripts/export-curriculum-v20-review-dataset.mjs
+
+      - name: Upload V20 review dataset
+        if: steps.compile.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v20-review-dataset
+          path: v20-review-export.json
+          retention-days: 3
+
       - name: Upload build log
         if: always()
         uses: actions/upload-artifact@v4
