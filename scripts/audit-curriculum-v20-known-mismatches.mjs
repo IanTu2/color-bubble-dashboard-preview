@@ -8,19 +8,19 @@ function expect(unit, label, required, forbidden = []) {
   if (!unit) { failures.push(`${label}: unit missing`); return }
   const example = unit.workedExamples?.[0]
   const check = unit.questions?.find((q) => q.id.includes('-ped-v17-check-')) ?? unit.questions?.[0]
-  const text = norm(`${example?.context} ${example?.prompt} ${example?.answer} ${example?.explanation} ${check?.context} ${check?.prompt} ${check?.kind === 'choice' ? check.options?.join(' ') : check?.sampleAnswer}`)
+  const text = norm(`${example?.context} ${example?.prompt} ${example?.answer} ${example?.explanation} ${check?.context} ${check?.prompt} ${check?.kind === 'choice' ? check.options?.join(' ') : check?.sampleAnswer} ${(unit.takeaway ?? []).join(' ')} ${(unit.visuals ?? []).map((v) => `${v.title} ${v.caption} ${(v.items ?? []).map((i) => `${i.label} ${i.detail}`).join(' ')}`).join(' ')}`)
   for (const pattern of required) if (!pattern.test(text)) failures.push(`${label}: required evidence missing: ${pattern}`)
   for (const pattern of forbidden) if (pattern.test(text)) failures.push(`${label}: forbidden stale task remains: ${pattern}`)
 }
 
 try {
-  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-pass1.ts')
-  const get = (id) => v20.getTextbookUnitContentV20Pass1(id)
+  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-final.ts')
+  const get = (id) => v20.getTextbookUnitContentV20Final(id)
 
   expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/100 以內|100以內/, /\d+\s*-\s*\d+|拿走/], [/150\s*-\s*36/, /科學記號/])
   expect(get('g5-math-s1-u1'), 'G5 Math 因數倍數', [/最大公因數|因數|倍數/], [/份材料.*用掉/, /科學記號/])
   expect(get('g8-math-s1-u1'), 'G8 Math 多項式', [/展開|多項式|x²/], [/份材料.*用掉/])
-  expect(get('g9-math-s1-u1'), 'G9 Math 二次方程式', [/x²/, /方程式|因式分解/, /x\s*=/], [/4,?000.*51,?000/, /科學記號/])
+  expect(get('g9-math-s1-u1'), 'G9 Math 二次方程式', [/x²/, /方程式|因式分解/, /x\s*=/, /代回|驗算/], [/4,?000.*51,?000/, /科學記號/])
   expect(get('g11-math-a-s1-u1'), 'G11 Math A 三角', [/sin|三角/, /對邊|斜邊/], [/長方形.*面積/])
   expect(get('g12-math-alpha-s1-u1'), 'G12 Math甲 微分', [/f′|導數|瞬時變化率|微分/], [/份材料.*用掉/])
 
@@ -37,4 +37,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence.')
+console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the V20 final layer.')
