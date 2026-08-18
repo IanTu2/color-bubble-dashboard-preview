@@ -3,29 +3,28 @@ import {
   getTextbookUnitContentV18 as getLegacyV18,
   getConceptChecksV18 as getLegacyConceptChecksV18,
 } from './curriculum-pedagogy-v18-final'
-import { getCachedTextbookUnitContentV20Editorial } from './curriculum-textbook-v20-editorial'
+import { getCachedTextbookUnitContentV20Complete } from './curriculum-textbook-v20-complete'
 import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 
-// V20 is now the learner-facing editorial layer. The recursion guard is deliberate:
-// V20 editorial rebuilds from the validated V18 baseline, so its internal request for V18
-// must resolve to the legacy validated unit rather than recursively re-entering V20.
+// V20 is now the learner-facing completed editorial layer. The recursion guard is deliberate:
+// V20 rebuilds from the validated V18 baseline, so its internal request for V18 must resolve
+// to the legacy validated unit rather than recursively re-entering V20.
 const resolvingV20 = new Set<string>()
 
 export function getTextbookUnitContentV18(unitId: string) {
   if (resolvingV20.has(unitId)) return getLegacyV18(unitId)
   resolvingV20.add(unitId)
   try {
-    return getCachedTextbookUnitContentV20Editorial(unitId)
+    return getCachedTextbookUnitContentV20Complete(unitId)
   } finally {
     resolvingV20.delete(unitId)
   }
 }
 
-// Compatibility export: older V20 tooling can keep this name while receiving the
-// same fully rebuilt editorial content that the active learner reader receives.
-export { getTextbookUnitContentV20Editorial as getTextbookUnitContentV20 } from './curriculum-textbook-v20-editorial'
+// Compatibility export: older V20 tooling keeps this name while receiving the exact
+// completed content used by the active learner reader.
+export { getTextbookUnitContentV20Complete as getTextbookUnitContentV20 } from './curriculum-textbook-v20-complete'
 
-// Keep the historic V18 inspector available for V14–V18 regression gates.
 export const inspectTextbookUnitV18 = inspectLegacyV18
 
 export function getConceptChecksV18(unit: TextbookUnitContentV14) {
