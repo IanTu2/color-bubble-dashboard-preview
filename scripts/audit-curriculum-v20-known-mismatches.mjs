@@ -14,8 +14,8 @@ function expect(unit, label, required, forbidden = []) {
 }
 
 try {
-  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-editorial.ts')
-  const get = (id) => v20.getTextbookUnitContentV20Editorial(id)
+  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-complete.ts')
+  const get = (id) => v20.getTextbookUnitContentV20Complete(id)
 
   expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/100 以內|100以內/, /\d+\s*-\s*\d+|拿走/], [/150\s*-\s*36/, /科學記號/])
   expect(get('g5-math-s1-u1'), 'G5 Math 因數倍數', [/最大公因數|因數|倍數/], [/份材料.*用掉/, /科學記號/])
@@ -37,4 +37,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the fully rebuilt V20 editorial layer.')
+console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the completed V20 layer.')
