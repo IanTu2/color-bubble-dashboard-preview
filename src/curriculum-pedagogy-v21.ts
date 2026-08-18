@@ -102,6 +102,75 @@ function evidenceContext(context: V21UnitContext, value: string | undefined) {
   return `${anchor} ${raw}`.trim()
 }
 
+const GENERIC_FILLER = /資訊不足，不能依題目條件得到此結論（\d+）/
+
+function replaceFirstNumber(value: string, transform: (n: number) => number) {
+  const match = value.match(/-?\d+(?:\.\d+)?/)
+  if (!match) return null
+  const number = Number(match[0])
+  if (!Number.isFinite(number)) return null
+  const next = transform(number)
+  return `${value.slice(0, match.index)}${Number.isInteger(next) ? next : Number(next.toFixed(3))}${value.slice((match.index ?? 0) + match[0].length)}`
+}
+
+function diagnosticDistractor(context: V21UnitContext, correct: string, slot: number, existing: string[]) {
+  const candidates: string[] = []
+  if (context.subject === 'math') {
+    const fraction = correct.match(/^\s*(-?\d+)\s*\/\s*(-?\d+)(.*)$/)
+    if (fraction) {
+      const a = Number(fraction[1]); const b = Number(fraction[2]); const suffix = fraction[3]
+      if (b !== 0) candidates.push(`${b}/${a || 1}${suffix}`, `${a + 1}/${b}${suffix}`, `${a}/${b + 1}${suffix}`)
+    }
+    const coordinate = correct.match(/^\s*\((-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)\s*$/)
+    if (coordinate) {
+      const x = Number(coordinate[1]); const y = Number(coordinate[2])
+      candidates.push(`(${y}, ${x})`, `(${-x}, ${y})`, `(${x}, ${-y})`)
+    }
+    candidates.push(
+      replaceFirstNumber(correct, (n) => n + Math.max(1, slot + 1)) ?? '',
+      replaceFirstNumber(correct, (n) => n - Math.max(1, slot + 1)) ?? '',
+      replaceFirstNumber(correct, (n) => n === 0 ? slot + 1 : n * 2) ?? '',
+    )
+    if (/</.test(correct)) candidates.push(correct.replace('<', '>'), correct.replace('<', '='))
+    if (/>/.test(correct)) candidates.push(correct.replace('>', '<'), correct.replace('>', '='))
+    if (/\+/.test(correct)) candidates.push(correct.replace('+', '-'))
+    if (/x²/.test(correct)) candidates.push(correct.replace(/x²/g, 'x'))
+  } else if (context.subject === 'science') {
+    candidates.push(
+      '把一次觀察直接推廣成所有條件都必然相同的結論',
+      '忽略量測條件與變因，只依表面現象判定唯一因果',
+      '把教學模型或示意圖當成真實比例與完整機制',
+      '只保留符合預期的資料，忽略其他觀察與量測紀錄',
+    )
+  } else if (context.subject === 'social') {
+    candidates.push(
+      '只根據單一來源就把結論推廣到所有時間、地區與群體',
+      '忽略資料年份、來源與樣本範圍，直接把相關寫成唯一因果',
+      '把價值判斷當成不需要證據與判準的客觀事實',
+      '只選支持既有立場的資料，不比較其他來源或觀點',
+    )
+  } else if (context.subject === 'english') {
+    candidates.push(
+      'Use a form that does not match the subject, time clue, or sentence meaning.',
+      'Choose a grammatically possible phrase that does not fit the communicative context.',
+      'Ignore word order and use the same form for every subject and time reference.',
+      'Select an answer based on one familiar word while ignoring the full sentence.',
+    )
+  } else {
+    candidates.push(
+      '只抓一個關鍵詞，不讀完整句子或上下文就下結論',
+      '加入原文沒有提供的資訊，再把它當成文本證據',
+      '只說修辭、篇章或字詞名稱，不解釋它在實際語句中的作用',
+      '把個人感想當成唯一答案，卻沒有引用任何文本線索',
+    )
+  }
+  const used = new Set(existing.map((item) => item.trim()))
+  for (const candidate of candidates.map((item) => item.trim()).filter(Boolean)) {
+    if (candidate !== correct.trim() && !used.has(candidate)) return candidate
+  }
+  return `錯誤變式：未依「${context.unit.title}」的${context.subject === 'math' ? '數學關係' : '題目證據'}重新檢查此結論`
+}
+
 function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, concepts: ReviewedConcept[], questions: ReviewedQuestion[]) {
   const dimensions = ['定義', '成立條件', '表示方式', '資料證據', '答案限制']
   const seen = new Set<string>()
@@ -120,11 +189,19 @@ function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, 
     }
     seen.add(key())
     if (question.kind === 'choice') {
+      const correct = sanitizeLegacyMetaText(question.options[question.correctIndex] ?? '')
+      const options: string[] = []
+      for (let optionIndex = 0; optionIndex < question.options.length; optionIndex += 1) {
+        const raw = sanitizeLegacyMetaText(question.options[optionIndex])
+        options.push(GENERIC_FILLER.test(raw) ? diagnosticDistractor(context, correct, optionIndex, [...options, ...question.options]) : raw)
+      }
+      const correctIndex = options.findIndex((option) => option === correct)
       return {
         ...question,
         context: normalizedContext,
         prompt,
-        options: question.options.map((option) => sanitizeLegacyMetaText(option)),
+        options,
+        correctIndex: correctIndex >= 0 ? correctIndex : question.correctIndex,
         optionFeedback: (question.optionFeedback ?? []).map((item) => sanitizeLegacyMetaText(item)),
       } as ReviewedQuestion
     }
