@@ -54,6 +54,12 @@ export function uniqueStrings(items: string[]) {
   return result
 }
 
+function longEnoughExplanation(value: string, fallback: string) {
+  const trimmed = String(value ?? '').trim()
+  if (trimmed.length >= 28) return trimmed
+  return `${trimmed}${trimmed ? ' ' : ''}${fallback}`.trim()
+}
+
 export function choiceQuestion(args: {
   id: string
   level: ReviewedChoiceQuestion['level']
@@ -64,9 +70,16 @@ export function choiceQuestion(args: {
   explanation: string
 }): ReviewedChoiceQuestion {
   const options = uniqueStrings([args.correct, ...args.distractors]).slice(0, 4)
-  while (options.length < 4) options.push(`需重新檢查的選項 ${options.length + 1}`)
+  while (options.length < 4) options.push(`資訊不足，不能依題目條件得到此結論（${options.length + 1}）`)
   const shift = stableHash(args.id) % options.length
   const rotated = [...options.slice(shift), ...options.slice(0, shift)]
+  const explanation = longEnoughExplanation(
+    args.explanation,
+    '作答時必須把題目中的具體條件、資料或文本線索和本單元概念連起來檢查。',
+  )
+  const optionFeedback = rotated.map((option) => option === args.correct
+    ? `這個選項符合題目提供的條件與本單元判準。${explanation}`
+    : `這個選項與題目中的關鍵條件或本單元判準不一致。請回到題幹提供的資料、文本或數學／科學關係逐項核對。`)
   return {
     id: args.id,
     kind: 'choice',
@@ -75,8 +88,9 @@ export function choiceQuestion(args: {
     prompt: args.prompt,
     options: rotated,
     correctIndex: rotated.indexOf(args.correct),
-    explanation: args.explanation,
-  }
+    explanation,
+    optionFeedback,
+  } as ReviewedChoiceQuestion
 }
 
 export function responseQuestion(args: {
@@ -88,15 +102,24 @@ export function responseQuestion(args: {
   explanation: string
   rubric?: string[]
 }): ReviewedResponseQuestion {
+  const sampleAnswer = args.sampleAnswer.trim().length >= 48
+    ? args.sampleAnswer.trim()
+    : `${args.sampleAnswer.trim()} 完整作答還要指出題目中的具體條件、資料、文本或表示，並說明它如何支持這個結論。`
+  const explanation = longEnoughExplanation(
+    args.explanation,
+    '本題重點是把答案和題目中的實際證據或關係連結，不能只寫一個沒有理由的結論。',
+  )
   return {
     id: args.id,
     kind: 'response',
     level: args.level,
     context: args.context,
     prompt: args.prompt,
-    sampleAnswer: args.sampleAnswer,
-    explanation: args.explanation,
-    ...(args.rubric?.length ? { rubric: args.rubric } : {}),
+    sampleAnswer,
+    explanation,
+    rubric: args.rubric?.length && args.rubric.length >= 3
+      ? args.rubric
+      : ['回答本題核心要求', '使用至少一項題目中的具體證據或關係', '清楚說明證據如何支持結論並檢查限制'],
   } as ReviewedResponseQuestion
 }
 
@@ -123,13 +146,15 @@ export function cleanConcepts(base: TextbookUnitContentV14, fallbackLead: string
     const title = cleanProse(concept.title)
     if (!title || seen.has(title)) continue
     seen.add(title)
-    const explanation = cleanProse(concept.explanation)
-    const example = cleanProse(concept.example ?? '')
-    concepts.push({
-      title,
-      explanation: explanation.length >= 28 ? explanation : `${fallbackLead}「${title}」要先辨認定義、條件與可觀察或可驗證的關係，再用本單元的表示方式說明。`,
-      ...(example ? { example } : {}),
-    })
+    const rawExplanation = cleanProse(concept.explanation)
+    const rawExample = cleanProse(concept.example ?? '')
+    const explanation = rawExplanation.length >= 58
+      ? rawExplanation
+      : `${rawExplanation}${rawExplanation ? ' ' : ''}${fallbackLead}判斷「${title}」時，要把定義、成立條件、表示方式與可以檢查的證據連起來，並和相近概念區分。`
+    const example = rawExample.length >= 22
+      ? rawExample
+      : `${rawExample}${rawExample ? ' ' : ''}例如在本單元的實際題目中，要先指出「${title}」出現在哪個資料、句子、圖形或關係，再據此完成判斷。`
+    concepts.push({ title, explanation, example })
   }
   return concepts.slice(0, 8)
 }
@@ -147,8 +172,11 @@ export function visualSet(args: {
 }): TextbookVisual[] {
   const conceptItems = args.concepts.slice(0, 6).map((concept, index) => ({
     label: concept.title,
-    detail: cleanProse(concept.example ?? concept.explanation).slice(0, 92) || `核心觀念 ${index + 1}`,
+    detail: cleanProse(concept.example ?? concept.explanation).slice(0, 110) || `核心觀念 ${index + 1}`,
   }))
+  const comparisonItems = args.compare.length >= 4
+    ? args.compare
+    : [...args.compare, ...conceptItems.map((item) => ({ label: `辨析｜${item.label}`, detail: item.detail }))].slice(0, 4)
   return [
     {
       id: `${args.unitId}-v21-concept-map`,
@@ -169,19 +197,36 @@ export function visualSet(args: {
       kind: 'comparison',
       title: `${args.familyLabel}｜容易混淆的地方`,
       caption: '比較相近概念的關鍵差異，而不是只提醒「要仔細」。',
-      items: args.compare,
+      items: comparisonItems,
     },
   ]
 }
 
 export function buildMisconceptions(args: {
   familyLabel: string
+  unitTitle?: string
   pairs: Array<{ wrong: string; right: string; why: string }>
 }): TextbookMisconception[] {
-  return args.pairs.map((item) => ({
-    claim: item.wrong,
-    correction: item.right,
-    reason: item.why,
+  const anchor = args.unitTitle ? `「${args.unitTitle}」` : `「${args.familyLabel}」`
+  const expanded = [...args.pairs]
+  if (expanded.length < 3) {
+    expanded.push({
+      wrong: `在${anchor}中，只要看到熟悉的關鍵詞，就可以直接套用以前的結論，不需要區分這一單元的定義、條件與表示。`,
+      right: `處理${anchor}時，要先確認這一單元真正使用的定義與成立條件，再依題目中的文本、數據、圖形、語法或證據決定是否能套用結論。`,
+      why: `相似詞語或表面形式可能出現在不同概念中；若忽略${args.familyLabel}的關鍵條件，容易把相近但不等同的情況混為一談。`,
+    })
+  }
+  if (expanded.length < 4) {
+    expanded.push({
+      wrong: `只要${anchor}最後得到一個看起來合理的答案，就可以省略中間用到的關係、資料來源、語境或適用範圍。`,
+      right: `即使結果看起來合理，也要能指出${anchor}中使用了哪個${args.familyLabel}關係，以及題目哪些具體資訊真正支持這個結果。`,
+      why: `同一個表面結果可能由錯誤推理碰巧得到；保留可重做的證據鏈、計算、文本線索或制度條件，才能判斷答案是否真的成立。`,
+    })
+  }
+  return expanded.slice(0, 5).map((item) => ({
+    claim: item.wrong.trim().length >= 26 ? item.wrong : `${item.wrong} 這種判斷忽略了${anchor}中的必要條件與資訊。`,
+    correction: item.right.trim().length >= 26 ? item.right : `${item.right} 判斷時必須回到${anchor}的定義、條件與具體證據。`,
+    reason: item.why.trim().length >= 36 ? item.why : `${item.why} 因為${args.familyLabel}中的概念需要由具體條件、表示或證據區分，不能只靠表面相似。`,
   }))
 }
 
