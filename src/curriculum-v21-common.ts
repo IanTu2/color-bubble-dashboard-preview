@@ -209,7 +209,7 @@ export function quickCheckSet(args: {
   return args.concepts.slice(0, 6).map((concept, index) => args.maker(
     concept,
     index,
-    `${args.unitId}-ped-v21-check-${args.familyId}-${index + 1}`,
+    `${args.unitId}-ped-v17-check-v21-${args.familyId}-${index + 1}`,
   ))
 }
 
