@@ -1,6 +1,6 @@
 import { resolveCurriculumUnit } from './curriculum-plan-v5'
 import type { ReviewedQuestion } from './curriculum-reviewed-social10'
-import { getTextbookUnitContentV18 } from './curriculum-pedagogy-v18'
+import { getTextbookUnitContentV18 as getLegacyTextbookUnitContentV18 } from './curriculum-pedagogy-v18-final'
 import { validateTextbookUnitV14, type TextbookUnitContentV14 } from './curriculum-textbook-v14'
 import { buildChineseV21 } from './curriculum-v21-chinese'
 import { buildEnglishV21 } from './curriculum-v21-english'
@@ -28,10 +28,12 @@ function buildForSubject(unitId: string, base: TextbookUnitContentV14): V21Subje
 }
 
 export function inspectTextbookUnitV21(unitId: string): V21Inspection {
-  const base = getTextbookUnitContentV18(unitId)
+  const base = getLegacyTextbookUnitContentV18(unitId)
   if (!base) {
-    const validation = validateTextbookUnitV14(null as unknown as TextbookUnitContentV14)
-    return { unit: null, validation }
+    return {
+      unit: null,
+      validation: { ready: false, failures: [`V21 base unit unavailable: ${unitId}`] } as ReturnType<typeof validateTextbookUnitV14>,
+    }
   }
   const build = buildForSubject(unitId, base)
   if (!build) return { unit: base, validation: validateTextbookUnitV14(base) }
