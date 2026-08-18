@@ -31,6 +31,14 @@ function unitFrame(subject: string, grade: number, semester: number, title: stri
   return `${grade} 年級第 ${semester} 學期「${title}」。本章焦點：${focus}`
 }
 
+function questionExplanation(subject: string, answer: string, original: string) {
+  const explanation = norm(original)
+  const answerLead = subject === 'english'
+    ? `The supported answer is “${answer}”.`
+    : `依題幹可支持的答案是「${answer}」。`
+  return `${answerLead} ${explanation}`.trim()
+}
+
 function deepenExampleExplanation(subject: string, title: string, original: string) {
   const explanation = norm(original)
   const check = subject === 'math'
@@ -54,12 +62,22 @@ export function getTextbookUnitContentV20ReviewedFinal(unitId: string): Textbook
   const questions = source.questions.map((question, index) => {
     const prompt = promptFor(context.subject, question.level, parts[index % parts.length], question.prompt)
     const questionContext = `${frame} ${norm(question.context)}`.trim()
-    if (question.kind === 'choice') return { ...question, context: questionContext, prompt }
+    if (question.kind === 'choice') {
+      const answer = norm(question.options?.[question.correctIndex])
+      return {
+        ...question,
+        context: questionContext,
+        prompt,
+        explanation: questionExplanation(context.subject, answer, question.explanation),
+      }
+    }
     const response = question as ResponseWithRubric
+    const answer = norm(response.sampleAnswer)
     return {
       ...response,
       context: questionContext,
       prompt,
+      explanation: questionExplanation(context.subject, answer, response.explanation),
       rubric: [
         `直接回答「${prompt.slice(0, 92)}${prompt.length > 92 ? '…' : ''}」。`,
         '至少指出一項題幹中的具體數字、語句、資料、觀察或計算。',
