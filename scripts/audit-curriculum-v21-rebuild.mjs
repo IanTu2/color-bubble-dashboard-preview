@@ -78,27 +78,28 @@ try {
           if (content.visuals.length < 3 || content.visuals.some((v) => v.items.length < 4)) fail(unit.id, 'visual-structure-depth', 'V21 visuals are incomplete')
           if (content.questions.some((q) => q.kind === 'choice' && q.options.some((o) => /資訊不足，不能依題目條件得到此結論（\d+）/.test(o)))) fail(unit.id, 'generic-fallback-distractor', 'generic fallback option remains')
 
+          const title = unit.title
           const titleFocus = `${unit.title} ${unit.focus}`
           if (route.subject === 'math') {
-            if (/100\s*以內/.test(titleFocus)) {
+            if (/100\s*以內/.test(title)) {
               if (inspected.familyId !== 'number') fail(unit.id, 'math-family-100', `family=${inspected.familyId}`)
               const taskText = normalize(content.workedExamples.flatMap((e) => [e.prompt, e.answer, e.explanation]).join(' '))
               const values = (taskText.match(/\d+(?:\.\d+)?/g) ?? []).map(Number).filter((value) => value < 1900)
               if (values.some((value) => value > 100)) fail(unit.id, 'math-100-range', `value > 100 found: ${Math.max(...values)}`)
             }
-            if (/因數|倍數/.test(titleFocus)) {
+            if (/因數|倍數/.test(title)) {
               if (inspected.familyId !== 'factors') fail(unit.id, 'math-family-factors', `family=${inspected.familyId}`)
               assertSignal(row, /因數|倍數|整除/, 'math-factor-signal', 'factor/divisibility')
             }
-            if (/二次方程式|二次函數/.test(titleFocus)) {
+            if (/二次方程式|二次函數/.test(title)) {
               if (inspected.familyId !== 'quadratic') fail(unit.id, 'math-family-quadratic', `family=${inspected.familyId}`)
               assertSignal(row, /x²|二次|拋物線|因式分解/, 'math-quadratic-signal', 'quadratic expression/equation/function')
             }
-            if (/三角比|三角函數/.test(titleFocus)) {
+            if (/三角比|三角函數/.test(title)) {
               if (inspected.familyId !== 'trigonometry') fail(unit.id, 'math-family-trigonometry', `family=${inspected.familyId}`)
               assertSignal(row, /sin|cos|tan|對邊|鄰邊|斜邊|三角比/, 'math-trig-signal', 'trigonometric relationship')
             }
-            if (/極限|微分|積分|導數/.test(titleFocus)) {
+            if (/極限|微分|積分|導數/.test(title)) {
               if (inspected.familyId !== 'calculus') fail(unit.id, 'math-family-calculus', `family=${inspected.familyId}`)
               assertSignal(row, /導數|微分|積分|變化率|∫|f'\(/, 'math-calculus-signal', 'calculus operation')
             }
@@ -106,67 +107,76 @@ try {
           }
 
           if (route.subject === 'english') {
-            if (/Be 動詞|基本句型/.test(titleFocus)) {
+            if (/Be 動詞|基本句型/.test(title)) {
               if (inspected.familyId !== 'be-basic') fail(unit.id, 'english-family-be', `family=${inspected.familyId}`)
               assertSignal(row, /\bam\b|\bis\b|\bare\b|be verb/i, 'english-be-signal', 'am/is/are')
             }
-            if (/現在簡單式|現在式問答|日常作息/.test(titleFocus)) {
+            if (/現在簡單式|現在式問答|日常作息/.test(title)) {
               if (inspected.familyId !== 'present-simple') fail(unit.id, 'english-family-present', `family=${inspected.familyId}`)
               assertSignal(row, /simple present|Every school day|walks|routine/i, 'english-present-signal', 'simple-present routine or form')
             }
-            if (/被動語態/.test(titleFocus)) {
+            if (/被動語態/.test(title)) {
               if (inspected.familyId !== 'passive') fail(unit.id, 'english-family-passive', `family=${inspected.familyId}`)
               assertSignal(row, /passive|were collected|past participle/i, 'english-passive-signal', 'passive structure')
             }
           }
 
           if (route.subject === 'chinese') {
-            if (/文言|古典|古文/.test(titleFocus)) {
+            const classicalTitle = /文言|古文|古典文本|古文與思想/.test(title) && !/詩|詞|曲/.test(title)
+            if (classicalTitle) {
               if (inspected.familyId !== 'classical') fail(unit.id, 'chinese-family-classical', `family=${inspected.familyId}`)
               assertSignal(row, /文言|句意|翻譯|上下文|古今/, 'chinese-classical-signal', 'classical-text interpretation')
             }
-            if (/修辭/.test(titleFocus)) {
+            if (/修辭/.test(title)) {
               if (inspected.familyId !== 'rhetoric') fail(unit.id, 'chinese-family-rhetoric', `family=${inspected.familyId}`)
               assertSignal(row, /修辭|譬喻|擬人|誇飾|表達效果/, 'chinese-rhetoric-signal', 'rhetorical device and effect')
+            }
+            if (/古典詩詞|詩詞曲|詩歌|意象/.test(title)) {
+              if (inspected.familyId !== 'poetry') fail(unit.id, 'chinese-family-poetry', `family=${inspected.familyId}`)
+              assertSignal(row, /詩|意象|情感|節奏|畫面/, 'chinese-poetry-signal', 'poetic image/form/effect')
             }
           }
 
           if (route.subject === 'science') {
-            if (/細胞/.test(titleFocus)) {
+            if (/細胞/.test(title)) {
               if (inspected.familyId !== 'cell-life') fail(unit.id, 'science-family-cell', `family=${inspected.familyId}`)
               assertSignal(row, /細胞|顯微鏡|細胞核|胞器|構造單位/, 'science-cell-signal', 'cell structure/observation')
             }
-            if (/電路|電磁|電場|電位|磁場/.test(titleFocus)) {
+            if (/電與磁|電路|電磁|電場|電位|磁場/.test(title) && !/專題|跨域/.test(title)) {
               if (inspected.familyId !== 'electricity-magnetism') fail(unit.id, 'science-family-electricity', `family=${inspected.familyId}`)
               assertSignal(row, /電流|電路|電壓|電阻|電場|磁場|電磁/, 'science-electricity-signal', 'electric/magnetic relationship')
             }
-            if (/月亮|天文|太陽系|宇宙|恆星|行星/.test(titleFocus)) {
+            if (/月亮|太空|天文|太陽系|宇宙|恆星|行星/.test(title) && !/專題/.test(title)) {
               if (inspected.familyId !== 'astronomy') fail(unit.id, 'science-family-astronomy', `family=${inspected.familyId}`)
               assertSignal(row, /月相|月球|太陽|恆星|行星|宇宙|天文/, 'science-astronomy-signal', 'astronomical observation/model')
             }
+            if (/專題|跨域/.test(title) && inspected.familyId !== 'data-project') fail(unit.id, 'science-family-project', `family=${inspected.familyId}`)
           }
 
           if (route.subject === 'social') {
-            if (/地圖|位置|空間資料|地理資訊/.test(titleFocus)) {
+            if (/地圖|位置|空間資料|地理資訊/.test(title)) {
               if (inspected.familyId !== 'map-spatial') fail(unit.id, 'social-family-map', `family=${inspected.familyId}`)
               assertSignal(row, /地圖|比例尺|位置|空間|尺度/, 'social-map-signal', 'map/scale/spatial evidence')
             }
-            if (/法律|權利|人權|法治/.test(titleFocus)) {
+            const explicitLawTitle = /法律|法治/.test(title) || (/權利|人權/.test(title) && route.pathway === 'civics' && !/民主|治理/.test(title))
+            if (explicitLawTitle) {
               if (inspected.familyId !== 'law-rights') fail(unit.id, 'social-family-law', `family=${inspected.familyId}`)
               assertSignal(row, /法律|法治|權利|程序|權益/, 'social-law-signal', 'law/rights/procedure')
             }
-            if (/史料|歷史解釋/.test(titleFocus)) {
+            if (/史料|歷史解釋/.test(title)) {
               if (inspected.familyId !== 'history-source') fail(unit.id, 'social-family-source', `family=${inspected.familyId}`)
               assertSignal(row, /史料|來源|作者|社論|統計|回憶|交叉檢證/, 'social-source-signal', 'source criticism')
             }
+            if (route.pathway === 'history' && inspected.familyId === 'law-rights') fail(unit.id, 'social-history-pathway-misclassified', 'history pathway unit must not collapse into civics law-rights merely because its focus mentions rights')
+            if (route.pathway === 'geography' && ['law-rights', 'government-democracy'].includes(inspected.familyId)) fail(unit.id, 'social-geography-pathway-misclassified', `geography pathway family=${inspected.familyId}`)
           }
         }
       }
     }
   }
 
-  stats.internalReady = Array.isArray(status.V20_INTERNAL_READY_UNITS) ? status.V20_INTERNAL_READY_UNITS.length : 0
-  stats.humanVerified = Array.isArray(status.V20_HUMAN_VERIFIED_UNITS) ? status.V20_HUMAN_VERIFIED_UNITS.length : 0
+  stats.internalReady = status.V20_INTERNAL_READY_UNITS instanceof Set ? status.V20_INTERNAL_READY_UNITS.size : 0
+  stats.humanVerified = status.V20_HUMAN_VERIFIED_UNITS instanceof Set ? status.V20_HUMAN_VERIFIED_UNITS.size : 0
 } finally {
   await server.close()
 }
