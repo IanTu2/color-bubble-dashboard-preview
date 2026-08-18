@@ -69,5 +69,5 @@ export function getTextbookUnitContentV21(unitId: string): TextbookUnitContentV1
 }
 
 export function getConceptChecksV21(unit: TextbookUnitContentV14): ReviewedQuestion[] {
-  return unit.questions.filter((question) => question.id.includes('-ped-v21-check-'))
+  return unit.questions.filter((question) => question.id.includes('-ped-v17-check-v21-'))
 }
