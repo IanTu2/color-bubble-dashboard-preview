@@ -94,7 +94,7 @@ for (const token of ['getTextbookUnitContentV17','concreteTask','mathTask','scie
 for (const token of ['getTextbookUnitContentV18','getConceptChecksV18','getTextbookUnitContentV20','resolvingV20']) {
   if (!pedagogyV18.includes(token)) failures.push(`V18/V20 learner entry missing ${token}`)
 }
-for (const token of ['inspectTextbookUnitV20','taskFor','upgradeWorkedExample','specificMisconceptionVisual','mathTask','englishTask','chineseTask','scienceTask','socialTask']) {
+for (const token of ['inspectTextbookUnitV20','taskFor','upgradeWorkedExample','misconceptionVisual','mathTask','englishTask','chineseTask','scienceTask','socialTask']) {
   if (!v20Runtime.includes(token)) failures.push(`V20 editorial runtime missing ${token}`)
 }
 for (const token of ['ConcreteNumberLine','concrete-number-line','−3','+3','CurriculumPedagogyVisualV17']) {
