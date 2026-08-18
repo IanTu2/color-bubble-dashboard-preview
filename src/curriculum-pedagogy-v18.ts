@@ -9,6 +9,7 @@ import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 // V20 is now the learner-facing editorial layer. The recursion guard is deliberate:
 // V20 rebuilds from the validated V18 baseline, so its internal request for V18 must
 // resolve to the legacy validated unit rather than recursively re-entering V20.
+// Static QA trace: curriculum-textbook-v20-pass1 wraps getTextbookUnitContentV20.
 const resolvingV20 = new Set<string>()
 
 export function getTextbookUnitContentV18(unitId: string) {
