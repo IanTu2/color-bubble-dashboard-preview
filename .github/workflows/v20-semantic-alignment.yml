@@ -24,6 +24,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Build generated CEFR lexicon
+        run: node scripts/build-cefr-lexicon.mjs
       - name: TypeScript compile
         run: npx tsc -b --pretty false
       - name: All 453 units semantic alignment
