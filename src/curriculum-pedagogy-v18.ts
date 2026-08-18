@@ -22,6 +22,10 @@ export function getTextbookUnitContentV18(unitId: string) {
   }
 }
 
+// Compatibility export: older V20 static checks and tooling can keep using the
+// getTextbookUnitContentV20 name, but it now resolves to the final editorial layer.
+export { getTextbookUnitContentV20Final as getTextbookUnitContentV20 } from './curriculum-textbook-v20-final'
+
 // Keep the historic V18 inspector available for V14–V18 regression gates.
 // V20 readiness is audited separately and never inferred from this result.
 export const inspectTextbookUnitV18 = inspectLegacyV18
