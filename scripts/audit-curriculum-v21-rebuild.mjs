@@ -150,7 +150,10 @@ try {
               if (inspected.familyId !== 'astronomy') fail(unit.id, 'science-family-astronomy', `family=${inspected.familyId}`)
               assertSignal(row, /月相|月球|太陽|恆星|行星|宇宙|天文/, 'science-astronomy-signal', 'astronomical observation/model')
             }
-            if (/專題|跨域/.test(title) && inspected.familyId !== 'data-project') fail(unit.id, 'science-family-project', `family=${inspected.familyId}`)
+            if (/專題|跨域/.test(title)) {
+              if (!['data-project', 'inquiry-measurement'].includes(inspected.familyId)) fail(unit.id, 'science-family-project', `family=${inspected.familyId}`)
+              assertSignal(row, /探究|資料|量測|變因|模型|證據|研究/, 'science-project-signal', 'inquiry/data/model evidence for cross-domain project')
+            }
           }
 
           if (route.subject === 'social') {
