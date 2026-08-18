@@ -6,28 +6,32 @@ const norm = (v) => String(v ?? '').replace(/\s+/g, ' ').trim()
 
 function expect(unit, label, required, forbidden = []) {
   if (!unit) { failures.push(`${label}: unit missing`); return }
-  const example = unit.workedExamples?.[0]
-  const check = unit.questions?.find((q) => q.id.includes('-ped-v17-check-')) ?? unit.questions?.[0]
-  const text = norm(`${example?.context} ${example?.prompt} ${example?.answer} ${example?.explanation} ${check?.context} ${check?.prompt} ${check?.kind === 'choice' ? check.options?.join(' ') : check?.sampleAnswer} ${(unit.takeaway ?? []).join(' ')} ${(unit.visuals ?? []).map((v) => `${v.title} ${v.caption} ${(v.items ?? []).map((i) => `${i.label} ${i.detail}`).join(' ')}`).join(' ')} ${(unit.misconceptions ?? []).map((m) => `${m.claim} ${m.correction} ${m.reason}`).join(' ')}`)
+  const text = norm(`${unit.overview} ${(unit.objectives ?? []).join(' ')} ${(unit.workedExamples ?? []).map((e) => `${e.context} ${e.prompt} ${e.answer} ${e.explanation}`).join(' ')} ${(unit.questions ?? []).map((q) => `${q.context} ${q.prompt} ${q.kind === 'choice' ? q.options?.join(' ') : q.sampleAnswer} ${q.explanation}`).join(' ')} ${(unit.takeaway ?? []).join(' ')}`)
   for (const pattern of required) if (!pattern.test(text)) failures.push(`${label}: required evidence missing: ${pattern}`)
   for (const pattern of forbidden) if (pattern.test(text)) failures.push(`${label}: forbidden stale task remains: ${pattern}`)
 }
 
 try {
-  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-complete.ts')
-  const get = (id) => v20.getTextbookUnitContentV20Complete(id)
+  const v20 = await server.ssrLoadModule('/src/curriculum-textbook-v20-reviewed.ts')
+  const get = (id) => v20.getTextbookUnitContentV20Reviewed(id)
 
-  expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/100 以內|100以內/, /\d+\s*-\s*\d+|拿走/], [/150\s*-\s*36/, /科學記號/])
+  expect(get('g1-math-s1-u1'), 'G1 Math 100內', [/個十/, /個一/, /100 以內/], [/150\s*-\s*36/, /科學記號/, /3 個千/])
+  expect(get('g2-math-s1-u1'), 'G2 Math 1000內', [/個百/, /個十/, /個一/], [/3 個千/, /3133/])
+  expect(get('g1-math-s1-u3'), 'G1 Math 形狀位置', [/圓形|三角形|正方形/, /右邊|上方/], [/面積是多少/])
   expect(get('g5-math-s1-u1'), 'G5 Math 因數倍數', [/最大公因數|因數|倍數/], [/份材料.*用掉/, /科學記號/])
-  expect(get('g8-math-s1-u1'), 'G8 Math 多項式', [/展開|多項式|x²/], [/份材料.*用掉/])
-  expect(get('g9-math-s1-u1'), 'G9 Math 二次方程式', [/x²/, /方程式|因式分解/, /x\s*=/, /代回|驗算/], [/4,?000.*51,?000/, /科學記號/])
-  expect(get('g11-math-a-s1-u1'), 'G11 Math A 三角', [/sin|三角/, /對邊|斜邊/], [/長方形.*面積/])
-  expect(get('g12-math-alpha-s1-u1'), 'G12 Math甲 微分', [/f′|導數|瞬時變化率|微分/], [/份材料.*用掉/])
+  expect(get('g7-math-s1-u3'), 'G7 Math 一元一次方程式', [/x/, /方程式|等量/], [/科學記號/])
+  expect(get('g7-math-s2-u2'), 'G7 Math 二元聯立', [/x\+y/, /x-y|x−y/, /\(x,y\)/], [/份資料.*剩/])
+  expect(get('g8-math-s1-u1'), 'G8 Math 多項式', [/展開/, /x²/], [/總共有多少個/])
+  expect(get('g9-math-s1-u1'), 'G9 Math 二次方程式', [/x²/, /因式分解|兩根|所有實數解/, /x\s*=/], [/科學記號/])
+  expect(get('g11-math-a-s1-u1'), 'G11 Math A 三角', [/sin/, /對邊/, /斜邊/], [/長方形.*面積/])
+  expect(get('g12-math-alpha-s1-u3'), 'G12 Math甲 積分', [/∫/, /定積分|反導/], [/瞬時變化率/])
 
   expect(get('g7-english-s1-u1'), 'G7 English Be', [/form of be|\bis\b|\bare\b/i], [/walk to school after breakfast/i])
-  expect(get('g7-social-s1-u1'), 'G7 Social 臺灣位置', [/臺灣|地圖|圖例|比例尺|海域|地形/], [/車站距離/, /人口變化.*唯一/])
-  expect(get('g7-chinese-s1-u1'), 'G7 Chinese 語文工具', [/字音|注音|字典|工具|讀音|聲調|部首/], [/第\s*\d+\s*天上台朗讀.*主動舉手/])
-  expect(get('g7-science-s1-u1'), 'G7 Science 科學方法與細胞', [/細胞|構造|細胞膜|細胞核|觀察/], [])
+  expect(get('g7-social-s1-u1'), 'G7 Social 臺灣位置', [/地圖|比例尺|圖例|方向/], [/車站距離/])
+  expect(get('g7-chinese-s1-u1'), 'G7 Chinese 語文工具', [/語境|字詞|謹慎|小心仔細/], [/主動舉手.*朗讀/])
+  expect(get('g7-science-s1-u1'), 'G7 Science 科學方法與細胞', [/細胞膜|細胞核|細胞質/, /物質進出/], [/pH=/])
+  expect(get('g12-physics-s1-u2'), 'G12 Physics 電磁學', [/電阻|電壓|歐姆|電流/], [/聲源振動頻率/])
+  expect(get('g12-physics-s2-u1'), 'G12 Physics 近代物理', [/光電子|光子|頻率|量子/], [/pH=/])
 } finally {
   await server.close()
 }
@@ -37,4 +41,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[curriculum-v20-known-mismatches] PASS: representative previously confirmed mismatch units now surface unit-targeted learner evidence in the completed V20 layer.')
+console.log('[curriculum-v20-known-mismatches] PASS: representative confirmed mismatch units now use title/focus-specific V20 reviewed tasks.')
