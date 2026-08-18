@@ -10,16 +10,16 @@ const oldGenericExample = /處理「[^」]+」的文本或表達任務時|a lear
 const rows = []
 try {
   const plan = await server.ssrLoadModule('/src/curriculum-plan-v5.ts')
-  const runtime = await server.ssrLoadModule('/src/curriculum-textbook-v20-runtime.ts')
+  const pass1 = await server.ssrLoadModule('/src/curriculum-textbook-v20-pass1.ts')
   for (let grade = 1; grade <= 12; grade += 1) {
     for (const route of plan.getCurriculumRouteOptions(grade)) {
       const track = plan.getCurriculumTrack(grade, route.subject, route.pathway)
       if (!track) continue
       for (const semester of track.semesters) {
         for (const unit of semester.units) {
-          const inspected = runtime.inspectTextbookUnitV20(unit.id)
-          if (!inspected?.unit) throw new Error(`V20 runtime missing ${unit.id}`)
-          rows.push({ grade, subject: route.subject, pathway: route.pathway ?? null, unit, content: inspected.unit })
+          const content = pass1.getTextbookUnitContentV20Pass1(unit.id)
+          if (!content) throw new Error(`V20 pass-1 learner output missing ${unit.id}`)
+          rows.push({ grade, subject: route.subject, pathway: route.pathway ?? null, unit, content })
         }
       }
     }
@@ -116,8 +116,8 @@ for (const [subject, item] of Object.entries(stats.bySubject)) {
 }
 
 // Pass 1 must materially remove the systemic V20 failures. This does NOT grant readiness.
-if (stats.questions < 6000 || stats.reusedQuestionInstances / stats.questions > 0.50) {
-  console.error('[curriculum-v20-rebuild] FAILED: cross-unit exact question reuse remains above 50%')
+if (stats.questions < 6000 || stats.reusedQuestionInstances / stats.questions > 0.25) {
+  console.error('[curriculum-v20-rebuild] FAILED: cross-unit exact learner-experience reuse remains above 25% after unit evidence binding')
   process.exit(1)
 }
 if (stats.oldGenericWorkedExamples / Math.max(1, stats.workedExamples) > 0.05) {
@@ -128,4 +128,4 @@ if (stats.genericMisconceptionVisualUnits !== 0 || stats.oldConceptBoilerplate !
   console.error('[curriculum-v20-rebuild] FAILED: old generic misconception visual or concept boilerplate still reaches learner-facing V20')
   process.exit(1)
 }
-console.log('[curriculum-v20-rebuild] PASS: systemic baseline failures materially reduced. All units remain v20-reviewing; fallbacks listed above still require subject/editorial work.')
+console.log('[curriculum-v20-rebuild] PASS: systemic baseline failures materially reduced. All units remain v20-reviewing; listed fallbacks still require subject/editorial work.')
