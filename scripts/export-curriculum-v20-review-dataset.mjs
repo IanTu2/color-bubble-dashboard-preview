@@ -6,7 +6,7 @@ const rows = []
 
 try {
   const plan = await server.ssrLoadModule('/src/curriculum-plan-v5.ts')
-  const complete = await server.ssrLoadModule('/src/curriculum-textbook-v20-complete.ts')
+  const published = await server.ssrLoadModule('/src/curriculum-textbook-v20-published.ts')
   const reviewed = await server.ssrLoadModule('/src/curriculum-reviewed-content.ts')
   const registry = await server.ssrLoadModule('/src/curriculum-audit-registry.ts')
 
@@ -17,7 +17,7 @@ try {
       for (const semester of track.semesters) {
         for (let unitIndex = 0; unitIndex < semester.units.length; unitIndex += 1) {
           const unit = semester.units[unitIndex]
-          const content = complete.getTextbookUnitContentV20Complete(unit.id)
+          const content = published.getTextbookUnitContentV20Published(unit.id)
           const strict = Boolean(reviewed.getStrictReviewedUnitContent(unit.id))
           const audit = registry.getUnitAuditSnapshot({ grade, subject: route.subject, pathway: route.pathway, unitId: unit.id, strictReviewed: strict })
           rows.push({
@@ -45,5 +45,5 @@ if (rows.length !== 453) {
   console.error(`[v20-export] expected 453 rows, got ${rows.length}`)
   process.exit(1)
 }
-await writeFile('v20-review-export.json', JSON.stringify({ version: 'v20-complete-review-export-2026-08-18', rows }, null, 2), 'utf8')
-console.log(`[v20-export] wrote ${rows.length} learner-facing V20 completed unit records to v20-review-export.json`)
+await writeFile('v20-review-export.json', JSON.stringify({ version: 'v20-published-review-export-2026-08-18', rows }, null, 2), 'utf8')
+console.log(`[v20-export] wrote ${rows.length} publication-clean V20 learner unit records to v20-review-export.json`)
