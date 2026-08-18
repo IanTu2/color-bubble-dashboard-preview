@@ -27,22 +27,10 @@ function evidenceFrame(subject: string, unitTitle: string, focus: string, concep
 
 function bindQuestionToUnit(question: ReviewedQuestion, frame: string, conceptTitle: string): ReviewedQuestion {
   const context = `${frame} ${String(question.context ?? '').trim()}`.trim()
-  if (question.kind === 'choice') {
-    return {
-      ...question,
-      context,
-      explanation: `${question.explanation} 本題在 V20 中只作為「${conceptTitle}」的學習證據，不可跨單元挪作另一個概念的替代題。`,
-      optionFeedback: question.optionFeedback?.map((feedback) => `${feedback} 請再核對「${conceptTitle}」的條件。`),
-    }
-  }
   return {
     ...question,
     context,
-    explanation: `${question.explanation} 本題在 V20 中只作為「${conceptTitle}」的學習證據，不可跨單元挪用。`,
-    rubric: [
-      ...(question.rubric ?? []),
-      `答案必須明確連回「${conceptTitle}」而不是只給泛用解題策略。`,
-    ],
+    explanation: `${question.explanation} 本題在 V20 中只作為「${conceptTitle}」的學習證據，不可跨單元挪作另一個概念的替代題。`,
   }
 }
 
