@@ -3,7 +3,7 @@ import {
   getTextbookUnitContentV18 as getLegacyV18,
   getConceptChecksV18 as getLegacyConceptChecksV18,
 } from './curriculum-pedagogy-v18-final'
-import { getTextbookUnitContentV20 } from './curriculum-textbook-v20-runtime'
+import { getCachedTextbookUnitContentV20Pass1 } from './curriculum-textbook-v20-pass1'
 import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 
 // V20 is now the learner-facing editorial layer. The recursion guard is deliberate:
@@ -15,7 +15,7 @@ export function getTextbookUnitContentV18(unitId: string) {
   if (resolvingV20.has(unitId)) return getLegacyV18(unitId)
   resolvingV20.add(unitId)
   try {
-    return getTextbookUnitContentV20(unitId)
+    return getCachedTextbookUnitContentV20Pass1(unitId)
   } finally {
     resolvingV20.delete(unitId)
   }
