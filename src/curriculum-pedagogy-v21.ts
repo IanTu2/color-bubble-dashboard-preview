@@ -54,9 +54,10 @@ function normalizeConcepts(context: V21UnitContext, familyLabel: string, build: 
 }
 
 function normalizeWorkedExample(context: V21UnitContext, familyLabel: string, example: ReviewedWorkedExample, index: number): ReviewedWorkedExample {
-  const contextText = example.context.trim().length >= 25
+  const unitAnchor = `單元「${context.unit.title}」；學習重點：${cleanProse(context.unit.focus)}。`
+  const contextText = `${unitAnchor} ${example.context.trim().length >= 25
     ? example.context.trim()
-    : `${example.context.trim()} 這個情境用來直接檢查「${context.unit.title}」中的${familyLabel}關係與必要條件。`
+    : `${example.context.trim()} 這個情境用來直接檢查本單元中的${familyLabel}關係與必要條件。`}`.trim()
   const prompt = example.prompt.trim().length >= 18
     ? example.prompt.trim()
     : `${example.prompt.trim()} 請依題目提供的${familyLabel}資料完成判斷並說明理由。`
@@ -93,11 +94,12 @@ function sanitizeLegacyMetaText(value: string) {
 
 function evidenceContext(context: V21UnitContext, value: string | undefined) {
   const raw = cleanProse(value ?? '')
-  if (context.subject === 'chinese') return `文本／句子資料：${raw || `本題取材自「${context.unit.title}」的語文任務。`}`
-  if (context.subject === 'english') return `句子／語料：${raw || `This item uses language from ${context.unit.title}.`}`
-  if (context.subject === 'science') return `觀察／量測資料：${raw || `本題提供「${context.unit.title}」可檢查的現象與資料。`}`
-  if (context.subject === 'social') return `社會資料／案例：${raw || `本題提供「${context.unit.title}」的史料、地圖、制度或社會案例。`}`
-  return raw || undefined
+  const anchor = `單元「${context.unit.title}」｜學習重點：${cleanProse(context.unit.focus)}。`
+  if (context.subject === 'chinese') return `${anchor} 文本／句子資料：${raw || '本題提供可直接引用的語文字詞與句子。'}`
+  if (context.subject === 'english') return `${anchor} Sentence / language evidence: ${raw || `This item provides language evidence for ${context.unit.title}.`}`
+  if (context.subject === 'science') return `${anchor} 觀察／量測資料：${raw || '本題提供可檢查的現象、數值或模型條件。'}`
+  if (context.subject === 'social') return `${anchor} 社會資料／案例：${raw || '本題提供史料、地圖、制度文本或社會資料。'}`
+  return `${anchor} ${raw}`.trim()
 }
 
 function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, concepts: ReviewedConcept[], questions: ReviewedQuestion[]) {
