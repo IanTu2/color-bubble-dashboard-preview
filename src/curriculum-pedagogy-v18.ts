@@ -3,27 +3,26 @@ import {
   getTextbookUnitContentV18 as getLegacyV18,
   getConceptChecksV18 as getLegacyConceptChecksV18,
 } from './curriculum-pedagogy-v18-final'
-import { getCachedTextbookUnitContentV20Complete } from './curriculum-textbook-v20-complete'
+import { getCachedTextbookUnitContentV20Published } from './curriculum-textbook-v20-published'
 import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 
-// V20 is now the learner-facing completed editorial layer. The recursion guard is deliberate:
-// V20 rebuilds from the validated V18 baseline, so its internal request for V18 must resolve
-// to the legacy validated unit rather than recursively re-entering V20.
+// V20 is now the learner-facing publication-clean editorial layer. The recursion guard
+// keeps the V20 rebuild anchored to the validated legacy V18 source without re-entering itself.
 const resolvingV20 = new Set<string>()
 
 export function getTextbookUnitContentV18(unitId: string) {
   if (resolvingV20.has(unitId)) return getLegacyV18(unitId)
   resolvingV20.add(unitId)
   try {
-    return getCachedTextbookUnitContentV20Complete(unitId)
+    return getCachedTextbookUnitContentV20Published(unitId)
   } finally {
     resolvingV20.delete(unitId)
   }
 }
 
-// Compatibility export: older V20 tooling keeps this name while receiving the exact
-// completed content used by the active learner reader.
-export { getTextbookUnitContentV20Complete as getTextbookUnitContentV20 } from './curriculum-textbook-v20-complete'
+// Compatibility export: V20 tooling receives the exact publication-clean content used
+// by the active learner reader.
+export { getTextbookUnitContentV20Published as getTextbookUnitContentV20 } from './curriculum-textbook-v20-published'
 
 export const inspectTextbookUnitV18 = inspectLegacyV18
 
