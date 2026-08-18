@@ -16,6 +16,8 @@ export type V21Inspection = {
   familyLabel?: string
 }
 
+type ChoiceEnhancement = { optionFeedback?: string[] }
+
 const V21_FAMILY_HINT_OVERRIDES: Record<string, string> = {
   'g4-science-s2-u2': '月亮 天文 月相',
   'g5-science-s2-u3': '太陽系 天文 宇宙',
@@ -73,7 +75,6 @@ function restoreBuildUnitIdentity(build: V21SubjectBuild, original: V21UnitConte
           prompt: restore(question.prompt),
           options: question.options.map(restore),
           explanation: restore(question.explanation),
-          optionFeedback: question.optionFeedback?.map(restore),
         }
       : {
           ...question,
@@ -81,7 +82,6 @@ function restoreBuildUnitIdentity(build: V21SubjectBuild, original: V21UnitConte
           prompt: restore(question.prompt),
           sampleAnswer: restore(question.sampleAnswer),
           explanation: restore(question.explanation),
-          rubric: question.rubric?.map(restore),
         }),
     takeaway: build.takeaway.map(restore),
   }
@@ -245,13 +245,14 @@ function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, 
         options.push(GENERIC_FILLER.test(raw) ? diagnosticDistractor(context, correct, optionIndex, [...options, ...question.options]) : raw)
       }
       const correctIndex = options.findIndex((option) => option === correct)
+      const enhancement = question as ReviewedQuestion & ChoiceEnhancement
       return {
         ...question,
         context: normalizedContext,
         prompt,
         options,
         correctIndex: correctIndex >= 0 ? correctIndex : question.correctIndex,
-        optionFeedback: (question.optionFeedback ?? []).map((item) => sanitizeLegacyMetaText(item)),
+        optionFeedback: (enhancement.optionFeedback ?? []).map((item: string) => sanitizeLegacyMetaText(item)),
       } as ReviewedQuestion
     }
     return { ...question, context: normalizedContext, prompt, sampleAnswer: sanitizeLegacyMetaText(question.sampleAnswer) } as ReviewedQuestion
