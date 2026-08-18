@@ -1,4 +1,4 @@
-import { getTextbookUnitContentV20Reviewed } from './curriculum-textbook-v20-reviewed'
+import { getTextbookUnitContentV20Semantic } from './curriculum-textbook-v20-semantic'
 import { resolveCurriculumUnit } from './curriculum-plan-v5'
 import type { ReviewedQuestion } from './curriculum-reviewed-social10'
 import type { TextbookUnitContentV20Final } from './curriculum-textbook-v20-final'
@@ -54,7 +54,10 @@ function deepenExampleExplanation(subject: string, title: string, original: stri
 }
 
 export function getTextbookUnitContentV20ReviewedFinal(unitId: string): TextbookUnitContentV20Final | null {
-  const source = getTextbookUnitContentV20Reviewed(unitId)
+  // Final learner output must inherit the subject/unit-specific semantic task layer.
+  // The previous chain read directly from V20Reviewed, whose parallel task generator
+  // could overwrite the more complete semantic families and create unit mismatches.
+  const source = getTextbookUnitContentV20Semantic(unitId)
   const context = resolveCurriculumUnit(unitId)
   if (!source || !context) return null
   const parts = focusParts(context.unit.title, context.unit.focus)
