@@ -79,23 +79,59 @@ function normalizeWorkedExample(context: V21UnitContext, familyLabel: string, ex
   }
 }
 
+function sanitizeLegacyMetaText(value: string) {
+  return String(value ?? '')
+    .replace(/哪個做法最/g, '根據上述資料，哪一項處理方式最')
+    .replace(/哪一個做法最可靠/g, '根據題目證據，哪一項判斷最有依據')
+    .replace(/最能正確使用/g, '最符合')
+    .replace(/先確認量、單位與限制/g, '核對題目中的數量、單位與限制')
+    .replace(/題目提供一組具體/g, '題目中的')
+    .replace(/直接搬用/g, '未檢查條件就套用')
+    .replace(/算出一個數字就停止/g, '得到數值後不再檢查單位與條件')
+    .replace(/看到([^。！？!?]{0,36})就立刻套/g, '只依$1的表面特徵直接套用')
+}
+
+function evidenceContext(context: V21UnitContext, value: string | undefined) {
+  const raw = cleanProse(value ?? '')
+  if (context.subject === 'chinese') return `文本／句子資料：${raw || `本題取材自「${context.unit.title}」的語文任務。`}`
+  if (context.subject === 'english') return `句子／語料：${raw || `This item uses language from ${context.unit.title}.`}`
+  if (context.subject === 'science') return `觀察／量測資料：${raw || `本題提供「${context.unit.title}」可檢查的現象與資料。`}`
+  if (context.subject === 'social') return `社會資料／案例：${raw || `本題提供「${context.unit.title}」的史料、地圖、制度或社會案例。`}`
+  return raw || undefined
+}
+
 function normalizeQuestionPrompts(context: V21UnitContext, familyLabel: string, concepts: ReviewedConcept[], questions: ReviewedQuestion[]) {
   const dimensions = ['定義', '成立條件', '表示方式', '資料證據', '答案限制']
   const seen = new Set<string>()
   return questions.map((question, index) => {
     const concept = concepts[index % Math.max(1, concepts.length)]
     const dimension = dimensions[Math.floor(index / Math.max(1, concepts.length)) % dimensions.length]
-    let prompt = question.prompt.trim()
+    const normalizedContext = evidenceContext(context, question.context)
+    let prompt = sanitizeLegacyMetaText(question.prompt.trim())
     const key = () => prompt.toLowerCase().replace(/[\s，。！？；：,.!?;:'"「」『』（）()\-—]/g, '')
     if (!prompt || seen.has(key())) {
-      const contextCue = cleanProse(question.context ?? '').slice(0, 72)
+      const contextCue = cleanProse(normalizedContext ?? '').slice(0, 72)
       prompt = `${prompt || '請完成判斷。'} 本題請特別連結「${concept?.title ?? context.unit.title}」的${dimension}${contextCue ? `，並以「${contextCue}」中的資訊檢查` : ''}。`
     }
     if (seen.has(key())) {
       prompt = `${prompt} 同時說明這個判斷在「${context.unit.title}」中如何符合${familyLabel}的${dimensions[(index + 2) % dimensions.length]}。`
     }
     seen.add(key())
-    return { ...question, prompt } as ReviewedQuestion
+    if (question.kind === 'choice') {
+      return {
+        ...question,
+        context: normalizedContext,
+        prompt,
+        options: question.options.map((option) => sanitizeLegacyMetaText(option)),
+        optionFeedback: (question.optionFeedback ?? []).map((item) => sanitizeLegacyMetaText(item)),
+      } as ReviewedQuestion
+    }
+    return {
+      ...question,
+      context: normalizedContext,
+      prompt,
+      sampleAnswer: sanitizeLegacyMetaText(question.sampleAnswer),
+    } as ReviewedQuestion
   })
 }
 
