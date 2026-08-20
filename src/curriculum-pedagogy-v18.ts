@@ -1,14 +1,30 @@
-export {
-  inspectTextbookUnitV18,
-  getTextbookUnitContentV18,
-  getConceptChecksV18,
+import {
+  inspectTextbookUnitV18 as inspectLegacyV18,
+  getTextbookUnitContentV18 as getLegacyV18,
+  getConceptChecksV18 as getLegacyConceptChecksV18,
 } from './curriculum-pedagogy-v18-final'
-export { isMetaLearnerPromptV18 } from './curriculum-pedagogy-v18-base'
+import { getCachedTextbookUnitContentV20ReviewedFinal } from './curriculum-textbook-v20-reviewed-final'
+import type { TextbookUnitContentV14 } from './curriculum-textbook-v14'
 
-/*
- * Static QA trace: the concrete core intentionally lives in
- * curriculum-pedagogy-v18-base.ts and contains getTextbookUnitContentV17,
- * concreteTask, mathTask, scienceTask, socialTask, englishTask, chineseTask,
- * and validateTextbookUnitV14. The public V18 entry above always routes its
- * learner output through the final V14 validator before returning content.
- */
+// V20 is now the learner-facing final reviewed layer. The recursion guard keeps
+// the rebuild anchored to the validated legacy V18 source without re-entering itself.
+const resolvingV20 = new Set<string>()
+
+export function getTextbookUnitContentV18(unitId: string) {
+  if (resolvingV20.has(unitId)) return getLegacyV18(unitId)
+  resolvingV20.add(unitId)
+  try {
+    return getCachedTextbookUnitContentV20ReviewedFinal(unitId)
+  } finally {
+    resolvingV20.delete(unitId)
+  }
+}
+
+export { getTextbookUnitContentV20ReviewedFinal as getTextbookUnitContentV20 } from './curriculum-textbook-v20-reviewed-final'
+export const inspectTextbookUnitV18 = inspectLegacyV18
+
+export function getConceptChecksV18(unit: TextbookUnitContentV14) {
+  return getLegacyConceptChecksV18(unit)
+}
+
+export { isMetaLearnerPromptV18 } from './curriculum-pedagogy-v18-base'

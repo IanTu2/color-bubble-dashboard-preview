@@ -49,7 +49,7 @@ if (!v8.includes('useLayoutEffect') || v8.includes('requestAnimationFrame')) fai
 if (!v8.includes('observer?.disconnect()')) failures.push('V8 observer mutation guard regressed')
 if (!stabilityCss.includes('aspect-ratio: 4 / 3')) failures.push('V8 media aspect-ratio reservation missing')
 
-// V19 is the active visual-language layer. V18 remains the learner-content overlay; V17 pedagogy and V14 structure remain intact.
+// V20 is the learner-facing editorial layer. V19 owns subject visual language; V18 remains the validated content baseline.
 const activeExport = read('src/components/CurriculumCourseApp.tsx')
 const v14 = read('src/components/CurriculumCourseAppV14.tsx')
 const activeReader = read('src/components/CurriculumCourseAppV17.tsx')
@@ -59,6 +59,8 @@ const v19Css = read('src/curriculum-course-v19.css')
 const textbookV14 = read('src/curriculum-textbook-v14.ts')
 const pedagogyV17 = read('src/curriculum-pedagogy-v17.ts')
 const pedagogyV18 = read('src/curriculum-pedagogy-v18.ts')
+const pedagogyV18Base = read('src/curriculum-pedagogy-v18-base.ts')
+const v20Runtime = read('src/curriculum-textbook-v20-runtime.ts')
 const pedagogyVisualV17 = read('src/components/CurriculumPedagogyVisualV17.tsx')
 const pedagogyVisualV18 = read('src/components/CurriculumPedagogyVisualV18.tsx')
 const pedagogyVisualV19 = read('src/components/CurriculumSubjectVisualV19.tsx')
@@ -66,7 +68,7 @@ const uxV18Css = read('src/user-experience-audit-v18.css')
 if (!activeExport.includes("from './CurriculumCourseAppV17'")) failures.push('active curriculum export must keep the stable reader component entry')
 if (!activeExport.includes("-user-audit-v18`")) failures.push('active reader route key must preserve V18 learner-content remount semantics')
 for (const token of ['getCurriculumCourseBundleV13','getTextbookUnitContentV18','getConceptChecksV18','quickCheck','renderQuestion(page.quickCheck)','CurriculumPedagogyVisualV19','CurriculumLearningVisualV19','questionGroups','unitContent.objectives','unitContent.misconceptions','unitContent.visuals','unitContent.workedExamples','unitContent.questions','optionFeedback','mediaAssetId','audioText','rubric','REPORT_OPTIONS']) {
-  if (!activeReader.includes(token)) failures.push(`active V19/V18 reader missing ${token}`)
+  if (!activeReader.includes(token)) failures.push(`active V19/V20 reader missing ${token}`)
 }
 for (const forbidden of ['MutationObserver','requestAnimationFrame','getUnitAuditSnapshot','getTrackPolicy','品質層級']) {
   if (activeReader.includes(forbidden)) failures.push(`active reader contains forbidden internal/DOM token ${forbidden}`)
@@ -86,8 +88,14 @@ for (const token of ['CoordinateDiagram','GeometryDiagram','NumberLineDiagram','
 for (const token of ['buildPedagogyQuestions','upgradeExamples','subjectSteps','-ped-v17-check-','validateTextbookUnitV14','getTextbookUnitContentV17','getConceptChecksV17']) {
   if (!pedagogyV17.includes(token)) failures.push(`V17 pedagogy content layer missing ${token}`)
 }
-for (const token of ['getTextbookUnitContentV17','concreteTask','mathTask','scienceTask','socialTask','englishTask','chineseTask','getTextbookUnitContentV18','getConceptChecksV18','validateTextbookUnitV14']) {
-  if (!pedagogyV18.includes(token)) failures.push(`V18 concrete learner layer missing ${token}`)
+for (const token of ['getTextbookUnitContentV17','concreteTask','mathTask','scienceTask','socialTask','englishTask','chineseTask','validateTextbookUnitV14']) {
+  if (!pedagogyV18Base.includes(token)) failures.push(`V18 concrete core missing ${token}`)
+}
+for (const token of ['getTextbookUnitContentV18','getConceptChecksV18','getTextbookUnitContentV20','resolvingV20']) {
+  if (!pedagogyV18.includes(token)) failures.push(`V18/V20 learner entry missing ${token}`)
+}
+for (const token of ['inspectTextbookUnitV20','taskFor','upgradeWorkedExample','misconceptionVisual','mathTask','englishTask','chineseTask','scienceTask','socialTask']) {
+  if (!v20Runtime.includes(token)) failures.push(`V20 editorial runtime missing ${token}`)
 }
 for (const token of ['ConcreteNumberLine','concrete-number-line','−3','+3','CurriculumPedagogyVisualV17']) {
   if (!pedagogyVisualV18.includes(token)) failures.push(`V18 learner visual layer missing ${token}`)
@@ -144,4 +152,4 @@ if (failures.length) {
   process.exit(1)
 }
 
-console.log('[curriculum-qa] V19 subject visual layer + V18 learner overlay + V17 pedagogy base + V14 structural textbook + V13 route structure passed')
+console.log('[curriculum-qa] V20 learner editorial runtime + V19 subject visual layer + V18 concrete core + V17 pedagogy base + V14 structural textbook + V13 route structure passed')

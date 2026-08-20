@@ -1,0 +1,38 @@
+name: Validate V20 Semantic Alignment
+
+on:
+  pull_request:
+    paths:
+      - 'src/curriculum-**'
+      - 'scripts/audit-curriculum-v20-**'
+      - '.github/workflows/v20-semantic-alignment.yml'
+  push:
+    branches:
+      - feat/v20-content-rebuild-pass1
+    paths:
+      - 'src/curriculum-**'
+      - 'scripts/audit-curriculum-v20-**'
+      - '.github/workflows/v20-semantic-alignment.yml'
+
+jobs:
+  semantic-alignment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Build generated CEFR lexicon
+        run: node scripts/build-cefr-lexicon.mjs
+      - name: TypeScript compile
+        run: npx tsc -b --pretty false
+      - name: All 453 units semantic alignment
+        run: node scripts/audit-curriculum-v20-semantic-alignment.mjs
+      - name: Known mismatch regression
+        run: node scripts/audit-curriculum-v20-known-mismatches.mjs
+      - name: Final learner-output gate
+        run: node scripts/audit-curriculum-v20-reviewed-output.mjs
+      - name: Blind answer consistency
+        run: node scripts/audit-curriculum-v20-answer-consistency.mjs
