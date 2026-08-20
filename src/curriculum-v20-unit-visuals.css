@@ -1,0 +1,41 @@
+.curriculum-v20-diagram-frame {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.curriculum-v20-diagram-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 4px;
+}
+
+.curriculum-v20-diagram-title strong {
+  overflow: hidden;
+  color: var(--text, #20304a);
+  font-size: .78rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.curriculum-v20-diagram-title span {
+  color: var(--muted, #64748b);
+  font-size: .64rem;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .curriculum-v20-diagram-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .curriculum-v20-diagram-title strong {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
