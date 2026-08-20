@@ -1,6 +1,7 @@
 import type { CurriculumSubjectId } from '../curriculum-plan-v5'
 import type { TextbookVisual } from '../curriculum-textbook-v14'
 import { CurriculumPedagogyVisualV17 } from './CurriculumPedagogyVisualV17'
+import '../curriculum-v20-unit-visuals.css'
 
 type Props = {
   subject: CurriculumSubjectId
@@ -44,13 +45,19 @@ function ConcreteNumberLine({ visual }: { visual: TextbookVisual }) {
   )
 }
 
+function LabeledDiagram({ props, children }: { props: Props; children: React.ReactNode }) {
+  return (
+    <div className="curriculum-v20-diagram-frame" data-v20-diagram-title={props.unitTitle}>
+      <div className="curriculum-v20-diagram-title"><strong>{props.unitTitle}</strong><span>{props.visual.title}</span></div>
+      {children}
+    </div>
+  )
+}
+
 export function CurriculumPedagogyVisualV18(props: Props) {
   const text = `${props.unitTitle} ${props.focus} ${props.visual.title} ${props.visual.items.map((item) => `${item.label} ${item.detail}`).join(' ')}`
-  // This diagram explicitly contains negative values (-5…5), so it is only valid
-  // for lessons that actually teach signed numbers. A generic mention of 數線 or
-  // 整數 must not make early-grade place-value lessons display negative numbers.
-  if (props.subject === 'math' && /負數|正負|相反數|絕對值|有向數/.test(text)) {
-    return <ConcreteNumberLine visual={props.visual} />
-  }
-  return <CurriculumPedagogyVisualV17 {...props} />
+  const diagram = props.subject === 'math' && /負數|正負|相反數|絕對值|有向數/.test(text)
+    ? <ConcreteNumberLine visual={props.visual} />
+    : <CurriculumPedagogyVisualV17 {...props} />
+  return <LabeledDiagram props={props}>{diagram}</LabeledDiagram>
 }
