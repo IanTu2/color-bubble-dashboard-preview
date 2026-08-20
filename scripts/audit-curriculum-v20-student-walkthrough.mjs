@@ -55,9 +55,16 @@ try {
     }
   }
 
-  const css = `${await readFile('src/curriculum-course-v19.css', 'utf8')}\n${await readFile('src/curriculum-course-v19-fixes.css', 'utf8')}`
+  // Responsive behavior is composed across the V19 course styles and the final V18
+  // user-experience overrides, which are loaded after the course layer. Check the
+  // actual stylesheet set instead of requiring every guard to live in one V19 file.
+  const css = [
+    await readFile('src/curriculum-course-v19.css', 'utf8'),
+    await readFile('src/curriculum-course-v19-fixes.css', 'utf8'),
+    await readFile('src/user-experience-audit-v18.css', 'utf8'),
+  ].join('\n')
   if (!/@media\s*\(/.test(css)) failures.push('responsive CSS: no media-query coverage')
-  if (!/min-width:\s*0/.test(css)) failures.push('responsive CSS: missing min-width:0 overflow protection')
+  if (!/min-width:\s*0\s*!important|min-width:\s*0\s*;/.test(css)) failures.push('responsive CSS: missing min-width:0 overflow protection in loaded course/UX styles')
   if (!/grid-template-columns:\s*46px\s+minmax\(0,\s*1fr\)\s+46px/.test(css)) failures.push('responsive CSS: English dialogue three-column regression protection missing')
 } finally {
   await server.close()
