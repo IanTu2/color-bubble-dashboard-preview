@@ -4,7 +4,8 @@ const norm=(v)=>String(v??'').replace(/\s+/g,' ').trim()
 const server=await createServer({logLevel:'error',server:{middlewareMode:true},appType:'custom'})
 const failures=[];let mathChecked=0,nonMathChecked=0;const correctPositions=[0,0,0,0]
 const answerOf=(q)=>q.kind==='choice'?norm(q.options?.[q.correctIndex]):norm(q.sampleAnswer)
-const has=(answer,expected)=>norm(answer).includes(norm(expected))
+const comparable=(v)=>norm(v).replace(/,/g,'')
+const has=(answer,expected)=>comparable(answer).includes(comparable(expected))
 const num=(v)=>Number(String(v).replace(/,/g,''))
 const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a)
 const canonicalFactors=(v)=>{const m=norm(v).match(/(\(x[+-]\d+\))(\(x[+-]\d+\))/);return m?[m[1],m[2]].sort().join(''):null}
@@ -79,8 +80,10 @@ function expectedMath(title,q){
   if((m=c.match(/y 與 x 成反比，且 xy=(\d+)/))){const target=+(p.match(/若 x=(\d+)/)||[])[1];return String(+m[1]/target)}
   if((m=c.match(/不等式 x\+(\d+)<(\d+)/)))return `x < ${+m[2]-+m[1]}`
   if((m=c.match(/已排序資料：([\d、.]+)/))){const v=m[1].split('、').map(Number);return String(v[Math.floor(v.length/2)])}
-  if((m=c.match(/資料：([\d、.]+)。/))&&/眾數/.test(p)){const v=m[1].split('、').map(Number),counts=new Map();for(const x of v)counts.set(x,(counts.get(x)||0)+1);return String([...counts].sort((a,b)=>b[1]-a[1])[0][0])}
+  if((m=c.match(/資料：([\d、.]+)。/))&&/中位數/.test(p)){const v=m[1].split('、').map(Number).sort((x,y)=>x-y);return String(v[Math.floor(v.length/2)])}
+  if((m=c.match(/資料：([\d、.]+)。/))&&/眾數/.test(p)){const v=m[1].split('、').map(Number),counts=new Map();for(const x of v)counts.set(x,(counts.get(x)||0)+1);return String([...counts].sort((x,y)=>y[1]-x[1])[0][0])}
   if((m=c.match(/資料：([\d、.]+)。/))&&/平均數/.test(p)){const v=m[1].split('、').map(Number);return String(v.reduce((x,y)=>x+y,0)/v.length)}
+  if(/兩組資料平均數相同，但甲組數值集中、乙組數值分散/.test(c))return '乙組的離散程度較大'
   if((m=c.match(/展開 \(x\+(\d+)\)\(x\+(\d+)\)/)))return `x² + ${+m[1]+ +m[2]}x + ${+m[1]*+m[2]}`
   if((m=c.match(/兩股長 (\d+) 與 (\d+)/)))return String(Math.sqrt((+m[1])**2+(+m[2])**2))
   if((m=c.match(/因式分解 x²\+(\d+)x\+(\d+)/))){const sum=+m[1],prod=+m[2];for(let x=1;x<=prod;x++)if(prod%x===0&&x+prod/x===sum)return `(x+${x})(x+${prod/x})`}
@@ -100,7 +103,11 @@ function expectedMath(title,q){
   if(/對邊 3、鄰邊 4、斜邊 5/.test(c))return '3/5'
   if(/角度 180° 對應半圓/.test(c))return 'π'
   if(/函數 y=sin x/.test(c))return '2π'
-  if((m=c.match(/向量 a=\((\d+),(\d+)\)，b=\((\d+),(\d+)\)/))){return /內積/.test(p)?String(+m[1]*+m[3]+ +m[2]*+m[4]):`(${+m[1]+ +m[3]},${+m[2]+ +m[4]})`}
+  if((m=c.match(/向量 a=\((\d+),(\d+)\)，b=\((\d+),(\d+)\)/))){
+    if(/a\+b 等於多少/.test(p))return `(${+m[1]+ +m[3]},${+m[2]+ +m[4]})`
+    if(/內積 a·b 是多少/.test(p))return String(+m[1]*+m[3]+ +m[2]*+m[4])
+    return null
+  }
   if((m=c.match(/空間向量 v=\((\d+),(\d+),(\d+)\)/)))return String((+m[1])**2+(+m[2])**2+(+m[3])**2)
   if((m=c.match(/矩陣 A=\[\[(\d+),(\d+)\],\[(\d+),(\d+)\]\]，向量 x=\[1,2\]\^T/)))return String(+m[1]+2*+m[2])
   if((m=c.match(/矩陣 A=\[\[(\d+),(\d+)\],\[(\d+),(\d+)\]\]，B=\[\[1,0\],\[0,1\]\]/)))return `[[${m[1]},${m[2]}],[${m[3]},${m[4]}]]`
