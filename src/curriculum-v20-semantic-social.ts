@@ -4,28 +4,31 @@ const seed = (unitId: string, index: number, suffix = '') => `${unitId}:${index}
 const gradeOf = (unitId: string) => Number(unitId.match(/^g(\d+)/)?.[1] ?? 0)
 
 function geographyTask(unitId: string, title: string, focus: string, index: number): V20SemanticTask {
-  const grade = gradeOf(unitId), s=seed(unitId,index)
+  const grade = gradeOf(unitId), s = seed(unitId, index)
   if (/臺灣環境|臺灣位置|地形|氣候|水文|災害/.test(`${title} ${focus}`)) {
-    const cases=[
+    const cases = [
       taskV20('臺灣地圖標有北回歸線、中央山脈、主要河川與鄰近海域。','開始判讀臺灣位置與環境前，哪個做法最重要？','先確認方向、圖例、比例尺與資料時間',['只看地圖顏色深淺就下結論','忽略比例尺直接量真實距離','把一張地圖當成所有年代都相同'],'地圖符號與尺度決定能做哪些空間判讀；資料時間則避免跨年代誤比。'),
       taskV20('某地位於臺灣西部平原，海拔低、人口與交通較集中；另一地位於中央山脈高地。','哪個比較是資料直接支持的？','兩地地形與人類活動條件不同',['高地一定完全沒有人居住','平原一定不會發生災害','海拔是人口分布唯一原因'],'地形與人口交通可能相關，但不能從單一條件推成唯一因果。'),
       taskV20('颱風豪雨後，陡坡地區發生崩塌；平原低窪處出現淹水。','哪個判斷較合理？','不同地形條件會形成不同災害風險',['所有災害都只由同一地形造成','山區只會淹水而不會崩塌','平原一定永遠安全'],'災害風險要把降雨與坡度、地勢、土地利用等條件一起分析。'),
-    ];return cases[index%cases.length]
+    ]
+    return cases[index % cases.length]
   }
   if (/人口|產業|聚落|都市/.test(`${title} ${focus}`)) {
-    const a=intV20(s,35,55),b=intV20(seed(unitId,index,'b'),a+5,75)
-    const cases=[
+    const a = intV20(s,35,55), b = intV20(seed(unitId,index,'b'),a+5,75)
+    const cases = [
       taskV20(`同一年度資料顯示甲區都市人口比例 ${a}%，乙區 ${b}%。`,'只依這組數據，哪個敘述可直接成立？',`乙區都市人口比例比甲區高 ${b-a} 個百分點`,['乙區一定比較富裕','甲區所有居民都住農村','兩區差異一定只有一個原因'],`數據直接支持比例差 ${b-a} 個百分點，但不能單靠比例推出財富或單一因果。`),
       taskV20('某都市捷運站周邊商業密度較高，但外圍住宅區人口夜間較集中。','哪個概念最有助解釋這種分布？','都市土地使用與活動功能具有空間差異',['所有都市空間用途完全相同','商業密度等於總人口','只要有捷運就能解釋所有城市問題'],'都市不同功能會形成不同時段、人口與產業分布。'),
       taskV20('農業區新設加工廠後，就業與貨運增加，但也出現用水與交通壓力。','哪個分析較完整？','同時評估產業收益、就業、資源需求與環境成本',['只看工廠產值','只看道路變多就判定一定更好','產業發展不需要考慮資源'],'區域發展需要比較多面向效益與代價。'),
-    ];return cases[index%cases.length]
+    ]
+    return cases[index % cases.length]
   }
   if (/中國與東亞|亞洲區域|世界區域|區域分析|全球議題|區域研究/.test(`${title} ${focus}`)) {
-    const cases=[
+    const cases = [
       taskV20('比較東亞兩個區域：甲沿海港口密集、製造與出口集中；乙內陸地形崎嶇、交通成本較高。','哪個判讀較合理？','區位、交通與地形可影響產業與人口分布',['沿海地區一定都最富裕','內陸完全不可能有城市','所有區域差異只由一個自然因素造成'],'區域分析要整合自然、人文與交通條件，不能用單一因素決定全部。'),
       taskV20('世界區域圖同時呈現年雨量、人口密度與主要城市。','要比較不同區域人地關係，第一步應做什麼？','確認各圖層單位、年代與尺度，再比較空間重疊與差異',['把不同年代資料直接疊在一起','只看人口最多的地方','把相關分布直接寫成因果'],'多圖層比較必須先對齊尺度、單位與時間。'),
       taskV20('兩個國家總人口相近，但國土面積差異很大。','若要比較人口集中程度，哪個指標更合適？','人口密度',['總人口本身','國旗顏色','國名長度'],'人口密度把人口數與面積連結，較適合比較單位面積的人口集中。'),
-    ];return cases[index%cases.length]
+    ]
+    return cases[index % cases.length]
   }
   if (/空間與區域分析|GIS|地理資訊/.test(`${title} ${focus}`)) {
     return taskV20('GIS 有人口、道路、淹水潛勢與避難場所四個圖層。','若要找「人口多、淹水風險高且距離避難場所遠」的區域，哪種方法最合適？','疊合人口、淹水與可達性圖層，建立明確條件篩選',['只看一張道路圖','把所有圖層改成同一顏色就算分析','忽略座標系統直接比較'],'GIS 的價值在空間對齊、疊圖與條件查詢；指標與尺度要先定義。')
@@ -38,13 +41,14 @@ function geographyTask(unitId: string, title: string, focus: string, index: numb
 }
 
 function historyTask(unitId: string, title: string, focus: string, index: number): V20SemanticTask {
-  const grade=gradeOf(unitId)
+  const grade = gradeOf(unitId)
   if (grade <= 6 || /地方的過去|家鄉|臺灣歷史發展/.test(`${title} ${focus}`)) {
-    const cases=[
+    const cases = [
       taskV20('老照片顯示 40 年前街道多是低樓房；現在照片出現捷運站與高樓。','哪個結論最適合由兩張照片直接支持？','這個地方的建築與交通景觀發生變化',['以前的人完全沒有交通工具','捷運是所有變化的唯一原因','高樓一定讓每個居民更幸福'],'照片可支持景觀變化，但不能單靠照片證明唯一原因或所有人的感受。'),
       taskV20('訪談長者說童年常在河邊洗衣；地方志記錄同時期自來水管線尚未普及。','兩份資料如何互相幫助？','不同來源可相互補充地方生活變遷的脈絡',['訪談一定比書面資料更正確','地方志能證明每個人的生活都一樣','資料來源不同就不能比較'],'口述與文獻各有角度，互證能增加脈絡但仍需注意代表性。'),
       taskV20('博物館展出老車票、學校照片與居民日記。','這些資料共同屬於什麼？','理解過去生活的史料',['未來預言','只有裝飾用途的物品','完全沒有來源脈絡的答案'],'物件、影像與文字都可成為史料，但要查來源與年代。'),
-    ];return cases[index%cases.length]
+    ]
+    return cases[index % cases.length]
   }
   const advanced = grade >= 10
   const cases = advanced ? [
@@ -56,24 +60,24 @@ function historyTask(unitId: string, title: string, focus: string, index: number
     taskV20('同一場戰爭，政府公告與一般居民日記對影響的描述很不相同。','哪個做法最適合？','保留不同群體觀點並比較它們各自能回答的問題',['只留下政府公告','只留下日記','把兩份資料混成一句沒有來源的話'],'不同位置的人留下的史料能呈現不同經驗，不能互相簡單取代。'),
     taskV20('時間線依序列出改革、抗爭、法令改變與選舉制度建立。','哪種做法最能理解變遷？','比較前後制度與參與方式的差異，再找可能的連結',['只背年份不看內容','把後來事件當成較早事件的原因','假設所有改變都在同一天完成'],'歷史時間線要保留先後關係，再討論變遷與因果證據。'),
   ]
-  return cases[index%cases.length]
+  return cases[index % cases.length]
 }
 
 function civicsTask(unitId: string, title: string, focus: string, index: number): V20SemanticTask {
-  const grade=gradeOf(unitId), t=`${title} ${focus}`
+  const grade = gradeOf(unitId), t = `${title} ${focus}`
   if (/經濟|市場|消費|財政|貨幣|政策/.test(t)) {
-    const advanced=grade>=10
+    const advanced = grade >= 10
     return advanced
       ? taskV20('政府評估補貼公共運輸方案：預算有限，但可能減少通勤成本與交通排放，不同所得群體受益程度不同。','哪種政策分析最完整？','比較政策目標、財政成本、分配效果、外部效益與替代方案',['只看總支出就判定好壞','只問受益者不看成本','假設政策沒有任何機會成本'],'高中公民經濟分析應同時考量效率、分配、外部性與政府選擇。')
       : taskV20('小明有 100 元，只能買一本 80 元的書或一張 90 元的電影票。','若他選擇買書，放棄的電影票最接近哪個概念？','機會成本',['收入','折扣','利息'],'在有限資源下做選擇時，放棄的最佳替代方案就是機會成本。')
   }
   if (/法律|權利|法治|憲政/.test(t)) {
-    return grade>=10
+    return grade >= 10
       ? taskV20('某行政機關限制人民活動自由，但沒有清楚法律依據，也沒有提供救濟程序。','從法治與權利保障角度，哪個問題最需要檢查？','限制是否有法律依據、符合比例原則並提供正當程序與救濟',['機關名稱是否夠長','支持留言是否最多','只要政府提出就一定合法'],'公權力限制基本權利需有法源、正當目的、比例性與程序保障。')
       : taskV20('班級制定規則：「所有人輪流使用共用器材，損壞要主動報告。」','這個規則主要在建立什麼？','共同權利與責任的可預期秩序',['誰力氣大誰先用','規則只約束少數人','有規則就不需要討論公平'],'規則能協調共同生活，權利與責任需同時考量。')
   }
   if (/民主|政府|選舉|政治|公共參與/.test(t)) {
-    return grade>=9
+    return grade >= 9
       ? taskV20('選舉期間，政黨 A 與 B 對同一政策提出不同方案，媒體公布支持度民調並附上樣本與誤差範圍。','公民判讀時哪個做法最妥當？','比較政策內容與資料方法，不把單一民調當成選舉結果',['只看最高支持度就停止分析','政黨不同代表資料必定造假','忽略樣本與誤差'],'民主判斷需要政策資訊、資料素養與程序理解。')
       : taskV20('學校要決定校慶活動，班級先收集同學意見，再公開討論方案並投票。','這個過程最能表現哪種民主精神？','參與、討論與依共同程序做決定',['只讓一個人決定全部','投票前不讓任何人知道方案','票數少的人失去所有權利'],'民主不只投票，也包含資訊、討論與保障不同意見。')
   }
@@ -87,12 +91,13 @@ export function getV20SocialSemanticTask(unitId: string, pathway: string | undef
   if (pathway === 'history') return historyTask(unitId,title,focus,index)
   if (pathway === 'civics') return civicsTask(unitId,title,focus,index)
 
-  const t=`${title} ${focus}`
+  const t = `${title} ${focus}`
+  if (title === '地方與國家變遷') return historyTask(unitId,title,focus,index)
   if (/歷史|過去|史前|政權|殖民|戰後|民主化|文明|革命|工業化|冷戰|時代|近現代/.test(t)) return historyTask(unitId,title,focus,index)
   if (/公民|民主|政府|法律|權利|經濟|市場|媒體|公共|社會議題|資訊與媒體/.test(t)) return civicsTask(unitId,title,focus,index)
   if (/地理|位置|地圖|環境|人口|產業|聚落|區域|亞洲|世界|全球化|永續|地方與社區|地方環境/.test(t)) return geographyTask(unitId,title,focus,index)
 
-  const grade=gradeOf(unitId)
+  const grade = gradeOf(unitId)
   if (grade <= 4) return taskV20(`在「${title}」活動中，學生觀察家庭、學校或社區的生活資料。`,'哪個做法最能幫助理解社會生活？','先分清楚看到的事實，再詢問不同人的經驗並比較',['只聽一個人的說法就代表全部','不知道來源也直接轉述','把自己喜好當成所有人的規則'],'低年級社會學習從生活觀察、訪問與比較開始。')
   return taskV20(`討論「${title}」時，有兩份來源、時間或群體不同的資料。`,'哪個步驟最能形成可靠判斷？','先核對來源、時間與資料範圍，再比較能支持的事實與解釋',['只看標題就下結論','混用不同年代資料而不說明','把一個案例外推所有情況'],'社會科判讀要保留來源、時空脈絡與結論的證據界線。')
 }
