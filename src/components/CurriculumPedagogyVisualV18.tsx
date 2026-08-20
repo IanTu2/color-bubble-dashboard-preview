@@ -39,14 +39,17 @@ function ConcreteNumberLine({ visual }: { visual: TextbookVisual }) {
           <text x={x(0)} y="286" textAnchor="middle" className="v17-caption">越往右數值越大；0 是正數與負數的基準</text>
         </svg>
       </div>
-      <figcaption><strong>真的用數線看</strong><span>{visual.caption}</span></figcaption>
+      <figcaption><strong>用有向數線看正負關係</strong><span>{visual.caption}</span></figcaption>
     </figure>
   )
 }
 
 export function CurriculumPedagogyVisualV18(props: Props) {
   const text = `${props.unitTitle} ${props.focus} ${props.visual.title} ${props.visual.items.map((item) => `${item.label} ${item.detail}`).join(' ')}`
-  if (props.subject === 'math' && /數線|正數|負數|整數|相反數|絕對值/.test(text)) {
+  // This diagram explicitly contains negative values (-5…5), so it is only valid
+  // for lessons that actually teach signed numbers. A generic mention of 數線 or
+  // 整數 must not make early-grade place-value lessons display negative numbers.
+  if (props.subject === 'math' && /負數|正負|相反數|絕對值|有向數/.test(text)) {
     return <ConcreteNumberLine visual={props.visual} />
   }
   return <CurriculumPedagogyVisualV17 {...props} />
