@@ -31,6 +31,17 @@ function editDistance(left: string, right: string) {
   return matrix[left.length][right.length]
 }
 
+function containsCjk(value: string) {
+  return /[\u3400-\u9fff]/u.test(value)
+}
+
+function crossScriptAlternativeGuard(target: string, alternative: string) {
+  const targetHasLatin = /[a-z]/i.test(target)
+  const targetHasCjk = containsCjk(target)
+  if (targetHasLatin && !targetHasCjk && containsCjk(alternative)) return false
+  return true
+}
+
 export function smartGradeEnglishAnswer(
   answer: string,
   target: string,
@@ -45,7 +56,11 @@ export function smartGradeEnglishAnswer(
   }
 
   const alternatives = Array.from(new Set(acceptedAnswers))
-    .filter((item) => normalizeEnglishAnswer(item) !== normalizedTarget)
+    .filter((item) => {
+      const normalizedAlternative = normalizeEnglishAnswer(item)
+      return normalizedAlternative !== normalizedTarget
+        && crossScriptAlternativeGuard(normalizedTarget, normalizedAlternative)
+    })
 
   const exactAlternative = alternatives.find(
     (item) => normalizeEnglishAnswer(item) === normalized,
