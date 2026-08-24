@@ -1,0 +1,39 @@
+.english-game-v7-portal { position: relative; width: 100%; }
+
+.english-game-v7-gate {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 52px);
+  text-align: center;
+  color: #223047;
+  border: 1px solid rgba(34,48,71,.1);
+  border-radius: 28px;
+  background: radial-gradient(circle at 50% 0, rgba(101,212,134,.18), transparent 38%), #fffefa;
+  box-shadow: 0 20px 58px rgba(17,28,47,.13);
+}
+.english-game-v7-gate > div { font-size: 2.6rem; }
+.english-game-v7-gate > p:first-of-type { margin: 12px 0 5px; color: #35a862; font-size: .7rem; font-weight: 900; letter-spacing: .1em; }
+.english-game-v7-gate h2 { margin: 0; font-size: clamp(1.45rem, 4vw, 2.2rem); line-height: 1.22; }
+.english-game-v7-gate h2 + p { margin: 14px auto 0; max-width: 560px; color: #748195; line-height: 1.65; }
+.english-game-v7-gate button { min-height: 48px; margin-top: 22px; padding: 10px 22px; color: #173724; border: 0; border-radius: 15px; background: #70d68e; box-shadow: 0 5px 0 #45ad68; cursor: pointer; font-weight: 900; }
+
+.english-game-v7-word-return {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(680px, calc(100% - 24px));
+  margin: 12px auto 0;
+  padding: 10px 13px;
+  color: #5c6c7f;
+  border: 1px solid #dfe8de;
+  border-radius: 13px;
+  background: #f6faf5;
+  font-size: .72rem;
+}
+.english-game-v7-word-return button { flex: 0 0 auto; width: 28px; height: 28px; border: 0; border-radius: 50%; background: #e8eee7; cursor: pointer; }
+
+@media (max-width: 520px) {
+  .english-game-v7-gate { padding: 28px 18px; border-radius: 22px; }
+  .english-game-v7-word-return { align-items: flex-start; }
+}
