@@ -60,6 +60,26 @@ try {
   const grammarLevels = new Set(grammarQuestions.map((item) => Math.max(1, Math.min(6, Math.round(item.difficulty)))))
   if (grammarLevels.size < 5) failures.push(`grammar bank covers only ${grammarLevels.size} rounded CEFR bands`)
 
+  let grammarChoiceQuestions = 0
+  let grammarTypingQuestions = 0
+  for (const question of grammarQuestions) {
+    if (!question.id || !question.prompt?.trim() || !question.answer?.trim() || !question.explanation?.trim()) {
+      failures.push(`grammar item ${question.id || '<missing-id>'} is missing prompt/answer/explanation`)
+    }
+    if (!Number.isFinite(question.difficulty) || question.difficulty < 0.75 || question.difficulty > 6.25) {
+      failures.push(`grammar item ${question.id} has out-of-range difficulty ${question.difficulty}`)
+    }
+    if (question.choices?.length) {
+      grammarChoiceQuestions += 1
+      const normalizedChoices = question.choices.map((choice) => String(choice).trim().toLowerCase())
+      if (new Set(normalizedChoices).size !== normalizedChoices.length) failures.push(`grammar item ${question.id} has duplicate choices`)
+      if (!normalizedChoices.includes(String(question.answer).trim().toLowerCase())) failures.push(`grammar item ${question.id} answer is not present in choices`)
+      if (question.choices.length < 3) failures.push(`grammar item ${question.id} has too few choices`)
+    } else {
+      grammarTypingQuestions += 1
+    }
+  }
+
   const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
   const counts = lexicon.CEFR_LEVEL_COUNTS
   for (const level of levels) if (!counts[level] || counts[level] < 1) failures.push(`missing CEFR lexicon coverage for ${level}`)
@@ -76,6 +96,8 @@ try {
 
   console.log('[english-game-v6]', JSON.stringify({
     grammarQuestions: grammarQuestions.length,
+    grammarChoiceQuestions,
+    grammarTypingQuestions,
     grammarBands: grammarLevels.size,
     lexiconByLevel: Object.fromEntries(levels.map((level) => [level, counts[level]])),
     crossScriptGuard: crossScript.kind,
@@ -92,4 +114,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[english-game-v6] PASSED: short-session flow, adaptive review, vocabulary/grammar/listening modes, voice-input boundary, grading-script boundary, no-op-control guard, accessibility, and responsive UI gates are present.')
+console.log('[english-game-v6] PASSED: short-session flow, adaptive review, playable grammar integrity, vocabulary/grammar/listening modes, voice-input boundary, grading-script boundary, no-op-control guard, accessibility, and responsive UI gates are present.')
