@@ -1,3 +1,3 @@
 export {
-  EnglishCasualPracticeV5 as EnglishCasualPractice,
-} from './EnglishCasualPracticeV5'
+  EnglishCasualPracticeV6 as EnglishCasualPractice,
+} from './EnglishCasualPracticeV6'
