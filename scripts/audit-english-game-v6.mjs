@@ -8,6 +8,7 @@ try {
   const component = await readFile(new URL('../src/components/EnglishCasualPracticeV6.tsx', import.meta.url), 'utf8')
   const wrapper = await readFile(new URL('../src/components/EnglishCasualPractice.tsx', import.meta.url), 'utf8')
   const css = await readFile(new URL('../src/english-casual-practice-v6.css', import.meta.url), 'utf8')
+  const legacyCss = await readFile(new URL('../src/english-casual-practice.css', import.meta.url), 'utf8')
   const grammar = await server.ssrLoadModule('/src/english-grammar-reading-bank.ts')
   const lexicon = await server.ssrLoadModule('/src/generated/cefr-lexicon.ts')
   const grader = await server.ssrLoadModule('/src/english-smart-grading.ts')
@@ -49,6 +50,11 @@ try {
   ]
   for (const token of cssTokens) if (!css.includes(token)) failures.push(`game CSS missing ${token}`)
 
+  const grammarModeGuard = '.english-game-v6-shell.setup:has(.english-game-v6-track-grid > button:nth-child(3).active)'
+  if (!legacyCss.includes(grammarModeGuard) || !legacyCss.includes('.english-game-v6-config-row > div:first-child')) {
+    failures.push('grammar-only setup still exposes the vocabulary difficulty control even though grammar uses its own adaptive selector')
+  }
+
   const grammarQuestions = grammar.GRAMMAR_READING_QUESTION_BANK.filter((item) => item.skill === 'grammar')
   if (grammarQuestions.length < 30) failures.push(`grammar practice bank too small: ${grammarQuestions.length}`)
   const grammarLevels = new Set(grammarQuestions.map((item) => Math.max(1, Math.min(6, Math.round(item.difficulty)))))
@@ -74,6 +80,7 @@ try {
     lexiconByLevel: Object.fromEntries(levels.map((level) => [level, counts[level]])),
     crossScriptGuard: crossScript.kind,
     sameScriptAlternative: sameScriptAlternative.kind,
+    grammarModeNoopControlHidden: true,
     failures: failures.length,
   }, null, 2))
 } finally {
@@ -85,4 +92,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[english-game-v6] PASSED: short-session flow, adaptive review, vocabulary/grammar/listening modes, voice-input boundary, grading-script boundary, accessibility, and responsive UI gates are present.')
+console.log('[english-game-v6] PASSED: short-session flow, adaptive review, vocabulary/grammar/listening modes, voice-input boundary, grading-script boundary, no-op-control guard, accessibility, and responsive UI gates are present.')
