@@ -10,6 +10,7 @@ try {
   const css = await readFile(new URL('../src/english-casual-practice-v6.css', import.meta.url), 'utf8')
   const grammar = await server.ssrLoadModule('/src/english-grammar-reading-bank.ts')
   const lexicon = await server.ssrLoadModule('/src/generated/cefr-lexicon.ts')
+  const grader = await server.ssrLoadModule('/src/english-smart-grading.ts')
 
   const componentTokens = [
     "type GameTrack = 'mix' | 'vocabulary' | 'grammar' | 'listening'",
@@ -60,14 +61,19 @@ try {
   const misleadingClaims = ['發音準確度評分', 'pronunciation accuracy score', 'AI 發音評分', 'AI pronunciation score']
   for (const phrase of misleadingClaims) if (component.toLowerCase().includes(phrase.toLowerCase())) failures.push(`misleading unsupported speech claim: ${phrase}`)
 
-  if (component.includes('detail.acceptedTranslations') && /answer:\s*detail\.word,\s*acceptedAnswers:\s*detail\.acceptedTranslations/.test(component)) {
-    failures.push('English cloze accepts Chinese translation aliases as if they were the English missing word')
+  const crossScript = grader.smartGradeEnglishAnswer('想法', 'idea', ['想法'])
+  if (crossScript.score !== 0 || crossScript.kind !== 'wrong') {
+    failures.push('Chinese semantic aliases are still accepted as an English spelling/cloze answer')
   }
+  const sameScriptAlternative = grader.smartGradeEnglishAnswer('colour', 'color', ['colour'])
+  if (sameScriptAlternative.score < 0.75) failures.push('valid same-script English alternatives stopped working')
 
   console.log('[english-game-v6]', JSON.stringify({
     grammarQuestions: grammarQuestions.length,
     grammarBands: grammarLevels.size,
     lexiconByLevel: Object.fromEntries(levels.map((level) => [level, counts[level]])),
+    crossScriptGuard: crossScript.kind,
+    sameScriptAlternative: sameScriptAlternative.kind,
     failures: failures.length,
   }, null, 2))
 } finally {
@@ -79,4 +85,4 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`)
   process.exit(1)
 }
-console.log('[english-game-v6] PASSED: short-session flow, adaptive review, vocabulary/grammar/listening modes, voice-input boundary, accessibility, and responsive UI gates are present.')
+console.log('[english-game-v6] PASSED: short-session flow, adaptive review, vocabulary/grammar/listening modes, voice-input boundary, grading-script boundary, accessibility, and responsive UI gates are present.')
