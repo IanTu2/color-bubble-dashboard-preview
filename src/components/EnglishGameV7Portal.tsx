@@ -9,6 +9,7 @@ import {
 } from '../english-learning'
 import type { Language } from '../types'
 import { EnglishCasualPracticeV7 } from './EnglishCasualPracticeV7'
+import '../english-game-v7-portal.css'
 
 type Props = {
   language: Language
