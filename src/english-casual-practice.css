@@ -150,6 +150,16 @@
 .casual-practice-info ul { display: grid; gap: 8px; padding-left: 19px; color: var(--ink); line-height: 1.45; }
 .casual-practice-info small { display: block; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.07); }
 
+/* V6 product-consistency guard: the segmented difficulty control targets the
+   vocabulary/lexicon selector. Grammar-only mode has its own CEFR-adaptive
+   item selector, so hiding this control avoids presenting a no-op setting. */
+.english-game-v6-shell.setup:has(.english-game-v6-track-grid > button:nth-child(3).active) .english-game-v6-config-row > div:first-child {
+  display: none;
+}
+.english-game-v6-shell.setup:has(.english-game-v6-track-grid > button:nth-child(3).active) .english-game-v6-config-row {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 920px) {
   .casual-practice-layout { grid-template-columns: 1fr; }
   .casual-practice-info { order: -1; }
