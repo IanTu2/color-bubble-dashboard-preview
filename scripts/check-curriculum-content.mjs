@@ -138,7 +138,11 @@ if (!aggregator.includes('getPathwayFoundationUnitContent')) failures.push('path
 if (!aggregator.includes('getFoundationUnitContent(unitId) ?? getPathwayFoundationUnitContent(unitId)')) failures.push('base foundation must remain first, pathway fallback second')
 
 const drawer = read('src/components/SideDrawer.tsx')
-for (const token of ['getCurriculumRouteOptions','selectedRouteId','selectedRoute.pathway','依本年級正式結構顯示']) if (!drawer.includes(token)) failures.push(`SideDrawer pathway navigation missing ${token}`)
+// The formal curriculum browser is intentionally hidden from the drawer while its
+// replacement is being redesigned. Keep this guard focused on the remaining entry.
+for (const token of ["games: '遊戲區'", "english: '英文'", "openDesktopApp('english')"]) {
+  if (!drawer.includes(token)) failures.push(`SideDrawer learning game entry missing ${token}`)
+}
 if (drawer.includes('查看五科課程')) failures.push('drawer must not claim every grade has the same five-course structure')
 const desktop = read('src/components/DesktopWorkspace.tsx')
 for (const token of ['getCurriculumCourseMeta','getCurriculumTrack(course.grade, course.subject, course.pathway)','pathway={item.course.pathway}']) if (!desktop.includes(token)) failures.push(`desktop pathway persistence missing ${token}`)
