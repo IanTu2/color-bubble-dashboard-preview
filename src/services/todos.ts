@@ -58,6 +58,12 @@ function rowsFrom(data: unknown) {
   return (data as Record<string, unknown>[] | null) ?? []
 }
 
+// Retry an older column set only when the server reports a missing column.
+// Network, authentication and policy failures must retain their original error.
+function isMissingColumn(error: { code?: string }) {
+  return error.code === '42703' || error.code === 'PGRST204'
+}
+
 export async function loadTodos(client: SupabaseClient, userId: string) {
   const schedule = await client
     .from('todos')
@@ -73,6 +79,10 @@ export async function loadTodos(client: SupabaseClient, userId: string) {
     }
   }
 
+  if (!isMissingColumn(schedule.error)) {
+    return { todos: [] as Todo[], schemaMode: 'schedule' as TodoSchema, error: schedule.error }
+  }
+
   const extended = await client
     .from('todos')
     .select(extendedFields)
@@ -85,6 +95,10 @@ export async function loadTodos(client: SupabaseClient, userId: string) {
       schemaMode: 'extended' as TodoSchema,
       error: null,
     }
+  }
+
+  if (!isMissingColumn(extended.error)) {
+    return { todos: [] as Todo[], schemaMode: 'extended' as TodoSchema, error: extended.error }
   }
 
   const legacy = await client
