@@ -32,7 +32,6 @@ function readFontScale() {
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [courseBrowserRequest, setCourseBrowserRequest] = useState(0)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
   const [desktopRequest, setDesktopRequest] = useState<DesktopRequest | null>(null)
@@ -119,7 +118,6 @@ function App() {
 
   const browseCurriculum = () => {
     setDrawerOpen(true)
-    setCourseBrowserRequest(Date.now())
   }
 
   const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => {
@@ -145,13 +143,11 @@ function App() {
         language={language}
         open={drawerOpen}
         loggedIn={Boolean(user)}
-        courseBrowserRequest={courseBrowserRequest}
         onToggle={() => setDrawerOpen((current) => !current)}
         onClose={() => setDrawerOpen(false)}
         onOpenSettings={() => { setDrawerOpen(false); setAuthOpen(false); setSettingsOpen(true) }}
         onOpenAuth={openAuth}
         onOpenDesktopApp={requestDesktopApp}
-        onOpenCourse={requestCurriculumCourse}
       />
       <Topbar language={language} user={user} authLoading={authLoading} onOpenAuth={openAuth} onLogout={logout} />
       <HomeDashboard
