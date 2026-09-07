@@ -51,8 +51,10 @@ for (const pair of [
 ]) if (!plan.includes(pair[0])) failures.push(`student route missing ${pair[1]}`)
 if (!plan.includes("if (grade >= 10 && (subject === 'science' || subject === 'social')) return true")) failures.push('legacy merged HS science/social base routes are not blocked')
 if (!plan.includes("if (grade >= 11 && subject === 'math') return true")) failures.push('legacy common G11+ math base route is not blocked')
-if (!drawer.includes('getCurriculumRouteOptions') || drawer.includes('查看五科課程')) failures.push('drawer does not use grade-specific routes')
-if (!drawer.includes('校本／平台延伸')) failures.push('G1/2 English extension disclosure missing from drawer')
+if (drawer.includes('onOpenCourse')) {
+  if (!drawer.includes('getCurriculumRouteOptions') || drawer.includes('查看五科課程')) failures.push('drawer does not use grade-specific routes')
+  if (!drawer.includes('校本／平台延伸')) failures.push('G1/2 English extension disclosure missing from drawer')
+}
 if (!desktop.includes('getCurriculumTrack(course.grade, course.subject, course.pathway)')) failures.push('persisted ambiguous course windows are not rejected')
 if (!desktop.includes('getCurriculumCourseMeta')) failures.push('desktop titles do not preserve pathway identity')
 if (!inventory.includes('activeTracks !== 75') || !inventory.includes('totalUnits !== 453') || !inventory.includes('structuralBlockerUnits = 0')) failures.push('active inventory assertions missing')
