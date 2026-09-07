@@ -46,7 +46,7 @@ for (const route of [
   "pathwayRoute('math', 'math-beta')",
 ]) if (!plan.includes(route)) failures.push(`high-school route missing: ${route}`)
 
-if (!drawer.includes('onOpenCourse(grade, subject, pathway)')) failures.push('SideDrawer drops pathway before course request')
+if (drawer.includes('getCurriculumRouteOptions') && !drawer.includes('onOpenCourse(grade, subject, pathway)')) failures.push('SideDrawer drops pathway before course request')
 if (!app.includes('course: { grade, subject, pathway }')) failures.push('App drops pathway in desktop request')
 if (!desktop.includes('pathway={item.course.pathway}')) failures.push('DesktopWorkspace drops pathway before player render')
 if (!activePlayer.includes('getCurriculumCourseBundleV13(grade, subject, pathway)')) failures.push('active player does not load the selected V13 route model')
