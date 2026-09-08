@@ -8,7 +8,6 @@ import { PersistentMusicPlayer } from './components/PersistentMusicPlayer'
 import { SettingsDialog } from './components/SettingsDialog'
 import { SideDrawer } from './components/SideDrawer'
 import { Topbar } from './components/Topbar'
-import type { CurriculumPathwayId, CurriculumSubjectId } from './curriculum-plan-v5'
 import { supabase } from './lib/supabase'
 import {
   APP_PREFERENCES_KEY,
@@ -116,15 +115,6 @@ function App() {
     setDesktopRequest({ id: Date.now() + Math.random(), kind })
   }
 
-  const browseCurriculum = () => {
-    setDrawerOpen(true)
-  }
-
-  const requestCurriculumCourse = (grade: number, subject: CurriculumSubjectId, pathway?: CurriculumPathwayId) => {
-    setDrawerOpen(false)
-    setDesktopRequest({ id: Date.now() + Math.random(), kind: 'course', course: { grade, subject, pathway } })
-  }
-
   const resetAllSettings = () => {
     setLanguage('zh')
     setFontScale(100)
@@ -155,10 +145,8 @@ function App() {
         loggedIn={Boolean(user)}
         userId={user?.id}
         onNotice={setToast}
-        onBrowseCourses={browseCurriculum}
-        onOpenCourse={requestCurriculumCourse}
       />
-      {user ? <DesktopWorkspace language={language} userId={user.id} request={desktopRequest} rememberWindows={preferences.rememberWindows} /> : null}
+      {user ? <DesktopWorkspace key={user.id} language={language} userId={user.id} request={desktopRequest} rememberWindows={preferences.rememberWindows} /> : null}
       {user ? <PersistentMusicPlayer language={language} userId={user.id} enabled={preferences.musicEnabled} onNotice={setToast} /> : null}
       <SettingsDialog
         language={language}
