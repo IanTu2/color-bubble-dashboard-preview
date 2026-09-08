@@ -93,7 +93,7 @@ function readStoredWindows(userId: string, rememberWindows: boolean): ManagedWin
         sequence: Number.isFinite(item.sequence) ? item.sequence : index + 1,
         geometry: clampWindowGeometry(item.geometry),
         minimized: Boolean(item.minimized),
-        maximized: Boolean(item.maximized),
+        maximized: item.app === 'english' || Boolean(item.maximized),
         zIndex: 60 + index,
         course: item.course,
       }))
@@ -157,7 +157,7 @@ export function DesktopWorkspace({
             ? {
                 ...item,
                 minimized: false,
-                maximized: item.maximized,
+                maximized: kind === 'english' || item.maximized,
                 zIndex,
               }
             : item)
@@ -242,7 +242,7 @@ export function DesktopWorkspace({
 
   const visibleWindows = windows.filter((item) => !item.minimized)
   const foregroundWindow = visibleWindows.reduce<ManagedWindow | null>((top, item) => (!top || item.zIndex > top.zIndex ? item : top), null)
-  const immersiveCourseOpen = foregroundWindow?.app === 'course'
+  const immersiveCourseOpen = foregroundWindow?.app === 'course' || foregroundWindow?.app === 'english'
 
   return (
     <>
@@ -258,6 +258,7 @@ export function DesktopWorkspace({
             geometry={item.geometry}
             maximized={item.maximized}
             immersive={item.app === 'course'}
+            compact={item.app === 'english'}
             zIndex={item.zIndex}
             onFocus={() => focusWindow(item.id)}
             onMinimize={() => updateWindow(item.id, { minimized: true })}

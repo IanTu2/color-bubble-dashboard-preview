@@ -1,0 +1,87 @@
+/* One source of geometry for the main drawer and its materials panel. */
+:root { --materials-drawer-width: 260px; --materials-drawer-edge: 12px; --materials-drawer-gap: 12px; }
+.side-drawer.learning-side-drawer { inset: 12px auto 12px var(--materials-drawer-edge); width: var(--materials-drawer-width); padding: 14px; border-radius: 20px; box-sizing: border-box; }
+.learning-side-drawer .drawer-head { gap: 8px; margin-bottom: 16px; }
+.learning-side-drawer .brand-mark { width: 36px; height: 36px; flex-shrink: 0; }
+.learning-side-drawer .drawer-head h2 { font-size: 1rem; }
+.learning-side-drawer .drawer-head .eyebrow { font-size: .55rem; }
+.learning-side-drawer .drawer-head .icon-button { flex-shrink: 0; width: 30px; height: 30px; }
+.learning-side-drawer .nav-single { padding: 10px; gap: 8px; }
+.learning-side-drawer .curriculum-entry { padding: 12px 10px; gap: 8px; }
+#materials-curtain { left: calc(var(--materials-drawer-edge) + var(--materials-drawer-width) + var(--materials-drawer-gap)); top: 12px; bottom: 12px; width: min(320px, calc(100vw - 296px)); padding: 18px; border-radius: 20px; box-sizing: border-box; transform: none; background: #151b2b; color: #eef2ff; }
+#materials-curtain .curriculum-curtain-head { gap: 10px; }
+#materials-curtain .curriculum-curtain-head h2 { font-size: 1.1rem; margin: 4px 0; }
+#materials-curtain .practice-tool-list { margin-top: 18px; gap: 10px; }
+#materials-curtain .practice-tool-card { min-height: 76px; padding: 12px; grid-template-columns: 38px minmax(0,1fr) auto; gap: 10px; color: #eef2ff; }
+#materials-curtain .practice-tool-icon { width: 38px; height: 38px; border-radius: 12px; }
+#materials-curtain .practice-tool-copy small { color: #b6c3d9; font-size: .75rem; }
+#materials-curtain .materials-coming { grid-template-columns: 1fr; opacity: 1; cursor: default; }
+html[data-theme='light'] #materials-curtain { background: #f7f9fc; color: #24334a; border-color: #d9e1ed; }
+html[data-theme='light'] #materials-curtain .practice-tool-card { color: #24334a; border-color: #d9e1ed; background: #fff; }
+html[data-theme='light'] #materials-curtain .practice-tool-copy small { color: #58677c; }
+html[data-theme='light'] #materials-curtain .eyebrow { color: #58677c; }
+/* Fill the webpage, while retaining minimize, restore and close controls. */
+.desktop-window.desktop-window-materials.maximized { inset: 0 !important; border: 0; border-radius: 0; min-width: 0; min-height: 0; }
+.desktop-window-materials .desktop-window-titlebar { flex-basis: 36px; min-height: 36px; padding: 0 8px 0 12px; }
+.desktop-window-materials .desktop-window-title > span { width: 24px; height: 24px; border-radius: 7px; font-size: .72rem; }
+.desktop-window-materials .desktop-window-title strong { font-size: .8rem; }
+.desktop-window-materials .desktop-window-actions button { width: 28px; height: 28px; border-radius: 8px; }
+.desktop-window-materials .desktop-window-content { overflow: hidden; }
+.desktop-window-materials .materials-hub { height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
+.desktop-window-materials .materials-header { flex: 0 0 auto; min-height: 44px; padding: 6px 16px; }
+.desktop-window-materials .materials-header > div { display: flex; align-items: baseline; gap: 12px; }
+.desktop-window-materials .materials-header h1 { margin: 0; font-size: 1rem; }
+.desktop-window-materials .materials-header button { padding: 6px 10px; font-size: .8rem; }
+.desktop-window-materials .materials-header small { font-size: .7rem; }
+.desktop-window-materials .materials-epop .materials-header small { display: none; }
+/* The lesson scrolls only when content/zoom genuinely needs more space. */
+.desktop-window-materials .materials-epop > .continuous-practice-shell { flex: 1 0 auto; min-height: 0; padding: 12px 20px; overflow: visible; }
+.materials-epop .continuous-practice-topbar { max-width: 1120px; gap: 10px; }
+.materials-epop .continuous-practice-topbar button { min-height: 32px; padding: 6px 10px; font-size: .8rem; }
+.materials-epop .context-session-progress { max-width: 1120px; height: 4px; margin: 10px auto 14px; }
+.materials-epop .continuous-question-card { max-width: 1120px; padding: 20px; border-radius: 18px; }
+.materials-epop .continuous-question-prompt { min-width: 0; }
+.materials-epop .continuous-question-prompt h1 { margin: 10px 0 14px; padding: 12px 14px; border: 1px solid var(--context-border); border-radius: 12px; background: rgba(119,234,213,.055); font-size: clamp(24px,2.5vw,34px); line-height: 1.35; overflow-wrap: anywhere; }
+.materials-epop .context-chinese-cue { gap: 6px; padding: 12px 14px; }
+.materials-epop .context-chinese-cue p { font-size: 1rem; line-height: 1.55; }
+.materials-epop .context-listening-panel { padding: 10px; margin-bottom: 12px; gap: 10px; }
+.materials-epop .context-hint-panel { margin: 10px 0 0; padding: 10px 12px; }
+.materials-epop .continuous-question-card form { min-width: 0; align-content: start; gap: 10px; }
+.materials-epop .continuous-question-card form > input { min-height: 46px; padding: 10px 12px; font-size: 1.2rem; }
+.materials-epop .context-question-actions-v2 { margin-top: 0; gap: 10px; }
+.materials-epop .context-question-actions-v2 button { min-height: 40px; padding: 10px 16px; border-radius: 12px; }
+.materials-epop .context-answer-feedback { margin: 0; padding: 14px; gap: 8px; }
+.materials-epop .context-answer-feedback > p { font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.materials-epop .context-answer-feedback > strong { font-size: 1rem; }
+.materials-epop .context-answer-word b { font-size: 1.4rem; }
+.materials-epop .context-answer-word span { font-size: .8rem; }
+.materials-epop .context-feedback-actions button { width: 100%; min-height: 40px; padding: 10px; }
+.materials-epop .continuous-bank-note { margin-top: 10px; }
+.materials-epop .continuous-summary-card { margin: 20px auto; padding: 24px; gap: 10px; }
+@media (min-width: 900px) {
+  .materials-epop .continuous-question-card { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 0 24px; align-items: start; }
+  .materials-epop .continuous-question-card form { margin: 0; }
+  .materials-epop .continuous-bank-note { grid-column: 1 / -1; }
+  .materials-epop .context-answer-word { flex-direction: row; }
+}
+@media (max-width: 700px) {
+  .side-drawer.learning-side-drawer { width: min(260px,calc(100vw - 24px)); }
+  .side-drawer.learning-side-drawer.materials-expanded { visibility: hidden; }
+  #materials-curtain { left: 12px; width: min(320px,calc(100vw - 24px)); z-index: 41; }
+  .desktop-window-materials .materials-header > div { display: block; }
+  .desktop-window-materials .materials-header small { display: none; }
+  .desktop-window-materials .materials-epop > .continuous-practice-shell { padding: 10px 12px; }
+  .materials-epop .continuous-question-card { padding: 14px; }
+}
+/* Keep path exercises compact too; long explanations remain scrollable. */
+.desktop-window-materials .materials-lesson { width: 100%; padding: 16px 24px; }
+.desktop-window-materials .materials-lesson progress { margin: 12px 0; height: 10px; }
+.desktop-window-materials .materials-lesson h2 { font-size: 1.35rem; margin: 10px 0 14px; }
+.desktop-window-materials .materials-cue { margin: 10px 0; }
+.desktop-window-materials .materials-sentence { font-size: 1.4rem; margin: 12px 0; }
+.desktop-window-materials .materials-options { margin: 14px 0; gap: 8px; }
+.desktop-window-materials .materials-answer-slots { min-height: 60px; margin-top: 12px; }
+.desktop-window-materials .materials-answer-label { margin-top: 12px; gap: 8px; }
+.desktop-window-materials .materials-feedback { padding: 12px 16px; margin-top: 12px; }
+.desktop-window-materials .materials-feedback p { margin: 8px 0; }
+.desktop-window-materials .materials-primary { margin-top: 14px; padding: 12px; }

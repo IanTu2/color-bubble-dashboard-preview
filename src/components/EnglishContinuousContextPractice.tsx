@@ -119,7 +119,7 @@ export function EnglishContinuousContextPractice({ language, userId, onBack, onR
     ? {
         title: '無限情境練習',
         subtitle: '每組 8 題只是小結，不是練習上限；完成後可立即換一批新題。',
-        back: '返回今日課程',
+        back: '切換模式',
         retest: '重新測驗實力',
         round: '第',
         group: '組',
@@ -142,7 +142,7 @@ export function EnglishContinuousContextPractice({ language, userId, onBack, onR
     : {
         title: 'Continuous Context Practice',
         subtitle: 'Eight questions form a checkpoint, not a limit. Continue immediately with a fresh set.',
-        back: 'Back to today',
+        back: 'Choose mode',
         retest: 'Retake placement test',
         round: 'Round',
         group: '',
@@ -270,29 +270,31 @@ export function EnglishContinuousContextPractice({ language, userId, onBack, onR
       </div>
 
       <main className="context-question-card context-question-card-v2 continuous-question-card">
-        <p className="context-eyebrow">
-          {listening ? copy.listening : copy.context} · {microLevelToCefr(journey.microLevel)}
-        </p>
-        <h1>{current.prompt}</h1>
+        <div className="continuous-question-prompt">
+          <p className="context-eyebrow">
+            {listening ? copy.listening : copy.context} · {microLevelToCefr(journey.microLevel)}
+          </p>
+          <h1>{current.prompt}</h1>
 
-        {listening ? (
-          <section className="context-listening-panel">
-            <p>{copy.listenInstruction}</p>
-            <button type="button" onClick={() => speakEnglish(current.fullSentence, profile.accent)}>🔊 {copy.play}</button>
-          </section>
-        ) : null}
+          {listening ? (
+            <section className="context-listening-panel">
+              <p>{copy.listenInstruction}</p>
+              <button type="button" onClick={() => speakEnglish(current.fullSentence, profile.accent)}>🔊 {copy.play}</button>
+            </section>
+          ) : null}
 
-        <ChineseCue item={current} language={language} />
+          <ChineseCue item={current} language={language} />
 
-        {hintVisible && !feedback ? (
-          <aside className="context-hint-panel">
-            <span>{language === 'zh' ? '提示' : 'Hint'}</span>
-            <strong>{current.word.word.slice(0, 1).toUpperCase()} · {current.word.word.length} {language === 'zh' ? '個字母' : 'letters'}</strong>
-          </aside>
-        ) : null}
-
-        <form onSubmit={submit}>
+          {hintVisible && !feedback ? (
+            <aside className="context-hint-panel">
+              <span>{language === 'zh' ? '提示' : 'Hint'}</span>
+              <strong>{current.word.word.slice(0, 1).toUpperCase()} · {current.word.word.length} {language === 'zh' ? '個字母' : 'letters'}</strong>
+            </aside>
+          ) : null}
+        </div>
+        <form className={feedback ? 'has-feedback' : undefined} onSubmit={submit}>
           <input
+            aria-label={language === 'zh' ? '輸入英文答案' : 'Your English answer'}
             value={response}
             disabled={Boolean(feedback)}
             autoFocus

@@ -15,7 +15,7 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
   const launch = (app: DesktopAppKind) => { close(); onOpenDesktopApp(app) }
   return <>
     <button className="drawer-trigger" type="button" aria-label={zh ? '主要選單' : 'Main menu'} aria-expanded={open} onClick={onToggle}><span/><span/><span/></button>
-    <aside className={`side-drawer learning-side-drawer${open ? ' open' : ''}`} inert={!open} aria-hidden={!open}>
+    <aside className={`side-drawer learning-side-drawer${materialsOpen ? ' materials-expanded' : ''}${open ? ' open' : ''}`} inert={!open} aria-hidden={!open}>
       <div className="drawer-head"><div className="brand-mark">B</div><div><p className="eyebrow">PERSONAL SPACE</p><h2>Bubble Space</h2></div><button className="icon-button" aria-label={zh ? '關閉選單' : 'Close menu'} onClick={close}>×</button></div>
       {loggedIn ? <>
         <nav className="member-nav" aria-label={zh ? '工作視窗' : 'Work windows'}><p className="drawer-section-label">{zh ? '工作視窗' : 'Work windows'}</p>

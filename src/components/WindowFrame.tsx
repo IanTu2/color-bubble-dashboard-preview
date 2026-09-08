@@ -26,6 +26,7 @@ type WindowFrameProps = {
   children: ReactNode
   hideMaximize?: boolean
   immersive?: boolean
+  compact?: boolean
   onFocus: () => void
   onMinimize: () => void
   onToggleMaximize: () => void
@@ -63,6 +64,7 @@ export function WindowFrame({
   children,
   hideMaximize = false,
   immersive = false,
+  compact = false,
   onFocus,
   onMinimize,
   onToggleMaximize,
@@ -134,7 +136,7 @@ export function WindowFrame({
   const style = immersive
     ? { inset: '0px', zIndex }
     : maximized
-      ? { inset: '8px', zIndex }
+      ? { inset: compact ? '0px' : '8px', zIndex }
       : {
           left: `${geometry.x}px`,
           top: `${geometry.y}px`,
@@ -162,7 +164,7 @@ export function WindowFrame({
 
   return (
     <section
-      className={`desktop-window${maximized ? ' maximized' : ''}${dragState ? ' is-resizing' : ''}`}
+      className={`desktop-window${compact ? ' desktop-window-materials' : ''}${maximized ? ' maximized' : ''}${dragState ? ' is-resizing' : ''}`}
       style={style}
       onPointerDown={onFocus}
       aria-label={title}
