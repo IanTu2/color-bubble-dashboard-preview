@@ -7,6 +7,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "history:audit": "node scripts/audit-history-materials.mjs",
     "curriculum:inventory": "node scripts/report-curriculum-audit.mjs",
     "curriculum:pedagogy-audit": "node scripts/audit-curriculum-pedagogy-v17-final.mjs && node scripts/audit-curriculum-user-experience-v18.mjs && node scripts/audit-curriculum-visual-language-v19.mjs",
     "curriculum:v20-review": "node scripts/audit-curriculum-v20-all-units.mjs && node scripts/audit-curriculum-v20-content-quality.mjs && node scripts/report-curriculum-v20-fallbacks.mjs && node scripts/audit-curriculum-v20-rebuild-pass1.mjs && node scripts/audit-curriculum-v20-known-mismatches.mjs && node scripts/audit-curriculum-v20-complete-output.mjs && node scripts/audit-curriculum-v20-semantic-alignment.mjs && node scripts/audit-curriculum-v20-reviewed-output.mjs && node scripts/audit-curriculum-v20-answer-consistency.mjs && node scripts/audit-curriculum-v20-visual-specificity.mjs && node scripts/audit-curriculum-v20-student-walkthrough.mjs && node scripts/audit-curriculum-v20-status-registry.mjs",
@@ -22,14 +23,19 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.110.8",
+    "d3-geo": "3.1.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2"
   },
   "devDependencies": {
+    "@types/d3-geo": "3.1.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@types/topojson-client": "3.1.0",
+    "@vitejs/plugin-react": "6.0.3",
     "typescript": "7.0.2",
-    "vite": "8.1.5",
-    "@vitejs/plugin-react": "6.0.3"
+    "vite": "8.1.5"
   }
 }
