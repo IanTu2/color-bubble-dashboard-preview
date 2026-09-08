@@ -34,7 +34,8 @@ export function SideDrawer({ language, open, loggedIn, onToggle, onClose, onOpen
       <header className="curriculum-curtain-head"><button className="curriculum-back" aria-label={zh ? '返回主選單' : 'Back to menu'} onClick={() => setMaterialsOpen(false)}>‹</button><div><p className="eyebrow">LEARNING MATERIALS</p><h2>{zh ? '輔助教材區' : 'Learning materials'}</h2></div></header>
       <div className="practice-tool-list">
         <button className="practice-tool-card" onClick={() => launch('english')}><span className="practice-tool-icon">EN</span><span className="practice-tool-copy"><strong>{zh ? '英文' : 'English'}</strong><small>{zh ? 'EPOP 式情境練習・多鄰國式闖關' : 'EPOP-style context practice · Duolingo-style path'}</small></span><span>›</span></button>
-        {[['歷史', 'History'], ['人體生物', 'Human biology']].map(([cn, en]) => <div className="practice-tool-card materials-coming" key={en}><span className="practice-tool-copy"><strong>{zh ? cn : en}</strong><small>{zh ? '籌備中' : 'Coming later'}</small></span></div>)}
+        <button className="practice-tool-card" onClick={() => launch('history')}><span className="practice-tool-icon history-tool-icon">史</span><span className="practice-tool-copy"><strong>{zh ? '歷史' : 'History'}</strong><small>{zh ? '世界地圖・時期・事件・史料' : 'World map · periods · events · sources'}</small></span><span>›</span></button>
+        <div className="practice-tool-card materials-coming"><span className="practice-tool-copy"><strong>{zh ? '人體生物' : 'Human biology'}</strong><small>{zh ? '籌備中' : 'Coming later'}</small></span></div>
       </div>
     </section> : null}
     {open ? <button className="drawer-backdrop" aria-label={zh ? '關閉選單' : 'Close menu'} onClick={close}/> : null}
