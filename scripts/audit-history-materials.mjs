@@ -13,6 +13,8 @@ const checks = [
   ['desktop workspace supports history windows', workspace.includes("item.app === 'history'")],
   ['four fixed views exist', ["'world'", "'period'", "'storyline'", "'event'"].every((view) => component.includes(view))],
   ['world map uses packaged Natural Earth geometry', component.includes("world-atlas/countries-110m.json") && component.includes('geoNaturalEarth1')],
+  ['world map excludes storyline-level events', component.includes('event.storylineSlug === null')],
+  ['map labels appear from compact point markers', component.includes('history-map-dot') && css.includes('.history-map-dot:hover > span')],
   ['global timeline supports BCE through current era', component.includes('min="-3000"') && component.includes('max="2025"')],
   ['storyline filters and ordering exist', component.includes('setCategory') && component.includes('setAscending')],
   ['Changping has fourteen internal nodes', (data.match(/eventSlug: 'battle-of-changping'/g) ?? []).length === 14],
