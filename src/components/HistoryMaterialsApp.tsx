@@ -15,6 +15,10 @@ const countries = feature(
   worldData as never,
   (worldData as unknown as { objects: { countries: never } }).objects.countries,
 ) as unknown as FeatureCollection<Geometry, GeoJsonProperties>
+const mappedCountries: FeatureCollection<Geometry, GeoJsonProperties> = {
+  ...countries,
+  features: countries.features.filter((country) => Number(country.id) !== 10),
+}
 
 const precisionZh = {
   year: '精確至年', month: '精確至月', range: '年代範圍', approximate: '約略年代', unknown: '日期不詳',
@@ -49,37 +53,36 @@ function WorldHistoryMap({ catalog, year, onOpenPeriod }: { catalog: HistoryCata
   }, [])
 
   const projection = useMemo(
-    () => geoNaturalEarth1().fitExtent([[14, 14], [size.width - 14, size.height - 14]], countries),
+    () => geoNaturalEarth1().fitExtent([[18, 14], [size.width - 18, size.height - 14]], mappedCountries),
     [size],
   )
   const path = useMemo(() => geoPath(projection), [projection])
   const activePeriods = catalog.periods.filter((period) => period.startYear <= year && period.endYear >= year)
-  const activeEvents = catalog.events.filter((event) => event.importance >= 5 && event.startYear <= year && event.endYear >= year && event.latitude !== null && event.longitude !== null)
+  const activeEvents = catalog.events.filter((event) => event.storylineSlug === null && event.importance >= 5 && event.startYear <= year && event.endYear >= year && event.latitude !== null && event.longitude !== null)
   const markers = [
-    ...activePeriods.map((period) => ({ key: period.slug, title: period.titleZh, date: period.dateLabelZh, latitude: period.latitude, longitude: period.longitude, period })),
-    ...activeEvents.map((event) => ({ key: event.slug, title: event.titleZh, date: event.dateLabelZh, latitude: event.latitude!, longitude: event.longitude!, period: null })),
+    ...activePeriods.map((period) => ({ key: period.slug, title: period.titleZh, date: period.dateLabelZh, latitude: period.latitude, longitude: period.longitude, period, kind: 'period' as const })),
+    ...activeEvents.map((event) => ({ key: event.slug, title: event.titleZh, date: event.dateLabelZh, latitude: event.latitude!, longitude: event.longitude!, period: catalog.periods.find((period) => period.slug === event.periodSlug), kind: 'event' as const })),
   ]
 
-  const positions = markers.map((marker, index) => {
+  const positions = markers.map((marker) => {
     const projected = projection([marker.longitude, marker.latitude]) ?? [size.width / 2, size.height / 2]
-    let y = projected[1]
-    for (let previous = 0; previous < index; previous += 1) {
-      const other = projection([markers[previous].longitude, markers[previous].latitude])
-      if (other && Math.abs(projected[0] - other[0]) < 145 && Math.abs(y - other[1]) < 54) y += 58
-    }
-    return { ...marker, x: clamp(projected[0], 76, size.width - 76), y: clamp(y, 42, size.height - 42) }
+    return { ...marker, x: clamp(projected[0], 16, size.width - 16), y: clamp(projected[1], 16, size.height - 16) }
   })
 
   return <div className="history-map-stage" ref={shellRef}>
     <svg viewBox={`0 0 ${size.width} ${size.height}`} role="img" aria-label={`${formatHistoryYear(year)}的世界地圖`}>
       <title>{formatHistoryYear(year)}的世界地圖</title>
-      <g>{countries.features.map((country, index) => <path className="history-country" d={path(country) ?? ''} key={String(country.id ?? index)} />)}</g>
+      <g>{mappedCountries.features.map((country, index) => <path className="history-country" d={path(country) ?? ''} key={String(country.id ?? index)} />)}</g>
     </svg>
-    {positions.map((marker) => marker.period
-      ? <button className="history-map-marker" key={marker.key} type="button" style={{ left: marker.x, top: marker.y }} onClick={() => onOpenPeriod(marker.period!)}>
-          <strong>{marker.title}</strong><small>{marker.date}</small>
-        </button>
-      : <div className="history-map-marker history-map-marker-event" key={marker.key} style={{ left: marker.x, top: marker.y }}><strong>{marker.title}</strong><small>{marker.date}</small></div>)}
+    {positions.map((marker) => <button
+      aria-label={`${marker.title}｜${marker.date}`}
+      className={`history-map-dot history-map-dot-${marker.kind}`}
+      disabled={!marker.period}
+      key={marker.key}
+      type="button"
+      style={{ left: marker.x, top: marker.y }}
+      onClick={() => { if (marker.period) onOpenPeriod(marker.period) }}
+    ><i aria-hidden="true"/><span role="tooltip"><strong>{marker.title}</strong><small>{marker.date}</small></span></button>)}
     {positions.length === 0 ? <p className="history-map-empty">此年代的首批資料尚未收錄</p> : null}
     <span className="history-map-credit">世界底圖：Natural Earth／world-atlas（概略國界）</span>
   </div>
