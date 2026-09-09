@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 const component = read('src/components/HistoryMaterialsApp.tsx')
+const interactiveMap = read('src/components/HistoryInteractiveMap.tsx')
 const data = read('src/history-data.ts')
 const drawer = read('src/components/SideDrawer.tsx')
 const workspace = read('src/components/DesktopWorkspace.tsx')
@@ -13,17 +14,19 @@ const checks = [
   ['history opens from materials drawer', drawer.includes("launch('history')")],
   ['desktop workspace supports history windows', workspace.includes("item.app === 'history'")],
   ['four fixed views exist', ["'world'", "'period'", "'storyline'", "'event'"].every((view) => component.includes(view))],
-  ['world map uses packaged Natural Earth geometry', component.includes("world-atlas/countries-110m.json") && component.includes('geoNaturalEarth1')],
+  ['world and regional maps share MapLibre interaction', component.includes('HistoryInteractiveMap') && interactiveMap.includes("mode: 'world' | 'region'")],
+  ['maps provide terrain, pan, zoom and fullscreen controls', interactiveMap.includes('MAPTERHORN_DEM') && interactiveMap.includes('setTerrain') && interactiveMap.includes('NavigationControl') && interactiveMap.includes('FullscreenControl')],
+  ['regional map refocuses around the selected node', interactiveMap.includes('fitBounds') && component.includes('focusKey={node.slug}')],
   ['world map excludes storyline-level events', component.includes('event.storylineSlug === null')],
-  ['map labels appear from compact point markers', component.includes('history-map-dot') && css.includes('.history-map-dot:hover > span')],
+  ['map labels appear from compact point markers', interactiveMap.includes('history-map-pin') && css.includes('.history-map-pin:hover > span')],
   ['global timeline supports BCE through current era', component.includes('min="-3000"') && component.includes('max="2025"')],
   ['storyline filters and ordering exist', component.includes('setCategory') && component.includes('setAscending')],
   ['Changping has fourteen internal nodes', (data.match(/eventSlug: 'battle-of-changping'/g) ?? []).length === 14],
   ['commander replacement includes causes and caveat', data.includes('久守不決與秦國反間共同推動換將') && data.includes('不應被寫成史料已明言的唯一原因')],
   ['source links are attached to nodes', component.includes('<SourceLinks node={selectedNode} catalog={catalog} />')],
-  ['fourth-layer nodes include a synchronized geography map', component.includes('function EventGeographyMap') && component.includes('<EventGeographyMap node={selectedNode} catalog={catalog} />')],
+  ['fourth-layer nodes include a synchronized geography map', component.includes('function EventGeographyMap') && component.includes('<EventGeographyMap node={selectedNode} catalog={catalog} />') && component.includes('routes={mappedRoutes}')],
   ['node geography is normalized and protected by RLS', geographyMigration.includes('create table public.history_event_node_places') && geographyMigration.includes('create table public.history_event_node_routes') && geographyMigration.includes('enable row level security')],
-  ['geography distinguishes approximate routes and borders', geographyMigration.includes('is_approximate boolean') && component.includes('不把爭議中的古代疆界或行軍線畫成精確結果')],
+  ['geography distinguishes approximate routes and borders', geographyMigration.includes('is_approximate boolean') && component.includes('不把有爭議的古代疆界或行軍線畫成精確結果')],
   ['database tables use RLS', migration.includes('enable row level security') && migration.includes('_public_read') && migration.includes('_admin_write')],
   ['database has normalized event relations', migration.includes('create table public.history_event_relations') && migration.includes('create table public.history_source_links')],
   ['responsive breakpoints cover tablet and mobile', css.includes('@media (max-width: 900px)') && css.includes('@media (max-width: 650px)')],
