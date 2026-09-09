@@ -7,6 +7,7 @@ const drawer = read('src/components/SideDrawer.tsx')
 const workspace = read('src/components/DesktopWorkspace.tsx')
 const css = read('src/history-materials.css')
 const migration = read('supabase/migrations/20260908073128_create_history_materials.sql')
+const geographyMigration = read('supabase/migrations/20260909023120_add_history_node_geography.sql')
 
 const checks = [
   ['history opens from materials drawer', drawer.includes("launch('history')")],
@@ -20,6 +21,9 @@ const checks = [
   ['Changping has fourteen internal nodes', (data.match(/eventSlug: 'battle-of-changping'/g) ?? []).length === 14],
   ['commander replacement includes causes and caveat', data.includes('久守不決與秦國反間共同推動換將') && data.includes('不應被寫成史料已明言的唯一原因')],
   ['source links are attached to nodes', component.includes('<SourceLinks node={selectedNode} catalog={catalog} />')],
+  ['fourth-layer nodes include a synchronized geography map', component.includes('function EventGeographyMap') && component.includes('<EventGeographyMap node={selectedNode} catalog={catalog} />')],
+  ['node geography is normalized and protected by RLS', geographyMigration.includes('create table public.history_event_node_places') && geographyMigration.includes('create table public.history_event_node_routes') && geographyMigration.includes('enable row level security')],
+  ['geography distinguishes approximate routes and borders', geographyMigration.includes('is_approximate boolean') && component.includes('不把爭議中的古代疆界或行軍線畫成精確結果')],
   ['database tables use RLS', migration.includes('enable row level security') && migration.includes('_public_read') && migration.includes('_admin_write')],
   ['database has normalized event relations', migration.includes('create table public.history_event_relations') && migration.includes('create table public.history_source_links')],
   ['responsive breakpoints cover tablet and mobile', css.includes('@media (max-width: 900px)') && css.includes('@media (max-width: 650px)')],

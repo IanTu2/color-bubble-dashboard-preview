@@ -96,6 +96,66 @@ function SourceLinks({ node, catalog }: { node: HistoryEventNode; catalog: Histo
   </a> : null)}</div>
 }
 
+const fallbackGeography: Record<string, string> = {
+  'changping-qin-takes-yewang': '野王位於韓國本土通往上黨的南側交通線。秦軍取得野王後，上黨與韓國本土的聯繫被切斷。',
+  'changping-fengting-offers-shangdang': '上黨位於太行山區西側高地；南向聯絡中斷後，馮亭轉而尋求東側趙國支援。',
+  'changping-zhao-accepts-shangdang': '邯鄲位於太行山東側，上黨在山地另一側；趙國接收上黨，也必須跨越山區投入軍隊維持。',
+  'changping-initial-fighting': '長平位於上黨南部，是秦軍北上爭奪上黨與趙軍西進接應之間的交會區。',
+  'changping-zhaokuo-replaces-lianpo': '換將決策在趙廷形成，趙括再由邯鄲方向赴長平接掌前線；政治決策與戰場相隔。',
+}
+
+function EventGeographyMap({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
+  const relations = catalog.nodePlaces.filter((item) => item.nodeSlug === node.slug)
+  const routes = catalog.nodeRoutes.filter((item) => item.nodeSlug === node.slug).sort((a, b) => a.sequence - b.sequence)
+  const visibleSlugs = ['xianyang', 'yewang', 'shangdang', 'changping', 'handan']
+  const places = visibleSlugs.map((slug) => catalog.places.find((place) => place.slug === slug)).filter(Boolean)
+  const relationByPlace = new Map(relations.map((item) => [item.placeSlug, item]))
+  const placeBySlug = new Map(catalog.places.map((place) => [place.slug, place]))
+  const x = (longitude: number) => 45 + ((longitude - 108.4) / 6.5) * 550
+  const y = (latitude: number) => 250 - ((latitude - 34) / 3) * 195
+  const taihangLeft = x(112.72)
+  const taihangRight = x(113.55)
+  const geographicContext = node.geographicContextZh || fallbackGeography[node.slug] || node.causeZh
+
+  return <section className="history-geography-card" aria-label="事件地理圖">
+    <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>這件事發生在哪裡？</h3></div><span>古地名與路線為概略定位</span></div>
+    <svg viewBox="0 0 640 300" role="img" aria-label={`${node.titleZh}的區域位置關係圖`}>
+      <defs>
+        <marker id="history-route-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
+      </defs>
+      <rect className="history-geo-grid" x="18" y="16" width="604" height="254" rx="16" />
+      <path className="history-geo-mountain" d={`M ${taihangLeft} 24 Q ${taihangRight} 74 ${taihangLeft + 8} 126 T ${taihangRight - 2} 258 L ${taihangRight + 24} 258 Q ${taihangRight - 7} 196 ${taihangRight + 18} 139 T ${taihangRight + 8} 24 Z`} />
+      <text className="history-geo-mountain-label" x={taihangRight + 9} y="42">太行山區</text>
+      <text className="history-geo-direction" x="28" y="289">西</text><text className="history-geo-direction" x="600" y="289">東</text>
+      {routes.map((route) => {
+        const from = placeBySlug.get(route.fromPlaceSlug)
+        const to = placeBySlug.get(route.toPlaceSlug)
+        if (!from || !to) return null
+        const x1 = x(from.longitude); const y1 = y(from.latitude); const x2 = x(to.longitude); const y2 = y(to.latitude)
+        const curve = Math.abs(x2 - x1) > 200 ? -22 : 14
+        const pathData = `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 + curve} ${x2} ${y2}`
+        return <g className={`history-geo-route route-${route.routeKind}`} key={`${route.nodeSlug}-${route.sequence}`}>
+          <path d={pathData} markerEnd={route.routeKind === 'blocked' ? undefined : 'url(#history-route-arrow)'} />
+          {route.routeKind === 'blocked' ? <text className="history-route-block" x={x2 - 12} y={y2 + 5}>×</text> : null}
+          <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + curve - 5}>{route.labelZh}</text>
+        </g>
+      })}
+      {places.map((place) => {
+        if (!place) return null
+        const relation = relationByPlace.get(place.slug)
+        const labelY = place.slug === 'shangdang' ? -13 : place.slug === 'changping' ? 22 : -12
+        return <g className={`history-geo-place${relation ? ` active role-${relation.role}` : ''}`} key={place.slug} transform={`translate(${x(place.longitude)} ${y(place.latitude)})`}>
+          <title>{relation?.noteZh || `${place.titleZh}（背景位置）`}</title>
+          <circle r={relation?.role === 'focus' ? 8 : 5} />
+          <text y={labelY}>{place.titleZh}</text>
+        </g>
+      })}
+    </svg>
+    <div className="history-geography-meaning"><small>地理意義</small><p>{geographicContext}</p></div>
+    <p className="history-geography-caveat">此圖呈現地點、方向與因果關係；不把爭議中的古代疆界或行軍線畫成精確結果。</p>
+  </section>
+}
+
 export function HistoryMaterialsApp({ language, userId }: { language: 'zh' | 'en'; userId: string }) {
   const stored = useMemo(() => loadStoredState(userId), [userId])
   const [catalog, setCatalog] = useState(historyFallbackCatalog)
@@ -218,6 +278,7 @@ export function HistoryMaterialsApp({ language, userId }: { language: 'zh' | 'en
           <section className="history-node-timeline"><div className="history-node-head"><h2>事件內部時間軸</h2><span>日期不詳時不強行補足</span></div>{nodes.map((node) => <button type="button" key={node.slug} className={selectedNode.slug === node.slug ? 'active' : ''} onClick={() => setSelectedNodeSlug(node.slug)}><time>{node.dateLabelZh}</time><i aria-hidden="true"/><span><strong>{node.titleZh}</strong><small>{node.consequenceZh}</small></span></button>)}</section>
           <article className="history-node-detail" aria-live="polite">
             <header><span>{selectedNode.dateLabelZh} · {precisionZh[selectedNode.datePrecision]}</span><h2>{selectedNode.titleZh}</h2><p>{selectedNode.placeNameZh} · {selectedNode.peopleZh.join('、')}</p></header>
+            <EventGeographyMap node={selectedNode} catalog={catalog} />
             <section><h3>發生了什麼</h3><p>{selectedNode.descriptionZh}</p></section>
             <section><h3>為什麼發生</h3><p>{selectedNode.causeZh}</p></section>
             <section className="history-cause-chain"><h3>前因與後續</h3><div><span><small>前因</small>{selectedNode.previousContextZh}</span><b>→</b><span><small>本事件</small>{selectedNode.titleZh}</span><b>→</b><span><small>後續</small>{selectedNode.consequenceZh}</span></div></section>

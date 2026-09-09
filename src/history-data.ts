@@ -72,6 +72,33 @@ export type HistoryEventNode = {
   consequenceZh: string
   disputeZh: string
   sourceSlugs: string[]
+  geographicContextZh?: string
+}
+
+export type HistoryPlace = {
+  slug: string
+  titleZh: string
+  latitude: number
+  longitude: number
+  locationPrecision: 'exact' | 'approximate' | 'disputed'
+}
+
+export type HistoryNodePlace = {
+  nodeSlug: string
+  placeSlug: string
+  role: 'focus' | 'origin' | 'destination' | 'context' | 'blocked'
+  sequence: number
+  noteZh: string
+}
+
+export type HistoryNodeRoute = {
+  nodeSlug: string
+  sequence: number
+  fromPlaceSlug: string
+  toPlaceSlug: string
+  routeKind: 'advance' | 'blocked' | 'transfer' | 'mobilization' | 'command'
+  labelZh: string
+  isApproximate: boolean
 }
 
 export type HistoryCatalog = {
@@ -80,6 +107,9 @@ export type HistoryCatalog = {
   events: HistoryEvent[]
   nodes: HistoryEventNode[]
   sources: HistorySource[]
+  places: HistoryPlace[]
+  nodePlaces: HistoryNodePlace[]
+  nodeRoutes: HistoryNodeRoute[]
 }
 
 export const historyFallbackCatalog: HistoryCatalog = {
@@ -141,6 +171,36 @@ export const historyFallbackCatalog: HistoryCatalog = {
     { slug: 'nccu-zhao-military', nameZh: '戰國時代趙國的軍事與外交', authorOrInstitution: '國立政治大學', workTitle: '戰國時代趙國的軍事與外交', locator: '學位論文典藏', url: 'https://ah.lib.nccu.edu.tw/item?item_id=106969', sourceType: 'academic', reliability: 'reviewed', accessedAt: '2026-09-08' },
     { slug: 'british-museum-qin', nameZh: 'British Museum：Qin unification', authorOrInstitution: 'The British Museum', workTitle: 'Horsepower: China, Mongolia and the steppe', locator: 'Research project overview', url: 'https://www.britishmuseum.org/research/projects/horsepower-china-mongolia-and-steppe', sourceType: 'museum', reliability: 'reviewed', accessedAt: '2026-09-08' },
     { slug: 'iwm-world-wars', nameZh: 'Imperial War Museums：World Wars', authorOrInstitution: 'Imperial War Museums', workTitle: 'Stories of War and Conflict', locator: 'First World War / Second World War', url: 'https://www.iwm.org.uk/history', sourceType: 'museum', reliability: 'reviewed', accessedAt: '2026-09-08' },
+  ],
+  places: [
+    { slug: 'xianyang', titleZh: '咸陽', latitude: 34.33, longitude: 108.71, locationPrecision: 'approximate' },
+    { slug: 'yewang', titleZh: '野王（今河南沁陽一帶）', latitude: 35.09, longitude: 112.95, locationPrecision: 'approximate' },
+    { slug: 'shangdang', titleZh: '上黨', latitude: 36, longitude: 113, locationPrecision: 'approximate' },
+    { slug: 'changping', titleZh: '長平', latitude: 35.8, longitude: 112.9, locationPrecision: 'approximate' },
+    { slug: 'handan', titleZh: '邯鄲', latitude: 36.62, longitude: 114.49, locationPrecision: 'approximate' },
+  ],
+  nodePlaces: [
+    { nodeSlug: 'changping-qin-takes-yewang', placeSlug: 'xianyang', role: 'origin', sequence: 1, noteZh: '秦國方向' },
+    { nodeSlug: 'changping-qin-takes-yewang', placeSlug: 'yewang', role: 'focus', sequence: 2, noteZh: '秦軍攻取' },
+    { nodeSlug: 'changping-qin-takes-yewang', placeSlug: 'shangdang', role: 'blocked', sequence: 3, noteZh: '與韓國本土聯絡中斷' },
+    { nodeSlug: 'changping-fengting-offers-shangdang', placeSlug: 'shangdang', role: 'focus', sequence: 1, noteZh: '歸屬爭議核心' },
+    { nodeSlug: 'changping-fengting-offers-shangdang', placeSlug: 'handan', role: 'destination', sequence: 2, noteZh: '趙國決策方向' },
+    { nodeSlug: 'changping-zhao-accepts-shangdang', placeSlug: 'handan', role: 'origin', sequence: 1, noteZh: '趙廷決策' },
+    { nodeSlug: 'changping-zhao-accepts-shangdang', placeSlug: 'shangdang', role: 'destination', sequence: 2, noteZh: '趙國接收' },
+    { nodeSlug: 'changping-initial-fighting', placeSlug: 'xianyang', role: 'origin', sequence: 1, noteZh: '秦國方向' },
+    { nodeSlug: 'changping-initial-fighting', placeSlug: 'handan', role: 'origin', sequence: 2, noteZh: '趙國方向' },
+    { nodeSlug: 'changping-initial-fighting', placeSlug: 'changping', role: 'focus', sequence: 3, noteZh: '交戰區' },
+    { nodeSlug: 'changping-zhaokuo-replaces-lianpo', placeSlug: 'handan', role: 'origin', sequence: 1, noteZh: '換將決策' },
+    { nodeSlug: 'changping-zhaokuo-replaces-lianpo', placeSlug: 'changping', role: 'destination', sequence: 2, noteZh: '接掌前線' },
+  ],
+  nodeRoutes: [
+    { nodeSlug: 'changping-qin-takes-yewang', sequence: 1, fromPlaceSlug: 'xianyang', toPlaceSlug: 'yewang', routeKind: 'advance', labelZh: '秦軍向野王推進', isApproximate: true },
+    { nodeSlug: 'changping-qin-takes-yewang', sequence: 2, fromPlaceSlug: 'yewang', toPlaceSlug: 'shangdang', routeKind: 'blocked', labelZh: '上黨道路中斷', isApproximate: true },
+    { nodeSlug: 'changping-fengting-offers-shangdang', sequence: 1, fromPlaceSlug: 'shangdang', toPlaceSlug: 'handan', routeKind: 'transfer', labelZh: '馮亭轉而歸趙', isApproximate: true },
+    { nodeSlug: 'changping-zhao-accepts-shangdang', sequence: 1, fromPlaceSlug: 'handan', toPlaceSlug: 'shangdang', routeKind: 'mobilization', labelZh: '趙國接收並派軍', isApproximate: true },
+    { nodeSlug: 'changping-initial-fighting', sequence: 1, fromPlaceSlug: 'xianyang', toPlaceSlug: 'changping', routeKind: 'advance', labelZh: '秦軍進攻方向', isApproximate: true },
+    { nodeSlug: 'changping-initial-fighting', sequence: 2, fromPlaceSlug: 'handan', toPlaceSlug: 'changping', routeKind: 'mobilization', labelZh: '趙軍接應方向', isApproximate: true },
+    { nodeSlug: 'changping-zhaokuo-replaces-lianpo', sequence: 1, fromPlaceSlug: 'handan', toPlaceSlug: 'changping', routeKind: 'command', labelZh: '趙括赴前線接任', isApproximate: true },
   ],
 }
 
