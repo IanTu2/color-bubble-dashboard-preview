@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { DatePrecision, HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryPeriod, HistorySource, HistoryStoryline } from '../history-data'
+import type { DatePrecision, HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryNodePlace, HistoryNodeRoute, HistoryPeriod, HistoryPlace, HistorySource, HistoryStoryline } from '../history-data'
 
 type Row = Record<string, unknown>
 
@@ -41,7 +41,29 @@ function mapNode(row: Row): HistoryEventNode {
     datePrecision: text(row.date_precision) as DatePrecision, titleZh: text(row.title_zh), placeNameZh: text(row.place_name_zh),
     peopleZh: stringArray(row.people_zh), descriptionZh: text(row.description_zh), causeZh: text(row.cause_zh),
     previousContextZh: text(row.previous_context_zh), consequenceZh: text(row.consequence_zh), disputeZh: text(row.dispute_zh),
-    sourceSlugs: stringArray(row.source_slugs),
+    sourceSlugs: stringArray(row.source_slugs), geographicContextZh: text(row.geographic_context_zh),
+  }
+}
+
+function mapPlace(row: Row): HistoryPlace {
+  return {
+    slug: text(row.slug), titleZh: text(row.title_zh), latitude: number(row.latitude), longitude: number(row.longitude),
+    locationPrecision: text(row.location_precision) as HistoryPlace['locationPrecision'],
+  }
+}
+
+function mapNodePlace(row: Row): HistoryNodePlace {
+  return {
+    nodeSlug: text(row.node_slug), placeSlug: text(row.place_slug), role: text(row.role) as HistoryNodePlace['role'],
+    sequence: number(row.sequence), noteZh: text(row.note_zh),
+  }
+}
+
+function mapNodeRoute(row: Row): HistoryNodeRoute {
+  return {
+    nodeSlug: text(row.node_slug), sequence: number(row.sequence), fromPlaceSlug: text(row.from_place_slug),
+    toPlaceSlug: text(row.to_place_slug), routeKind: text(row.route_kind) as HistoryNodeRoute['routeKind'],
+    labelZh: text(row.label_zh), isApproximate: Boolean(row.is_approximate),
   }
 }
 
@@ -55,15 +77,18 @@ function mapSource(row: Row): HistorySource {
 }
 
 export async function loadHistoryCatalog(): Promise<HistoryCatalog> {
-  const [periodsResult, storylinesResult, eventsResult, nodesResult, sourcesResult] = await Promise.all([
+  const [periodsResult, storylinesResult, eventsResult, nodesResult, sourcesResult, placesResult, nodePlacesResult, nodeRoutesResult] = await Promise.all([
     supabase.from('history_periods').select('*').eq('is_published', true).order('start_year'),
     supabase.from('history_storylines').select('*').order('sequence'),
     supabase.from('history_events').select('*').eq('is_published', true).order('sequence'),
     supabase.from('history_event_nodes').select('*').eq('is_published', true).order('sequence'),
     supabase.from('history_sources').select('*').order('name_zh'),
+    supabase.from('history_places').select('slug,title_zh,latitude,longitude,location_precision').order('title_zh'),
+    supabase.from('history_event_node_places').select('*').eq('is_published', true).order('sequence'),
+    supabase.from('history_event_node_routes').select('*').eq('is_published', true).order('sequence'),
   ])
 
-  const failure = [periodsResult.error, storylinesResult.error, eventsResult.error, nodesResult.error, sourcesResult.error].find(Boolean)
+  const failure = [periodsResult.error, storylinesResult.error, eventsResult.error, nodesResult.error, sourcesResult.error, placesResult.error, nodePlacesResult.error, nodeRoutesResult.error].find(Boolean)
   if (failure) throw new Error(failure.message)
 
   return {
@@ -72,5 +97,8 @@ export async function loadHistoryCatalog(): Promise<HistoryCatalog> {
     events: (eventsResult.data ?? []).map((row) => mapEvent(row as Row)),
     nodes: (nodesResult.data ?? []).map((row) => mapNode(row as Row)),
     sources: (sourcesResult.data ?? []).map((row) => mapSource(row as Row)),
+    places: (placesResult.data ?? []).map((row) => mapPlace(row as Row)),
+    nodePlaces: (nodePlacesResult.data ?? []).map((row) => mapNodePlace(row as Row)),
+    nodeRoutes: (nodeRoutesResult.data ?? []).map((row) => mapNodeRoute(row as Row)),
   }
 }
