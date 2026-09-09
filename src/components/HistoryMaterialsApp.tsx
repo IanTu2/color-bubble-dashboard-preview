@@ -1,25 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { geoNaturalEarth1, geoPath } from 'd3-geo'
-import { feature } from 'topojson-client'
-import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson'
-import worldData from 'world-atlas/countries-110m.json'
 import { formatHistoryYear, historyCategoryZh, historyFallbackCatalog } from '../history-data'
 import type { HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryPeriod } from '../history-data'
 import { loadHistoryCatalog } from '../services/history'
+import { HistoryInteractiveMap, type HistoryMapPoint } from './HistoryInteractiveMap'
 import '../history-materials.css'
 
 type View = 'world' | 'period' | 'storyline' | 'event'
-type Size = { width: number; height: number }
-
-const countries = feature(
-  worldData as never,
-  (worldData as unknown as { objects: { countries: never } }).objects.countries,
-) as unknown as FeatureCollection<Geometry, GeoJsonProperties>
-const mappedCountries: FeatureCollection<Geometry, GeoJsonProperties> = {
-  ...countries,
-  features: countries.features.filter((country) => Number(country.id) !== 10),
-}
-
 const precisionZh = {
   year: '精確至年', month: '精確至月', range: '年代範圍', approximate: '約略年代', unknown: '日期不詳',
 }
@@ -34,58 +20,17 @@ function loadStoredState(userId: string) {
   }
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max)
-}
-
 function WorldHistoryMap({ catalog, year, onOpenPeriod }: { catalog: HistoryCatalog; year: number; onOpenPeriod: (period: HistoryPeriod) => void }) {
-  const shellRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState<Size>({ width: 900, height: 460 })
-
-  useLayoutEffect(() => {
-    const shell = shellRef.current
-    if (!shell) return
-    const measure = () => setSize({ width: Math.max(320, shell.clientWidth), height: Math.max(250, shell.clientHeight) })
-    const observer = new ResizeObserver(measure)
-    observer.observe(shell)
-    measure()
-    return () => observer.disconnect()
-  }, [])
-
-  const projection = useMemo(
-    () => geoNaturalEarth1().fitExtent([[18, 14], [size.width - 18, size.height - 14]], mappedCountries),
-    [size],
-  )
-  const path = useMemo(() => geoPath(projection), [projection])
   const activePeriods = catalog.periods.filter((period) => period.startYear <= year && period.endYear >= year)
   const activeEvents = catalog.events.filter((event) => event.storylineSlug === null && event.importance >= 5 && event.startYear <= year && event.endYear >= year && event.latitude !== null && event.longitude !== null)
-  const markers = [
-    ...activePeriods.map((period) => ({ key: period.slug, title: period.titleZh, date: period.dateLabelZh, latitude: period.latitude, longitude: period.longitude, period, kind: 'period' as const })),
-    ...activeEvents.map((event) => ({ key: event.slug, title: event.titleZh, date: event.dateLabelZh, latitude: event.latitude!, longitude: event.longitude!, period: catalog.periods.find((period) => period.slug === event.periodSlug), kind: 'event' as const })),
+  const points: HistoryMapPoint[] = [
+    ...activePeriods.map((period) => ({ key: period.slug, title: period.titleZh, subtitle: period.dateLabelZh, latitude: period.latitude, longitude: period.longitude, tone: 'period' as const, onClick: () => onOpenPeriod(period) })),
+    ...activeEvents.map((event) => {
+      const period = catalog.periods.find((item) => item.slug === event.periodSlug)
+      return { key: event.slug, title: event.titleZh, subtitle: event.dateLabelZh, latitude: event.latitude!, longitude: event.longitude!, tone: 'event' as const, onClick: period ? () => onOpenPeriod(period) : undefined }
+    }),
   ]
-
-  const positions = markers.map((marker) => {
-    const projected = projection([marker.longitude, marker.latitude]) ?? [size.width / 2, size.height / 2]
-    return { ...marker, x: clamp(projected[0], 16, size.width - 16), y: clamp(projected[1], 16, size.height - 16) }
-  })
-
-  return <div className="history-map-stage" ref={shellRef}>
-    <svg viewBox={`0 0 ${size.width} ${size.height}`} role="img" aria-label={`${formatHistoryYear(year)}的世界地圖`}>
-      <title>{formatHistoryYear(year)}的世界地圖</title>
-      <g>{mappedCountries.features.map((country, index) => <path className="history-country" d={path(country) ?? ''} key={String(country.id ?? index)} />)}</g>
-    </svg>
-    {positions.map((marker) => <button
-      aria-label={`${marker.title}｜${marker.date}`}
-      className={`history-map-dot history-map-dot-${marker.kind}`}
-      disabled={!marker.period}
-      key={marker.key}
-      type="button"
-      style={{ left: marker.x, top: marker.y }}
-      onClick={() => { if (marker.period) onOpenPeriod(marker.period) }}
-    ><i aria-hidden="true"/><span role="tooltip"><strong>{marker.title}</strong><small>{marker.date}</small></span></button>)}
-    {positions.length === 0 ? <p className="history-map-empty">此年代的首批資料尚未收錄</p> : null}
-    <span className="history-map-credit">世界底圖：Natural Earth／world-atlas（概略國界）</span>
-  </div>
+  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" mode="world" points={points} /></div>
 }
 
 function SourceLinks({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
@@ -111,48 +56,30 @@ function EventGeographyMap({ node, catalog }: { node: HistoryEventNode; catalog:
   const places = visibleSlugs.map((slug) => catalog.places.find((place) => place.slug === slug)).filter(Boolean)
   const relationByPlace = new Map(relations.map((item) => [item.placeSlug, item]))
   const placeBySlug = new Map(catalog.places.map((place) => [place.slug, place]))
-  const x = (longitude: number) => 45 + ((longitude - 108.4) / 6.5) * 550
-  const y = (latitude: number) => 250 - ((latitude - 34) / 3) * 195
-  const taihangLeft = x(112.72)
-  const taihangRight = x(113.55)
   const geographicContext = node.geographicContextZh || fallbackGeography[node.slug] || node.causeZh
+  const points: HistoryMapPoint[] = places.flatMap((place) => {
+    if (!place) return []
+    const relation = relationByPlace.get(place.slug)
+    return [{
+      key: place.slug,
+      title: place.titleZh,
+      subtitle: relation?.noteZh || '周邊歷史位置',
+      latitude: place.latitude,
+      longitude: place.longitude,
+      tone: relation?.role ?? 'context',
+    }]
+  })
+  const mappedRoutes = routes.flatMap((route) => {
+    const from = placeBySlug.get(route.fromPlaceSlug)
+    const to = placeBySlug.get(route.toPlaceSlug)
+    return from && to ? [{ ...route, from, to }] : []
+  })
 
   return <section className="history-geography-card" aria-label="事件地理圖">
-    <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>這件事發生在哪裡？</h3></div><span>古地名與路線為概略定位</span></div>
-    <svg viewBox="0 0 640 300" role="img" aria-label={`${node.titleZh}的區域位置關係圖`}>
-      <defs>
-        <marker id="history-route-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" /></marker>
-      </defs>
-      <rect className="history-geo-grid" x="18" y="16" width="604" height="254" rx="16" />
-      <path className="history-geo-mountain" d={`M ${taihangLeft} 24 Q ${taihangRight} 74 ${taihangLeft + 8} 126 T ${taihangRight - 2} 258 L ${taihangRight + 24} 258 Q ${taihangRight - 7} 196 ${taihangRight + 18} 139 T ${taihangRight + 8} 24 Z`} />
-      <text className="history-geo-mountain-label" x={taihangRight + 9} y="42">太行山區</text>
-      <text className="history-geo-direction" x="28" y="289">西</text><text className="history-geo-direction" x="600" y="289">東</text>
-      {routes.map((route) => {
-        const from = placeBySlug.get(route.fromPlaceSlug)
-        const to = placeBySlug.get(route.toPlaceSlug)
-        if (!from || !to) return null
-        const x1 = x(from.longitude); const y1 = y(from.latitude); const x2 = x(to.longitude); const y2 = y(to.latitude)
-        const curve = Math.abs(x2 - x1) > 200 ? -22 : 14
-        const pathData = `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 + curve} ${x2} ${y2}`
-        return <g className={`history-geo-route route-${route.routeKind}`} key={`${route.nodeSlug}-${route.sequence}`}>
-          <path d={pathData} markerEnd={route.routeKind === 'blocked' ? undefined : 'url(#history-route-arrow)'} />
-          {route.routeKind === 'blocked' ? <text className="history-route-block" x={x2 - 12} y={y2 + 5}>×</text> : null}
-          <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 + curve - 5}>{route.labelZh}</text>
-        </g>
-      })}
-      {places.map((place) => {
-        if (!place) return null
-        const relation = relationByPlace.get(place.slug)
-        const labelY = place.slug === 'shangdang' ? -13 : place.slug === 'changping' ? 22 : -12
-        return <g className={`history-geo-place${relation ? ` active role-${relation.role}` : ''}`} key={place.slug} transform={`translate(${x(place.longitude)} ${y(place.latitude)})`}>
-          <title>{relation?.noteZh || `${place.titleZh}（背景位置）`}</title>
-          <circle r={relation?.role === 'focus' ? 8 : 5} />
-          <text y={labelY}>{place.titleZh}</text>
-        </g>
-      })}
-    </svg>
+    <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>從世界縮放到事件現場</h3></div><span>拖曳、滾輪縮放，點位停留顯示說明</span></div>
+    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} mode="region" points={points} routes={mappedRoutes} />
     <div className="history-geography-meaning"><small>地理意義</small><p>{geographicContext}</p></div>
-    <p className="history-geography-caveat">此圖呈現地點、方向與因果關係；不把爭議中的古代疆界或行軍線畫成精確結果。</p>
+    <p className="history-geography-caveat">地形來自公開高程資料；古地名與虛線路線僅為概略定位，不把有爭議的古代疆界或行軍線畫成精確結果。</p>
   </section>
 }
 
