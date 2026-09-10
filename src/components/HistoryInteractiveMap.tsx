@@ -72,7 +72,19 @@ function markerElement(point: HistoryMapPoint) {
   subtitle.textContent = point.subtitle
   tooltip.append(title, subtitle)
   button.append(dot, tooltip)
-  if (point.onClick) button.addEventListener('click', point.onClick)
+  const keepMarkerGesture = (event: Event) => event.stopPropagation()
+  button.addEventListener('pointerdown', keepMarkerGesture)
+  button.addEventListener('pointerup', keepMarkerGesture)
+  button.addEventListener('mousedown', keepMarkerGesture)
+  button.addEventListener('touchstart', keepMarkerGesture, { passive: true })
+  if (point.onClick) {
+    button.classList.add('is-actionable')
+    button.addEventListener('click', (event) => {
+      event.preventDefault()
+      event.stopPropagation()
+      point.onClick?.()
+    })
+  }
   return button
 }
 
