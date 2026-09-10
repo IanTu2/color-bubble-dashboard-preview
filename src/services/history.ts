@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { DatePrecision, HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryNodePlace, HistoryNodeRoute, HistoryPeriod, HistoryPlace, HistorySource, HistoryStoryline } from '../history-data'
+import type { DatePrecision, HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryMapLayer, HistoryNodePlace, HistoryNodeRoute, HistoryPeriod, HistoryPlace, HistorySource, HistoryStoryline } from '../history-data'
 
 type Row = Record<string, unknown>
 
@@ -76,8 +76,19 @@ function mapSource(row: Row): HistorySource {
   }
 }
 
+function mapLayer(row: Row): HistoryMapLayer {
+  return {
+    slug: text(row.slug), periodSlug: text(row.period_slug), titleZh: text(row.title_zh),
+    startYear: number(row.start_year), endYear: number(row.end_year), tileTemplate: text(row.tile_template),
+    minZoom: number(row.min_zoom), maxZoom: number(row.max_zoom),
+    bounds: [number(row.bounds_west), number(row.bounds_south), number(row.bounds_east), number(row.bounds_north)],
+    attributionZh: text(row.attribution_zh), sourceUrl: text(row.source_url), opacity: number(row.opacity),
+    coverageNoteZh: text(row.coverage_note_zh), isPublished: Boolean(row.is_published),
+  }
+}
+
 export async function loadHistoryCatalog(): Promise<HistoryCatalog> {
-  const [periodsResult, storylinesResult, eventsResult, nodesResult, sourcesResult, placesResult, nodePlacesResult, nodeRoutesResult] = await Promise.all([
+  const [periodsResult, storylinesResult, eventsResult, nodesResult, sourcesResult, placesResult, nodePlacesResult, nodeRoutesResult, mapLayersResult] = await Promise.all([
     supabase.from('history_periods').select('*').eq('is_published', true).order('start_year'),
     supabase.from('history_storylines').select('*').order('sequence'),
     supabase.from('history_events').select('*').eq('is_published', true).order('sequence'),
@@ -86,9 +97,10 @@ export async function loadHistoryCatalog(): Promise<HistoryCatalog> {
     supabase.from('history_places').select('slug,title_zh,latitude,longitude,location_precision').order('title_zh'),
     supabase.from('history_event_node_places').select('*').eq('is_published', true).order('sequence'),
     supabase.from('history_event_node_routes').select('*').eq('is_published', true).order('sequence'),
+    supabase.from('history_map_layers').select('*').eq('is_published', true).order('start_year'),
   ])
 
-  const failure = [periodsResult.error, storylinesResult.error, eventsResult.error, nodesResult.error, sourcesResult.error, placesResult.error, nodePlacesResult.error, nodeRoutesResult.error].find(Boolean)
+  const failure = [periodsResult.error, storylinesResult.error, eventsResult.error, nodesResult.error, sourcesResult.error, placesResult.error, nodePlacesResult.error, nodeRoutesResult.error, mapLayersResult.error].find(Boolean)
   if (failure) throw new Error(failure.message)
 
   return {
@@ -100,5 +112,6 @@ export async function loadHistoryCatalog(): Promise<HistoryCatalog> {
     places: (placesResult.data ?? []).map((row) => mapPlace(row as Row)),
     nodePlaces: (nodePlacesResult.data ?? []).map((row) => mapNodePlace(row as Row)),
     nodeRoutes: (nodeRoutesResult.data ?? []).map((row) => mapNodeRoute(row as Row)),
+    mapLayers: (mapLayersResult.data ?? []).map((row) => mapLayer(row as Row)),
   }
 }
