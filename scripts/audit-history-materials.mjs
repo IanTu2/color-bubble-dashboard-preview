@@ -20,6 +20,7 @@ const checks = [
   ['world map excludes storyline-level events', component.includes('event.storylineSlug === null')],
   ['map labels appear from compact point markers', interactiveMap.includes('history-map-pin') && css.includes('.history-map-pin:hover > span')],
   ['map marker activation is isolated from map drag gestures', interactiveMap.includes("addEventListener('pointerdown', keepMarkerGesture)") && interactiveMap.includes("addEventListener('click'")],
+  ['MapLibre markers retain absolute geographic anchoring', css.includes('.history-map-pin {\n  position: absolute;')],
   ['world map uses overlay controls instead of shrinking the map', css.includes('.history-map-stage { position: absolute; inset: 6px;') && css.includes('.history-global-timeline { position: absolute;')],
   ['global timeline supports BCE through current era', component.includes('min="-3000"') && component.includes('max="2025"')],
   ['storyline filters and ordering exist', component.includes('setCategory') && component.includes('setAscending')],
