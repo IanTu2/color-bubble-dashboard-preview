@@ -101,6 +101,23 @@ export type HistoryNodeRoute = {
   isApproximate: boolean
 }
 
+export type HistoryMapLayer = {
+  slug: string
+  periodSlug: string
+  titleZh: string
+  startYear: number
+  endYear: number
+  tileTemplate: string
+  minZoom: number
+  maxZoom: number
+  bounds: [number, number, number, number]
+  attributionZh: string
+  sourceUrl: string
+  opacity: number
+  coverageNoteZh: string
+  isPublished: boolean
+}
+
 export type HistoryCatalog = {
   periods: HistoryPeriod[]
   storylines: HistoryStoryline[]
@@ -110,6 +127,7 @@ export type HistoryCatalog = {
   places: HistoryPlace[]
   nodePlaces: HistoryNodePlace[]
   nodeRoutes: HistoryNodeRoute[]
+  mapLayers: HistoryMapLayer[]
 }
 
 export const historyFallbackCatalog: HistoryCatalog = {
@@ -201,6 +219,19 @@ export const historyFallbackCatalog: HistoryCatalog = {
     { nodeSlug: 'changping-initial-fighting', sequence: 1, fromPlaceSlug: 'xianyang', toPlaceSlug: 'changping', routeKind: 'advance', labelZh: '秦軍進攻方向', isApproximate: true },
     { nodeSlug: 'changping-initial-fighting', sequence: 2, fromPlaceSlug: 'handan', toPlaceSlug: 'changping', routeKind: 'mobilization', labelZh: '趙軍接應方向', isApproximate: true },
     { nodeSlug: 'changping-zhaokuo-replaces-lianpo', sequence: 1, fromPlaceSlug: 'handan', toPlaceSlug: 'changping', routeKind: 'command', labelZh: '趙括赴前線接任', isApproximate: true },
+  ],
+  mapLayers: [
+    {
+      slug: 'sinica-warring-states', periodSlug: 'warring-states', titleZh: '戰國時期疆域',
+      startYear: -475, endYear: -221,
+      tileTemplate: 'https://gis.sinica.edu.tw/ccts/file-exists.php?img=warring_states-png-{z}-{x}-{y}',
+      minZoom: 0, maxZoom: 19, bounds: [93.947, 22.285, 130.849, 45.057],
+      attributionZh: '中央研究院人社中心 GIS 專題中心',
+      sourceUrl: 'https://gis.sinica.edu.tw/showwmts/index.php?l=warring_states&s=ccts',
+      opacity: 0.82,
+      coverageNoteZh: '戰國疆域為歷史地圖概略重建，不代表前 260 年每一時點的精確邊界。',
+      isPublished: true,
+    },
   ],
 }
 

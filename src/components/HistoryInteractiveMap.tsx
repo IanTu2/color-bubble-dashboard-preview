@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl'
 import type { FeatureCollection, LineString } from 'geojson'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import type { HistoryNodeRoute, HistoryPlace } from '../history-data'
+import type { HistoryMapLayer, HistoryNodeRoute, HistoryPlace } from '../history-data'
 
 const OPEN_FREE_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const MAPTERHORN_DEM = 'https://tiles.mapterhorn.com/tilejson.json'
@@ -25,6 +25,7 @@ type Props = {
   points: HistoryMapPoint[]
   routes?: RouteWithPlaces[]
   mode: 'world' | 'region'
+  historicalLayer?: HistoryMapLayer
   focusKey?: string
   emptyLabel?: string
 }
@@ -103,14 +104,21 @@ function fitPoints(map: MapLibreMap, points: HistoryMapPoint[], mode: Props['mod
   map.fitBounds(bounds, { padding: { top: 46, right: 46, bottom: 46, left: 46 }, maxZoom: 8.2, pitch: 42, duration: 700 })
 }
 
-export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, focusKey, emptyLabel }: Props) {
+export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, historicalLayer, focusKey, emptyLabel }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<MapLibreMarker[]>([])
+  const [boundaryMode, setBoundaryMode] = useState<'modern' | 'historical'>('modern')
+  const boundaryModeRef = useRef(boundaryMode)
   const pointsRef = useRef(points)
   const routesRef = useRef(routes)
   pointsRef.current = points
   routesRef.current = routes
+  boundaryModeRef.current = boundaryMode
+
+  useEffect(() => {
+    if (!historicalLayer && boundaryMode === 'historical') setBoundaryMode('modern')
+  }, [boundaryMode, historicalLayer])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -148,6 +156,24 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, fo
         }, firstSymbol)
       }
       map.addControl(new maplibregl.TerrainControl({ source: 'history-terrain', exaggeration: 0.8 }), 'top-right')
+      if (historicalLayer) {
+        map.addSource('history-boundaries', {
+          type: 'raster',
+          tiles: [historicalLayer.tileTemplate],
+          tileSize: 256,
+          minzoom: historicalLayer.minZoom,
+          maxzoom: historicalLayer.maxZoom,
+          bounds: historicalLayer.bounds,
+          attribution: historicalLayer.attributionZh,
+        })
+        map.addLayer({
+          id: 'history-boundaries-overlay',
+          type: 'raster',
+          source: 'history-boundaries',
+          layout: { visibility: boundaryModeRef.current === 'historical' ? 'visible' : 'none' },
+          paint: { 'raster-opacity': historicalLayer.opacity, 'raster-fade-duration': 140 },
+        })
+      }
       map.addSource('history-routes', { type: 'geojson', data: routeCollection(routesRef.current) })
       map.addLayer({
         id: 'history-routes-line',
@@ -186,7 +212,13 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, fo
       map.remove()
       mapRef.current = null
     }
-  }, [mode])
+  }, [historicalLayer?.slug, mode])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !map.getLayer('history-boundaries-overlay')) return
+    map.setLayoutProperty('history-boundaries-overlay', 'visibility', boundaryMode === 'historical' ? 'visible' : 'none')
+  }, [boundaryMode, historicalLayer?.slug])
 
   useEffect(() => {
     const map = mapRef.current
@@ -204,8 +236,13 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, fo
 
   return <div className={`history-interactive-map map-${mode}`} aria-label={ariaLabel} role="application">
     <div className="history-map-canvas" ref={containerRef} />
+    <div className="history-map-boundary-toggle" role="group" aria-label="疆界顯示方式">
+      <button className={boundaryMode === 'modern' ? 'active' : ''} type="button" onClick={() => setBoundaryMode('modern')} aria-pressed={boundaryMode === 'modern'}>現代</button>
+      <button className={boundaryMode === 'historical' ? 'active' : ''} type="button" disabled={!historicalLayer} onClick={() => setBoundaryMode('historical')} aria-pressed={boundaryMode === 'historical'} title={historicalLayer?.coverageNoteZh ?? '此年代的歷史疆域尚未收錄'}>當時</button>
+    </div>
     <button className="history-map-refocus" type="button" onClick={() => { if (mapRef.current) fitPoints(mapRef.current, points, mode) }}>◎ {mode === 'world' ? '回到世界' : '回到事件範圍'}</button>
     {points.length === 0 && emptyLabel ? <p className="history-map-empty">{emptyLabel}</p> : null}
+    {boundaryMode === 'historical' && historicalLayer ? <a className="history-map-layer-source" href={historicalLayer.sourceUrl} target="_blank" rel="noreferrer" title={historicalLayer.coverageNoteZh}>概略疆域 · {historicalLayer.attributionZh}</a> : null}
     <div className="history-map-legend"><span><i className="terrain" />地形底圖</span><span><i className="approximate" />古地點／路線為概略定位</span></div>
   </div>
 }

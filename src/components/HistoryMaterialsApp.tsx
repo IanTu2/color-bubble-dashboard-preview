@@ -30,7 +30,8 @@ function WorldHistoryMap({ catalog, year, onOpenPeriod }: { catalog: HistoryCata
       return { key: event.slug, title: event.titleZh, subtitle: event.dateLabelZh, latitude: event.latitude!, longitude: event.longitude!, tone: 'event' as const, onClick: period ? () => onOpenPeriod(period) : undefined }
     }),
   ]
-  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" mode="world" points={points} /></div>
+  const historicalLayer = catalog.mapLayers.find((layer) => layer.startYear <= year && layer.endYear >= year)
+  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" historicalLayer={historicalLayer} mode="world" points={points} /></div>
 }
 
 function SourceLinks({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
@@ -49,7 +50,7 @@ const fallbackGeography: Record<string, string> = {
   'changping-zhaokuo-replaces-lianpo': '換將決策在趙廷形成，趙括再由邯鄲方向赴長平接掌前線；政治決策與戰場相隔。',
 }
 
-function EventGeographyMap({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
+function EventGeographyMap({ node, catalog, year }: { node: HistoryEventNode; catalog: HistoryCatalog; year: number }) {
   const relations = catalog.nodePlaces.filter((item) => item.nodeSlug === node.slug)
   const routes = catalog.nodeRoutes.filter((item) => item.nodeSlug === node.slug).sort((a, b) => a.sequence - b.sequence)
   const visibleSlugs = ['xianyang', 'yewang', 'shangdang', 'changping', 'handan']
@@ -74,10 +75,11 @@ function EventGeographyMap({ node, catalog }: { node: HistoryEventNode; catalog:
     const to = placeBySlug.get(route.toPlaceSlug)
     return from && to ? [{ ...route, from, to }] : []
   })
+  const historicalLayer = catalog.mapLayers.find((layer) => layer.startYear <= year && layer.endYear >= year)
 
   return <section className="history-geography-card" aria-label="事件地理圖">
     <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>從世界縮放到事件現場</h3></div><span>拖曳、滾輪縮放，點位停留顯示說明</span></div>
-    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} mode="region" points={points} routes={mappedRoutes} />
+    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} historicalLayer={historicalLayer} mode="region" points={points} routes={mappedRoutes} />
     <div className="history-geography-meaning"><small>地理意義</small><p>{geographicContext}</p></div>
     <p className="history-geography-caveat">地形來自公開高程資料；古地名與虛線路線僅為概略定位，不把有爭議的古代疆界或行軍線畫成精確結果。</p>
   </section>
@@ -205,7 +207,7 @@ export function HistoryMaterialsApp({ language, userId }: { language: 'zh' | 'en
           <section className="history-node-timeline"><div className="history-node-head"><h2>事件內部時間軸</h2><span>日期不詳時不強行補足</span></div>{nodes.map((node) => <button type="button" key={node.slug} className={selectedNode.slug === node.slug ? 'active' : ''} onClick={() => setSelectedNodeSlug(node.slug)}><time>{node.dateLabelZh}</time><i aria-hidden="true"/><span><strong>{node.titleZh}</strong><small>{node.consequenceZh}</small></span></button>)}</section>
           <article className="history-node-detail" aria-live="polite">
             <header><span>{selectedNode.dateLabelZh} · {precisionZh[selectedNode.datePrecision]}</span><h2>{selectedNode.titleZh}</h2><p>{selectedNode.placeNameZh} · {selectedNode.peopleZh.join('、')}</p></header>
-            <EventGeographyMap node={selectedNode} catalog={catalog} />
+            <EventGeographyMap node={selectedNode} catalog={catalog} year={event.startYear} />
             <section><h3>發生了什麼</h3><p>{selectedNode.descriptionZh}</p></section>
             <section><h3>為什麼發生</h3><p>{selectedNode.causeZh}</p></section>
             <section className="history-cause-chain"><h3>前因與後續</h3><div><span><small>前因</small>{selectedNode.previousContextZh}</span><b>→</b><span><small>本事件</small>{selectedNode.titleZh}</span><b>→</b><span><small>後續</small>{selectedNode.consequenceZh}</span></div></section>
