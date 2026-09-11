@@ -18,6 +18,7 @@ const checks = [
   ['world and regional maps share MapLibre interaction', component.includes('HistoryInteractiveMap') && interactiveMap.includes("mode: 'world' | 'region'")],
   ['maps provide terrain, pan, zoom and fullscreen controls', interactiveMap.includes('MAPTERHORN_DEM') && interactiveMap.includes('setTerrain') && interactiveMap.includes('NavigationControl') && interactiveMap.includes('FullscreenControl')],
   ['every map can switch between modern and historical boundaries', interactiveMap.includes('history-map-boundary-toggle') && interactiveMap.includes("setBoundaryMode('modern')") && interactiveMap.includes("setBoundaryMode('historical')")],
+  ['modern and historical boundaries have visible map labels and legends', interactiveMap.includes('history-boundary-labels-text') && interactiveMap.includes('紅線＝國界') && interactiveMap.includes('藍線＝戰國疆界') && component.includes('上黨爭議區')],
   ['historical boundary layer uses the official Academia Sinica tiles', interactiveMap.includes("type: 'raster'") && mapLayersMigration.includes('gis.sinica.edu.tw/ccts/file-exists.php') && mapLayersMigration.includes('中央研究院')],
   ['regional map refocuses around the selected node', interactiveMap.includes('fitBounds') && component.includes('focusKey={node.slug}')],
   ['world map excludes storyline-level events', component.includes('event.storylineSlug === null')],

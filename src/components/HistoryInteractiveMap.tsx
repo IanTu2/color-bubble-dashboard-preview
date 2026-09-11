@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl'
-import type { FeatureCollection, LineString } from 'geojson'
+import type { FeatureCollection, LineString, Point } from 'geojson'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { HistoryMapLayer, HistoryNodeRoute, HistoryPlace } from '../history-data'
 
@@ -18,6 +18,14 @@ export type HistoryMapPoint = {
   onClick?: () => void
 }
 
+export type HistoryBoundaryLabel = {
+  key: string
+  title: string
+  longitude: number
+  latitude: number
+  color?: string
+}
+
 type RouteWithPlaces = HistoryNodeRoute & { from: HistoryPlace; to: HistoryPlace }
 
 type Props = {
@@ -26,8 +34,47 @@ type Props = {
   routes?: RouteWithPlaces[]
   mode: 'world' | 'region'
   historicalLayer?: HistoryMapLayer
+  historicalLabels?: HistoryBoundaryLabel[]
+  modernLabels?: HistoryBoundaryLabel[]
   focusKey?: string
   emptyLabel?: string
+}
+
+const MODERN_BOUNDARY_LAYERS = ['boundary_3', 'boundary_2', 'boundary_disputed']
+const MODERN_LABEL_LAYERS = ['label_state', 'label_country_3', 'label_country_2', 'label_country_1']
+
+function boundaryLabelCollection(labels: HistoryBoundaryLabel[]): FeatureCollection<Point> {
+  return {
+    type: 'FeatureCollection',
+    features: labels.map((label) => ({
+      type: 'Feature',
+      properties: { title: label.title, color: label.color ?? '#173047' },
+      geometry: { type: 'Point', coordinates: [label.longitude, label.latitude] },
+    })),
+  }
+}
+
+function applyBoundaryMode(map: MapLibreMap, mode: 'modern' | 'historical') {
+  const visibility = mode === 'modern' ? 'visible' : 'none'
+  const modernLayers = [...MODERN_BOUNDARY_LAYERS, ...MODERN_LABEL_LAYERS]
+  modernLayers.forEach((id) => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility)
+  })
+  if (map.getLayer('boundary_2')) {
+    map.setPaintProperty('boundary_2', 'line-color', '#d54462')
+    map.setPaintProperty('boundary_2', 'line-width', ['interpolate', ['linear'], ['zoom'], 1, 1.25, 5, 2.2, 10, 4])
+  }
+  if (map.getLayer('boundary_3')) {
+    map.setPaintProperty('boundary_3', 'line-color', '#536dde')
+    map.setPaintProperty('boundary_3', 'line-dasharray', [2, 1])
+    map.setPaintProperty('boundary_3', 'line-width', ['interpolate', ['linear'], ['zoom'], 5, 1.4, 9, 2.6])
+  }
+  MODERN_LABEL_LAYERS.forEach((id) => {
+    if (!map.getLayer(id)) return
+    map.setPaintProperty(id, 'text-color', '#18243a')
+    map.setPaintProperty(id, 'text-halo-color', '#ffffff')
+    map.setPaintProperty(id, 'text-halo-width', 2)
+  })
 }
 
 function routeColor(kind: HistoryNodeRoute['routeKind']) {
@@ -104,7 +151,7 @@ function fitPoints(map: MapLibreMap, points: HistoryMapPoint[], mode: Props['mod
   map.fitBounds(bounds, { padding: { top: 46, right: 46, bottom: 46, left: 46 }, maxZoom: 8.2, pitch: 42, duration: 700 })
 }
 
-export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, historicalLayer, focusKey, emptyLabel }: Props) {
+export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, historicalLayer, historicalLabels = [], modernLabels = [], focusKey, emptyLabel }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<MapLibreMarker[]>([])
@@ -112,8 +159,12 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
   const boundaryModeRef = useRef(boundaryMode)
   const pointsRef = useRef(points)
   const routesRef = useRef(routes)
+  const historicalLabelsRef = useRef(historicalLabels)
+  const modernLabelsRef = useRef(modernLabels)
   pointsRef.current = points
   routesRef.current = routes
+  historicalLabelsRef.current = historicalLabels
+  modernLabelsRef.current = modernLabels
   boundaryModeRef.current = boundaryMode
 
   useEffect(() => {
@@ -142,6 +193,7 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
       if (!map.getSource('history-terrain')) {
         map.addSource('history-terrain', { type: 'raster-dem', url: MAPTERHORN_DEM })
         map.setTerrain({ source: 'history-terrain', exaggeration: 0.8 })
+        const boundaryLayer = map.getStyle().layers?.find((layer) => MODERN_BOUNDARY_LAYERS.includes(layer.id))?.id
         const firstSymbol = map.getStyle().layers?.find((layer) => layer.type === 'symbol')?.id
         map.addLayer({
           id: 'history-hillshade',
@@ -153,7 +205,7 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
             'hillshade-highlight-color': '#d7eadf',
             'hillshade-accent-color': '#7f8f7d',
           },
-        }, firstSymbol)
+        }, boundaryLayer ?? firstSymbol)
       }
       map.addControl(new maplibregl.TerrainControl({ source: 'history-terrain', exaggeration: 0.8 }), 'top-right')
       if (historicalLayer) {
@@ -171,9 +223,38 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
           type: 'raster',
           source: 'history-boundaries',
           layout: { visibility: boundaryModeRef.current === 'historical' ? 'visible' : 'none' },
-          paint: { 'raster-opacity': historicalLayer.opacity, 'raster-fade-duration': 140 },
+          paint: {
+            'raster-opacity': Math.max(historicalLayer.opacity, 0.96),
+            'raster-contrast': 0.28,
+            'raster-saturation': 0.12,
+            'raster-fade-duration': 140,
+          },
         })
       }
+      map.addSource('history-boundary-labels', {
+        type: 'geojson',
+        data: boundaryLabelCollection(boundaryModeRef.current === 'historical' ? historicalLabelsRef.current : modernLabelsRef.current),
+      })
+      map.addLayer({
+        id: 'history-boundary-labels-text',
+        type: 'symbol',
+        source: 'history-boundary-labels',
+        minzoom: mode === 'world' ? 2.8 : 4.5,
+        layout: {
+          'text-field': ['get', 'title'],
+          'text-font': ['Noto Sans Bold'],
+          'text-size': ['interpolate', ['linear'], ['zoom'], 3, 12, 6, 17, 9, 21],
+          'text-allow-overlap': false,
+          'text-letter-spacing': 0.08,
+        },
+        paint: {
+          'text-color': ['get', 'color'],
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 3,
+          'text-halo-blur': 1,
+        },
+      })
+      applyBoundaryMode(map, boundaryModeRef.current)
       map.addSource('history-routes', { type: 'geojson', data: routeCollection(routesRef.current) })
       map.addLayer({
         id: 'history-routes-line',
@@ -216,9 +297,12 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !map.getLayer('history-boundaries-overlay')) return
-    map.setLayoutProperty('history-boundaries-overlay', 'visibility', boundaryMode === 'historical' ? 'visible' : 'none')
-  }, [boundaryMode, historicalLayer?.slug])
+    if (!map) return
+    if (map.getLayer('history-boundaries-overlay')) map.setLayoutProperty('history-boundaries-overlay', 'visibility', boundaryMode === 'historical' ? 'visible' : 'none')
+    applyBoundaryMode(map, boundaryMode)
+    const labelSource = map.getSource('history-boundary-labels') as maplibregl.GeoJSONSource | undefined
+    labelSource?.setData(boundaryLabelCollection(boundaryMode === 'historical' ? historicalLabels : modernLabels))
+  }, [boundaryMode, historicalLabels, historicalLayer?.slug, modernLabels])
 
   useEffect(() => {
     const map = mapRef.current
@@ -242,7 +326,9 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
     </div>
     <button className="history-map-refocus" type="button" onClick={() => { if (mapRef.current) fitPoints(mapRef.current, points, mode) }}>◎ {mode === 'world' ? '回到世界' : '回到事件範圍'}</button>
     {points.length === 0 && emptyLabel ? <p className="history-map-empty">{emptyLabel}</p> : null}
-    {boundaryMode === 'historical' && historicalLayer ? <a className="history-map-layer-source" href={historicalLayer.sourceUrl} target="_blank" rel="noreferrer" title={historicalLayer.coverageNoteZh}>概略疆域 · {historicalLayer.attributionZh}</a> : null}
+    {boundaryMode === 'historical' && historicalLayer
+      ? <a className="history-map-layer-source" href={historicalLayer.sourceUrl} target="_blank" rel="noreferrer" title={historicalLayer.coverageNoteZh}>藍線＝戰國疆界（概略） · {historicalLayer.attributionZh}</a>
+      : <span className="history-map-layer-source is-modern">紅線＝國界 · 藍線＝省界</span>}
     <div className="history-map-legend"><span><i className="terrain" />地形底圖</span><span><i className="approximate" />古地點／路線為概略定位</span></div>
   </div>
 }

@@ -2,13 +2,32 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { formatHistoryYear, historyCategoryZh, historyFallbackCatalog } from '../history-data'
 import type { HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryPeriod } from '../history-data'
 import { loadHistoryCatalog } from '../services/history'
-import { HistoryInteractiveMap, type HistoryMapPoint } from './HistoryInteractiveMap'
+import { HistoryInteractiveMap, type HistoryBoundaryLabel, type HistoryMapPoint } from './HistoryInteractiveMap'
 import '../history-materials.css'
 
 type View = 'world' | 'period' | 'storyline' | 'event'
 const precisionZh = {
   year: '精確至年', month: '精確至月', range: '年代範圍', approximate: '約略年代', unknown: '日期不詳',
 }
+
+const warringStatesLabels: HistoryBoundaryLabel[] = [
+  { key: 'qin', title: '秦', longitude: 107.4, latitude: 34.8, color: '#9b3d54' },
+  { key: 'zhao', title: '趙', longitude: 114.1, latitude: 37.7, color: '#176f7c' },
+  { key: 'han', title: '韓', longitude: 112.5, latitude: 34.6, color: '#865b16' },
+  { key: 'wei', title: '魏', longitude: 114.5, latitude: 34.3, color: '#5744a0' },
+  { key: 'chu', title: '楚', longitude: 112.2, latitude: 30.8, color: '#2f6d44' },
+  { key: 'yan', title: '燕', longitude: 116.7, latitude: 40.1, color: '#3a5b9d' },
+  { key: 'qi', title: '齊', longitude: 118.4, latitude: 36.5, color: '#8a4b27' },
+  { key: 'shangdang', title: '上黨爭議區', longitude: 113, latitude: 36, color: '#b2294f' },
+]
+
+const modernChinaLabels: HistoryBoundaryLabel[] = [
+  { key: 'china', title: '中國（現代）', longitude: 110.2, latitude: 39.5, color: '#a51e3e' },
+  { key: 'shanxi', title: '山西省', longitude: 112.3, latitude: 37.4, color: '#223c88' },
+  { key: 'hebei', title: '河北省', longitude: 115.2, latitude: 38.4, color: '#223c88' },
+  { key: 'henan', title: '河南省', longitude: 113.6, latitude: 33.7, color: '#223c88' },
+  { key: 'shaanxi', title: '陝西省', longitude: 108.8, latitude: 35.4, color: '#223c88' },
+]
 
 function loadStoredState(userId: string) {
   try {
@@ -31,7 +50,7 @@ function WorldHistoryMap({ catalog, year, onOpenPeriod }: { catalog: HistoryCata
     }),
   ]
   const historicalLayer = catalog.mapLayers.find((layer) => layer.startYear <= year && layer.endYear >= year)
-  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" historicalLayer={historicalLayer} mode="world" points={points} /></div>
+  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} modernLabels={modernChinaLabels} mode="world" points={points} /></div>
 }
 
 function SourceLinks({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
@@ -79,7 +98,7 @@ function EventGeographyMap({ node, catalog, year }: { node: HistoryEventNode; ca
 
   return <section className="history-geography-card" aria-label="事件地理圖">
     <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>從世界縮放到事件現場</h3></div><span>拖曳、滾輪縮放，點位停留顯示說明</span></div>
-    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} historicalLayer={historicalLayer} mode="region" points={points} routes={mappedRoutes} />
+    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} modernLabels={modernChinaLabels} mode="region" points={points} routes={mappedRoutes} />
     <div className="history-geography-meaning"><small>地理意義</small><p>{geographicContext}</p></div>
     <p className="history-geography-caveat">地形來自公開高程資料；古地名與虛線路線僅為概略定位，不把有爭議的古代疆界或行軍線畫成精確結果。</p>
   </section>
