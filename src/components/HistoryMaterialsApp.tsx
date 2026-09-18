@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { formatHistoryYear, historyCategoryZh, historyFallbackCatalog } from '../history-data'
 import type { HistoryCatalog, HistoryEvent, HistoryEventNode, HistoryPeriod } from '../history-data'
 import { loadHistoryCatalog } from '../services/history'
-import { HistoryInteractiveMap, type HistoryBoundaryLabel, type HistoryMapPoint } from './HistoryInteractiveMap'
+import { HistoryInteractiveMap, type HistoryBoundaryLabel, type HistoryMapPoint, type HistoryTerritory } from './HistoryInteractiveMap'
 import '../history-materials.css'
 
 type View = 'world' | 'period' | 'storyline' | 'event'
@@ -19,6 +19,18 @@ const warringStatesLabels: HistoryBoundaryLabel[] = [
   { key: 'yan', title: '燕', longitude: 116.7, latitude: 40.1, color: '#3a5b9d' },
   { key: 'qi', title: '齊', longitude: 118.4, latitude: 36.5, color: '#8a4b27' },
   { key: 'shangdang', title: '上黨爭議區', longitude: 113, latitude: 36, color: '#b2294f' },
+]
+
+// Teaching overlay traced as deliberately broad zones against the cited CCTS map.
+// It helps distinguish the seven states, while the source raster remains the authority for finer boundaries.
+const warringStatesTerritories: HistoryTerritory[] = [
+  { key: 'qin', title: '秦', color: '#b33a52', coordinates: [[[100.5, 30], [106, 28.5], [111.2, 30.5], [112, 33], [110.5, 36], [109, 39.5], [104, 40], [101, 36], [100.5, 30]]] },
+  { key: 'zhao', title: '趙', color: '#158092', coordinates: [[[109.2, 36], [111.3, 34.9], [114.8, 35.8], [117, 38], [116, 42.3], [111.5, 42.2], [109, 39.2], [109.2, 36]]] },
+  { key: 'han', title: '韓', color: '#c78a22', coordinates: [[[110.3, 33], [113.8, 33], [114.2, 35.7], [112.7, 36.5], [110.4, 35.4], [110.3, 33]]] },
+  { key: 'wei', title: '魏', color: '#7052c7', coordinates: [[[112.6, 32.7], [116.9, 32.6], [117, 36.6], [114.5, 36.8], [112.8, 35.3], [112.6, 32.7]]] },
+  { key: 'chu', title: '楚', color: '#3f8d59', coordinates: [[[105.5, 27.2], [121.5, 27.5], [121, 32.8], [116, 34.3], [111, 33.4], [106, 32.2], [105.5, 27.2]]] },
+  { key: 'yan', title: '燕', color: '#5079c8', coordinates: [[[113.5, 39.2], [120.6, 38.8], [123.5, 41.8], [120.5, 44.2], [114.2, 43.2], [113.5, 39.2]]] },
+  { key: 'qi', title: '齊', color: '#d06b31', coordinates: [[[115.6, 34.3], [122.2, 34.2], [122.5, 38.4], [118.6, 39.3], [115.8, 37.1], [115.6, 34.3]]] },
 ]
 
 const modernChinaLabels: HistoryBoundaryLabel[] = [
@@ -50,7 +62,7 @@ function WorldHistoryMap({ catalog, year, onOpenPeriod }: { catalog: HistoryCata
     }),
   ]
   const historicalLayer = catalog.mapLayers.find((layer) => layer.startYear <= year && layer.endYear >= year)
-  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} modernLabels={modernChinaLabels} mode="world" points={points} /></div>
+  return <div className="history-map-stage"><HistoryInteractiveMap ariaLabel={`${formatHistoryYear(year)}的世界地形地圖`} emptyLabel="此年代的首批資料尚未收錄" historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} historicalTerritories={warringStatesTerritories} modernLabels={modernChinaLabels} mode="world" points={points} /></div>
 }
 
 function SourceLinks({ node, catalog }: { node: HistoryEventNode; catalog: HistoryCatalog }) {
@@ -98,7 +110,7 @@ function EventGeographyMap({ node, catalog, year }: { node: HistoryEventNode; ca
 
   return <section className="history-geography-card" aria-label="事件地理圖">
     <div className="history-geography-head"><div><small>GEOGRAPHIC CONTEXT</small><h3>從世界縮放到事件現場</h3></div><span>拖曳、滾輪縮放，點位停留顯示說明</span></div>
-    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} modernLabels={modernChinaLabels} mode="region" points={points} routes={mappedRoutes} />
+    <HistoryInteractiveMap ariaLabel={`${node.titleZh}的可縮放地形地圖`} focusKey={node.slug} historicalLabels={warringStatesLabels} historicalLayer={historicalLayer} historicalTerritories={warringStatesTerritories} modernLabels={modernChinaLabels} mode="region" points={points} routes={mappedRoutes} />
     <div className="history-geography-meaning"><small>地理意義</small><p>{geographicContext}</p></div>
     <p className="history-geography-caveat">地形來自公開高程資料；古地名與虛線路線僅為概略定位，不把有爭議的古代疆界或行軍線畫成精確結果。</p>
   </section>
