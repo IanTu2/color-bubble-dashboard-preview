@@ -219,6 +219,22 @@
   gap: 17px;
 }
 
+.auth-form-heading h3,
+.auth-form-heading p {
+  margin: 0;
+}
+
+.auth-form-heading h3 {
+  font-size: 1.2rem;
+}
+
+.auth-form-heading p {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.55;
+}
+
 .auth-form label {
   display: grid;
   gap: 8px;
@@ -265,6 +281,13 @@
   border: 0;
   color: var(--muted);
   background: transparent;
+}
+
+.auth-forgot-button {
+  justify-self: end;
+  margin: -10px 0 -7px;
+  padding: 2px 0;
+  color: #8ce8dd;
 }
 
 .otp-input {
