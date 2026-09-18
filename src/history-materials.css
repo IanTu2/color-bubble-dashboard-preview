@@ -159,7 +159,7 @@ html[data-theme='light'] .history-map-pin > span { background: rgba(255, 255, 25
 .history-map-legend span { display: flex; align-items: center; gap: 4px; }
 .history-map-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--history-aqua); }
 .history-map-legend i.territory { border: 1px solid #8a5fd1; border-radius: 2px; background: rgba(143, 96, 207, .38); }
-.history-map-legend i.historical-border { width: 15px; height: 0; border-top: 3px dashed #8a5fd1; border-radius: 0; background: transparent; }
+.history-map-legend i.historical-border { width: 15px; height: 0; border-top: 3px dashed #d2264d; border-radius: 0; background: transparent; }
 .history-map-legend i.country-border { width: 15px; height: 0; border-top: 3px solid #c81d46; border-radius: 0; background: transparent; box-shadow: 0 -1px #fff, 0 1px #fff; }
 .history-map-legend i.province-border { width: 15px; height: 0; border-top: 2px dashed #315cda; border-radius: 0; background: transparent; }
 .history-map-legend i.approximate { width: 14px; height: 0; border-top: 2px dashed var(--history-gold); border-radius: 0; background: transparent; }

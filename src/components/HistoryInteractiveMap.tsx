@@ -7,6 +7,8 @@ import type { HistoryMapLayer, HistoryNodeRoute, HistoryPlace } from '../history
 
 const OPEN_FREE_MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
 const MAPTERHORN_DEM = 'https://tiles.mapterhorn.com/tilejson.json'
+const MODERN_CHINA_COUNTRY_GEOJSON = `${import.meta.env.BASE_URL}data/china-country.geojson`
+const MODERN_CHINA_PROVINCES_GEOJSON = `${import.meta.env.BASE_URL}data/china-provinces.geojson`
 
 export type HistoryMapPoint = {
   key: string
@@ -74,30 +76,36 @@ function territoryCollection(territories: HistoryTerritory[]): FeatureCollection
 }
 
 function addModernBoundaryOverlays(map: MapLibreMap, mode: 'modern' | 'historical') {
-  if (!map.getSource('openmaptiles') || map.getLayer('history-modern-country-line')) return
+  if (map.getLayer('history-modern-country-line')) return
   const visibility = mode === 'modern' ? 'visible' : 'none'
-  const countryFilter = ['all', ['==', ['get', 'admin_level'], 2], ['!=', ['get', 'maritime'], 1]] as maplibregl.FilterSpecification
-  const subdivisionFilter = ['all', ['>=', ['get', 'admin_level'], 3], ['<=', ['get', 'admin_level'], 6], ['!=', ['get', 'maritime'], 1]] as maplibregl.FilterSpecification
+
+  map.addSource('history-modern-country', { type: 'geojson', data: MODERN_CHINA_COUNTRY_GEOJSON })
+  map.addSource('history-modern-provinces', { type: 'geojson', data: MODERN_CHINA_PROVINCES_GEOJSON })
 
   map.addLayer({
-    id: 'history-modern-country-casing', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: countryFilter,
+    id: 'history-modern-country-fill', type: 'fill', source: 'history-modern-country',
+    layout: { visibility },
+    paint: { 'fill-color': '#f3d9df', 'fill-opacity': 0.08 },
+  })
+  map.addLayer({
+    id: 'history-modern-subdivision-casing', type: 'line', source: 'history-modern-provinces',
+    minzoom: 2.5, layout: { visibility },
+    paint: { 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 3.6, 8, 5.2], 'line-opacity': 0.95 },
+  })
+  map.addLayer({
+    id: 'history-modern-subdivision-line', type: 'line', source: 'history-modern-provinces',
+    minzoom: 2.5, layout: { visibility },
+    paint: { 'line-color': '#315cda', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.7, 8, 3], 'line-opacity': 1, 'line-dasharray': [3, 1.4] },
+  })
+  map.addLayer({
+    id: 'history-modern-country-casing', type: 'line', source: 'history-modern-country',
     layout: { visibility },
     paint: { 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 3.8, 5, 5.4, 10, 8], 'line-opacity': 0.96 },
   })
   map.addLayer({
-    id: 'history-modern-country-line', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: countryFilter,
+    id: 'history-modern-country-line', type: 'line', source: 'history-modern-country',
     layout: { visibility },
     paint: { 'line-color': '#c81d46', 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 2, 5, 3.1, 10, 4.5], 'line-opacity': 1 },
-  })
-  map.addLayer({
-    id: 'history-modern-subdivision-casing', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: subdivisionFilter,
-    minzoom: 3, layout: { visibility },
-    paint: { 'line-color': '#ffffff', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2.8, 8, 4.4], 'line-opacity': 0.9 },
-  })
-  map.addLayer({
-    id: 'history-modern-subdivision-line', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', filter: subdivisionFilter,
-    minzoom: 3, layout: { visibility },
-    paint: { 'line-color': '#315cda', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.35, 8, 2.5], 'line-opacity': 0.96, 'line-dasharray': [3, 1.4] },
   })
 }
 
@@ -107,7 +115,7 @@ function applyBoundaryMode(map: MapLibreMap, mode: 'modern' | 'historical') {
   modernLayers.forEach((id) => {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility)
   })
-  ;['history-modern-country-casing', 'history-modern-country-line', 'history-modern-subdivision-casing', 'history-modern-subdivision-line'].forEach((id) => {
+  ;['history-modern-country-fill', 'history-modern-country-casing', 'history-modern-country-line', 'history-modern-subdivision-casing', 'history-modern-subdivision-line'].forEach((id) => {
     if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visibility)
   })
   if (map.getLayer('boundary_2')) {
@@ -319,7 +327,7 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
           type: 'line',
           source: 'history-territories',
           layout: { visibility: boundaryModeRef.current === 'historical' ? 'visible' : 'none' },
-          paint: { 'line-color': ['get', 'color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2.4, 7, 4], 'line-opacity': 1, 'line-dasharray': [4, 1.3] },
+          paint: { 'line-color': '#d2264d', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2.8, 7, 4.6], 'line-opacity': 1, 'line-dasharray': [4, 1.3] },
         })
       }
       addModernBoundaryOverlays(map, boundaryModeRef.current)
@@ -377,7 +385,7 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
           'text-halo-width': 2,
         },
       })
-      fitPoints(map, pointsRef.current, mode)
+      fitBoundaryContext(map, mode, boundaryModeRef.current, pointsRef.current)
     })
 
     return () => {
@@ -414,7 +422,6 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
     if (source) source.setData(routeCollection(routes))
     const ready = () => fitPoints(map, points, mode)
     if (map.loaded()) ready()
-    else map.once('load', ready)
   }, [focusKey, mode, points, routes])
 
   return <div className={`history-interactive-map map-${mode}`} aria-label={ariaLabel} role="application">
@@ -426,12 +433,12 @@ export function HistoryInteractiveMap({ ariaLabel, points, routes = [], mode, hi
     <button className="history-map-refocus" type="button" onClick={() => { if (mapRef.current) fitPoints(mapRef.current, points, mode) }}>◎ {mode === 'world' ? '回到世界' : '回到事件範圍'}</button>
     {points.length === 0 && emptyLabel ? <p className="history-map-empty">{emptyLabel}</p> : null}
     {boundaryMode === 'historical' && historicalLayer
-      ? <a className="history-map-layer-source" href={historicalLayer.sourceUrl} target="_blank" rel="noreferrer" title={historicalLayer.coverageNoteZh}>色塊／粗虛線＝七雄概略疆域 · 細藍線原圖＝{historicalLayer.attributionZh}</a>
+      ? <a className="history-map-layer-source" href={historicalLayer.sourceUrl} target="_blank" rel="noreferrer" title={historicalLayer.coverageNoteZh}>紅色粗虛線＝諸侯疆界 · 淡色色塊＝概略疆域 · 細藍線原圖＝{historicalLayer.attributionZh}</a>
       : <span className="history-map-layer-source is-modern">紅色實線＝現代國界 · 藍色虛線＝省級行政界</span>}
     <div className={`history-map-legend is-${boundaryMode}`}>
       <span><i className="terrain" />地形</span>
       {boundaryMode === 'historical'
-        ? <><span><i className="territory" />概略疆域色塊</span><span><i className="historical-border" />諸侯疆界</span></>
+        ? <><span><i className="territory" />概略疆域色塊</span><span><i className="historical-border" />紅色諸侯疆界</span></>
         : <><span><i className="country-border" />國界</span><span><i className="province-border" />省界</span></>}
     </div>
   </div>
