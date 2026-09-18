@@ -33,6 +33,7 @@ function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [desktopRequest, setDesktopRequest] = useState<DesktopRequest | null>(null)
   const [language, setLanguage] = useState<Language>(readLanguage)
   const [fontScale, setFontScale] = useState(readFontScale)
@@ -88,9 +89,14 @@ function App() {
       setAuthLoading(false)
     })
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       setAuthLoading(false)
+      if (event === 'PASSWORD_RECOVERY') {
+        setSettingsOpen(false)
+        setPasswordRecovery(true)
+        setAuthOpen(true)
+      }
       if (!session?.user) setDesktopRequest(null)
     })
 
@@ -108,7 +114,13 @@ function App() {
 
   const openAuth = () => {
     setSettingsOpen(false)
+    setPasswordRecovery(false)
     setAuthOpen(true)
+  }
+
+  const closeAuth = () => {
+    setAuthOpen(false)
+    setPasswordRecovery(false)
   }
 
   const requestDesktopApp = (kind: DesktopAppKind) => {
@@ -159,7 +171,13 @@ function App() {
         onPreferencesChange={setPreferences}
         onResetAll={resetAllSettings}
       />
-      <AuthDialog language={language} open={authOpen} onClose={() => setAuthOpen(false)} onSuccess={setToast} />
+      <AuthDialog
+        language={language}
+        open={authOpen}
+        passwordRecovery={passwordRecovery}
+        onClose={closeAuth}
+        onSuccess={setToast}
+      />
       {toast ? <div className="toast" role="status">{toast}</div> : null}
     </div>
   )
